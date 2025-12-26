@@ -1,7 +1,5 @@
 import Image from "next/image";
-import LandingHeader from "@/features/landing/LandingHeader";
-import LandingMain from "@/features/landing/LandingMain";
-import LandingFooter from "@/features/landing/LandingFooter";
+import { LandingHeader, LandingMain, LandingFooter } from "@/features/landing";
 
 export default function Page() {
     return (
