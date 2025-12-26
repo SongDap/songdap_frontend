@@ -6,7 +6,7 @@ interface LPProps {
 }
 
 export default function LP({ circleColor = "#ffffff", size = 300 }: LPProps) {
-  const circleSize = (size * 135) / 300; // 300:135 비율 유지
+  const circleSizeRatio = 108 / 300; // 300:108 비율
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
@@ -23,8 +23,8 @@ export default function LP({ circleColor = "#ffffff", size = 300 }: LPProps) {
       <div
         className="absolute rounded-full"
         style={{
-          width: circleSize,
-          height: circleSize,
+          width: `${circleSizeRatio * 100}%`,
+          height: `${circleSizeRatio * 100}%`,
           backgroundColor: circleColor,
           top: "50%",
           left: "50%",
@@ -34,4 +34,5 @@ export default function LP({ circleColor = "#ffffff", size = 300 }: LPProps) {
     </div>
   );
 }
+
 

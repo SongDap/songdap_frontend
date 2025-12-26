@@ -9,3 +9,80 @@ body {
   padding: 0;
 } /*이거를 넣어야 스크롤이 안 생겨 */
 
+/* 스크롤바 숨기기 */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* 앨범 영역 스크롤바 표시 */
+.album-area-scroll {
+  scrollbar-width: thin; /* Firefox */
+  -ms-overflow-style: auto; /* IE and Edge */
+}
+
+.album-area-scroll::-webkit-scrollbar {
+  display: block; /* Chrome, Safari, Opera */
+  width: 8px;
+}
+
+.album-area-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.album-area-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.album-area-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* 앨범 설명 입력창 스크롤바 표시 */
+.album-description-scroll {
+  scrollbar-width: thin; /* Firefox */
+  -ms-overflow-style: auto; /* IE and Edge */
+}
+
+.album-description-scroll::-webkit-scrollbar {
+  display: block; /* Chrome, Safari, Opera */
+  width: 8px;
+}
+
+.album-description-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.album-description-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.album-description-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+@media (min-width: 768px) {
+  .album-create-title {
+    font-size: clamp(calc(75 * 100vh / 1024 * 0.6), calc(75 * 100vh / 1024), calc((100% - min(calc(32 * 100% / 768), 32px) * 2) / 10)) !important;
+  }
+}
+
+.service-frame {
+  min-height: 700px;
+}
+
+@media (min-height: 700px) {
+  .service-frame {
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
+
