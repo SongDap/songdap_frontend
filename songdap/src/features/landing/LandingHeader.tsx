@@ -4,7 +4,7 @@ export default function LandingHeader() {
   return (
     <header className="flex flex-1 flex-col items-center justify-center gap-10">
       <Image
-        src="/logo_name.png"
+        src="/images/logo_name.png"
         alt="Songdap logo"
         width={320}
         height={64}

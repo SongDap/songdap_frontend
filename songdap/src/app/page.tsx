@@ -7,7 +7,7 @@ export default function Page() {
 
             <div className="relative min-h-screen">
                 <Image
-                    src="/mainBackground.png"
+                    src="/images/mainBackground.png"
                     alt="Main background"
                     fill
                     priority
