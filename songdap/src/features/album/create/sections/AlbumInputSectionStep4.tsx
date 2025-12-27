@@ -9,7 +9,7 @@ import {
   responsive,
   COLORS,
   FONTS,
-} from "./constants";
+} from "../constants";
 
 const COLOR_OPTIONS = [
   { label: "흰색", value: "#ffffff" },

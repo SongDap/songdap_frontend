@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/shared/ui";
-import { SPACING, responsive, COLORS } from "./constants";
+import { SPACING, responsive, COLORS } from "../constants";
 
 interface AlbumButtonSectionProps {
   onNextClick?: () => void;

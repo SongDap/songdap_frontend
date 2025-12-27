@@ -5,7 +5,7 @@ import { HiLockClosed, HiLockOpen } from "react-icons/hi2";
 import { FaComment, FaLink } from "react-icons/fa";
 import LP from "@/shared/ui/LP";
 import { AlbumCoverWithLP } from "@/shared/ui";
-import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_STYLE, responsive } from "./constants";
+import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_STYLE, responsive } from "../constants";
 
 interface AlbumAreaProps {
   albumName?: string;
