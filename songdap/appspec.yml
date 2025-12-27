@@ -1,0 +1,17 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /var/www/frontend
+    overwrite: yes
+
+permissions:
+  - object: /var/www/frontend
+    owner: ubuntu
+    group: ubuntu
+
+hooks:
+  AfterInstall:
+    - location: scripts/deploy-frontend.sh
+      timeout: 60
+      runas: root
