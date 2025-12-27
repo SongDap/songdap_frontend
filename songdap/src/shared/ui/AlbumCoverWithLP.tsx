@@ -3,6 +3,12 @@
 import Image from "next/image";
 import LP from "./LP";
 
+// 폰트 상수
+const FONTS = {
+  KYOBO_HANDWRITING: 'var(--font-kyobo-handwriting)',
+  CAFE24_PROSLIM: 'var(--font-cafe24-proslim)',
+} as const;
+
 interface AlbumCoverWithLPProps {
   coverImageUrl?: string;
   coverColor?: string;
@@ -10,6 +16,11 @@ interface AlbumCoverWithLPProps {
   lpCircleImageUrl?: string;
   lpSize?: number;
   coverSize?: number;
+  albumName?: string;
+  tag?: string;
+  nickname?: string;
+  date?: string;
+  showCoverText?: boolean;
 }
 
 export default function AlbumCoverWithLP({
@@ -19,6 +30,11 @@ export default function AlbumCoverWithLP({
   lpCircleImageUrl,
   lpSize = 225,
   coverSize = 250,
+  albumName,
+  tag,
+  nickname,
+  date,
+  showCoverText = false,
 }: AlbumCoverWithLPProps) {
   // 앨범 커버의 왼쪽 끝을 기준으로 위치 조정
   // 앨범 커버의 오른쪽 끝이 LP의 중심에 오도록 위치 계산
@@ -74,27 +90,202 @@ export default function AlbumCoverWithLP({
           border: "2.5px solid #000",
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: showCoverText ? "flex-start" : "center",
           zIndex: 10,
+          padding: showCoverText ? `${coverSize * 0.08}px ${coverSize * 0.06}px` : 0,
+          boxSizing: "border-box",
+          overflow: "hidden",
         }}
       >
         {coverImageUrl ? (
-          <Image
-            src={coverImageUrl}
-            alt="Album cover"
-            width={coverSize}
-            height={coverSize}
-            className="w-full h-full object-cover"
-          />
+          <>
+            <Image
+              src={coverImageUrl}
+              alt="Album cover"
+              width={coverSize}
+              height={coverSize}
+              className="w-full h-full object-cover"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                zIndex: 0,
+              }}
+            />
+            {showCoverText && (
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: 1,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
+                {/* 상단: 태그 */}
+                {tag && (
+                  <div
+                    style={{
+                      alignSelf: "flex-start",
+                      padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
+                      border: "2px solid #000",
+                      borderRadius: `${coverSize * 0.04}px`,
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      fontFamily: FONTS.KYOBO_HANDWRITING,
+                      fontSize: `${coverSize * 0.08}px`,
+                      color: "#000",
+                    }}
+                  >
+                    {tag}
+                  </div>
+                )}
+                
+                {/* 하단: 앨범명, 닉네임, 날짜 */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: `${coverSize * 0.02}px`,
+                    width: "100%",
+                  }}
+                >
+                  {albumName && (
+                    <div
+                      style={{
+                        fontFamily: FONTS.KYOBO_HANDWRITING,
+                        fontSize: `${coverSize * 0.12}px`,
+                        color: "#000",
+                        fontWeight: "bold",
+                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {albumName}
+                    </div>
+                  )}
+                  {nickname && (
+                    <div
+                      style={{
+                        fontFamily: FONTS.CAFE24_PROSLIM,
+                        fontSize: `${coverSize * 0.07}px`,
+                        color: "#000",
+                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
+                      }}
+                    >
+                      {nickname}
+                    </div>
+                  )}
+                  {date && (
+                    <div
+                      style={{
+                        fontFamily: FONTS.CAFE24_PROSLIM,
+                        fontSize: `${coverSize * 0.06}px`,
+                        color: "#666",
+                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
+                      }}
+                    >
+                      {date}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: coverColor,
-            }}
-          />
+          <>
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: coverColor,
+                position: "relative",
+              }}
+            />
+            {showCoverText && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  padding: `${coverSize * 0.08}px ${coverSize * 0.06}px`,
+                  boxSizing: "border-box",
+                }}
+              >
+                {/* 상단: 태그 */}
+                {tag && (
+                  <div
+                    style={{
+                      alignSelf: "flex-start",
+                      padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
+                      border: "2px solid #000",
+                      borderRadius: `${coverSize * 0.04}px`,
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      fontFamily: FONTS.KYOBO_HANDWRITING,
+                      fontSize: `${coverSize * 0.08}px`,
+                      color: "#000",
+                    }}
+                  >
+                    {tag}
+                  </div>
+                )}
+                
+                {/* 하단: 앨범명, 닉네임, 날짜 */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: `${coverSize * 0.02}px`,
+                    width: "100%",
+                  }}
+                >
+                  {albumName && (
+                    <div
+                      style={{
+                        fontFamily: FONTS.KYOBO_HANDWRITING,
+                        fontSize: `${coverSize * 0.12}px`,
+                        color: "#000",
+                        fontWeight: "bold",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {albumName}
+                    </div>
+                  )}
+                  {nickname && (
+                    <div
+                      style={{
+                        fontFamily: FONTS.CAFE24_PROSLIM,
+                        fontSize: `${coverSize * 0.07}px`,
+                        color: "#000",
+                      }}
+                    >
+                      {nickname}
+                    </div>
+                  )}
+                  {date && (
+                    <div
+                      style={{
+                        fontFamily: FONTS.CAFE24_PROSLIM,
+                        fontSize: `${coverSize * 0.06}px`,
+                        color: "#666",
+                      }}
+                    >
+                      {date}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

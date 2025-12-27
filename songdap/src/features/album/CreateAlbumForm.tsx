@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { AlbumArea, AlbumButtonSection, AlbumInputSection, AlbumInputSectionStep2, AlbumInputSectionStep3, AlbumInputSectionStep4 } from "@/features/album/create";
+import { useRouter } from "next/navigation";
+import { AlbumArea, AlbumButtonSection, AlbumInputSection, AlbumInputSectionStep2, AlbumInputSectionStep3, AlbumInputSectionStep4, AlbumShareSection } from "@/features/album/create";
 import { COLORS, FONTS, responsive, ALBUM_AREA } from "@/features/album/create/constants";
+import { ROUTES } from "@/app/lib/routes";
 
 // 제목 관련 상수
 const TITLE_TEXT_STEP1 = "앨범의 제목과 설명을";
@@ -13,6 +15,8 @@ const TITLE_TEXT_STEP3 = "앨범의 세부 정보를";
 const TITLE_SUBTEXT_STEP3 = "입력해주세요~";
 const TITLE_TEXT_STEP4 = "앨범 커버를";
 const TITLE_SUBTEXT_STEP4 = "만들어주세요~";
+const TITLE_TEXT_STEP5 = "발매한 앨범을";
+const TITLE_SUBTEXT_STEP5 = "공유해주세요~";
 const TITLE_SPACING = 40; // 제목과 앨범 영역 간격
 const INPUT_SECTION_SPACING = 20; // 앨범 영역과 입력 섹션 간격
 
@@ -24,6 +28,7 @@ const FONT_SIZE_ITERATIONS = 30;
 const FONT_SIZE_TOLERANCE = 1;
 
 export default function CreateAlbumForm() {
+  const router = useRouter();
   const [step, setStep] = useState(1); // 단계 관리
   const [maxStepReached, setMaxStepReached] = useState(1); // 도달한 최대 단계
   const [albumName, setAlbumName] = useState("");
@@ -44,8 +49,8 @@ export default function CreateAlbumForm() {
   const isButtonEnabled = albumName.trim().length > 0;
 
   // step에 따른 제목 텍스트
-  const titleText = step === 1 ? TITLE_TEXT_STEP1 : step === 2 ? TITLE_TEXT_STEP2 : step === 3 ? TITLE_TEXT_STEP3 : TITLE_TEXT_STEP4;
-  const titleSubtext = step === 1 ? TITLE_SUBTEXT_STEP1 : step === 2 ? TITLE_SUBTEXT_STEP2 : step === 3 ? TITLE_SUBTEXT_STEP3 : TITLE_SUBTEXT_STEP4;
+  const titleText = step === 1 ? TITLE_TEXT_STEP1 : step === 2 ? TITLE_TEXT_STEP2 : step === 3 ? TITLE_TEXT_STEP3 : step === 4 ? TITLE_TEXT_STEP4 : TITLE_TEXT_STEP5;
+  const titleSubtext = step === 1 ? TITLE_SUBTEXT_STEP1 : step === 2 ? TITLE_SUBTEXT_STEP2 : step === 3 ? TITLE_SUBTEXT_STEP3 : step === 4 ? TITLE_SUBTEXT_STEP4 : TITLE_SUBTEXT_STEP5;
 
   useEffect(() => {
     const updateFontSize = () => {
@@ -56,12 +61,14 @@ export default function CreateAlbumForm() {
         TITLE_TEXT_STEP1.length,
         TITLE_TEXT_STEP2.length,
         TITLE_TEXT_STEP3.length,
-        TITLE_TEXT_STEP4.length
+        TITLE_TEXT_STEP4.length,
+        TITLE_TEXT_STEP5.length
       );
       const baseText = longestText === TITLE_TEXT_STEP1.length ? TITLE_TEXT_STEP1 :
                        longestText === TITLE_TEXT_STEP2.length ? TITLE_TEXT_STEP2 :
                        longestText === TITLE_TEXT_STEP3.length ? TITLE_TEXT_STEP3 :
-                       TITLE_TEXT_STEP4;
+                       longestText === TITLE_TEXT_STEP4.length ? TITLE_TEXT_STEP4 :
+                       TITLE_TEXT_STEP5;
       
       const targetWidth = serviceFrameRef.current.offsetWidth * TARGET_WIDTH_RATIO;
       const tempElement = document.createElement('div');
@@ -238,7 +245,7 @@ export default function CreateAlbumForm() {
               songCount={songCount}
               onSongCountChange={setSongCount}
             />
-          ) : (
+          ) : step === 4 ? (
             <AlbumInputSectionStep4
               lpColor={lpColor}
               onLpColorChange={setLpColor}
@@ -246,6 +253,8 @@ export default function CreateAlbumForm() {
               onCoverImageUrlChange={setCoverImageUrl}
               onCoverColorChange={setCoverColor}
             />
+          ) : (
+            <AlbumShareSection />
           )}
         </div>
         
@@ -271,6 +280,9 @@ export default function CreateAlbumForm() {
               } else if (step === 4) {
                 // 발매 확인 모달 열기
                 setIsReleaseModalOpen(true);
+              } else if (step === 5) {
+                // 완료 버튼 클릭 시 앨범 저장소 페이지로 이동
+                router.push(ROUTES.ALBUM.BASE);
               } else {
                 // TODO: 앨범 생성 로직 구현
                 console.log('앨범 생성');
@@ -285,7 +297,7 @@ export default function CreateAlbumForm() {
               }
             }}
             nextDisabled={step === 1 && !isButtonEnabled}
-            nextText={step === 4 ? "발매" : "다음"}
+            nextText={step === 4 ? "발매" : step === 5 ? "완료" : "다음"}
           />
         </div>
       </div>
@@ -362,8 +374,8 @@ export default function CreateAlbumForm() {
               </button>
               <button
                 onClick={() => {
-                  // TODO: 앨범 발매 로직 구현
-                  console.log('앨범 발매');
+                  // 앨범 발매 후 공유 페이지로 이동
+                  setStep(5);
                   setIsReleaseModalOpen(false);
                 }}
                 style={{
