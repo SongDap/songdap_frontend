@@ -9,6 +9,7 @@ interface ButtonProps {
   disabled?: boolean;
   outerColor?: string;
   innerColor?: string;
+  style?: React.CSSProperties;
 }
 
 export default function Button({ 
@@ -17,7 +18,8 @@ export default function Button({
   className = "",
   disabled = false,
   outerColor,
-  innerColor
+  innerColor,
+  style
 }: ButtonProps) {
   return (
     <button
@@ -34,24 +36,13 @@ export default function Button({
         alignItems: 'center',
         justifyContent: 'center',
         cursor: disabled ? 'not-allowed' : 'pointer',
+        fontFamily: 'var(--font-cafe24-proslim)',
+        fontSize: 'calc(35 * 100vh / 1024 * 96 / 90)',
+        color: '#000000',
+        ...style,
       }}
     >
-      {/* 안쪽 네모 */}
-      <div
-        style={{
-          width: 'calc(682 * 100% / 704)',
-          height: 'calc(74 * 100vh / 1024)',
-          borderRadius: '4px',
-          backgroundColor: innerColor || 'transparent',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-galmuri9)',
-          fontSize: 'calc(35 * 100vh / 1024 * 96 / 90)',
-        }}
-      >
-        {children}
-      </div>
+      {children}
     </button>
   );
 }
