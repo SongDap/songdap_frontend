@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { HiLockClosed, HiLockOpen } from "react-icons/hi2";
 import LP from "@/shared/ui/LP";
-import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_STYLE } from "./constants";
+import { AlbumCoverWithLP } from "@/shared/ui";
+import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_STYLE, responsive } from "./constants";
 
 interface AlbumAreaProps {
   albumName?: string;
@@ -14,6 +15,10 @@ interface AlbumAreaProps {
   isPublic?: string;
   songCount?: number;
   step?: number;
+  maxStepReached?: number;
+  lpColor?: string;
+  coverColor?: string;
+  coverImageUrl?: string;
 }
 
 const LP_SPACING = SPACING.LP_SPACING;
@@ -27,6 +32,10 @@ export default function AlbumArea({
   isPublic = "",
   songCount = 15,
   step = 1,
+  maxStepReached = 1,
+  lpColor = COLORS.WHITE,
+  coverColor = COLORS.WHITE,
+  coverImageUrl,
 }: AlbumAreaProps) {
   const [lpSize, setLpSize] = useState(250);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -106,7 +115,11 @@ export default function AlbumArea({
     songCount ?? 15,
   ]);
 
-  const hasContent = albumName.trim().length > 0 || albumDescription.trim().length > 0;
+  const hasContent = albumName.trim().length > 0 || 
+                     albumDescription.trim().length > 0 || 
+                     (category === "mood" && selectedTag && selectedTag !== "+ 직접 입력") || 
+                     (category === "situation" && situationValue) ||
+                     (maxStepReached >= 3 && (isPublic || songCount > 0));
   const shouldScroll = contentHeight > containerHeight && containerHeight > 0;
 
   return (
@@ -131,11 +144,22 @@ export default function AlbumArea({
           height: ALBUM_AREA.LP_SIZE,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: maxStepReached >= 4 ? 'flex-start' : 'center',
           zIndex: 1,
         }}
       >
-        <LP size={lpSize} circleColor={COLORS.WHITE} />
+        {maxStepReached >= 4 ? (
+          <AlbumCoverWithLP
+            coverImageUrl={coverImageUrl}
+            coverColor={coverColor}
+            lpCircleColor={coverColor}
+            lpCircleImageUrl={coverImageUrl}
+            lpSize={Math.round(lpSize * (225 / 250))}
+            coverSize={lpSize}
+          />
+        ) : (
+          <LP size={lpSize} circleColor={lpColor} />
+        )}
       </div>
 
       <div
@@ -143,9 +167,13 @@ export default function AlbumArea({
         className="album-area-scroll"
         style={{
           position: 'absolute',
-          left: `calc(${SPACING.SIDE_PADDING} + ${ALBUM_AREA.LP_SIZE} + ${LP_SPACING})`,
+          left: maxStepReached >= 4
+            ? `calc(${SPACING.SIDE_PADDING} + ${lpSize}px + ${lpSize * (225 / 250) / 2}px + ${responsive.min(10)})`
+            : `calc(${SPACING.SIDE_PADDING} + ${ALBUM_AREA.LP_SIZE} + ${LP_SPACING})`,
           top: SPACING.LP_PADDING,
-          width: `calc(100% - ${SPACING.SIDE_PADDING} * 2 - ${ALBUM_AREA.LP_SIZE} - ${LP_SPACING})`,
+          width: maxStepReached >= 4
+            ? `calc(100% - ${SPACING.SIDE_PADDING} * 2 - ${lpSize}px - ${lpSize * (225 / 250) / 2}px - ${responsive.min(10)})`
+            : `calc(100% - ${SPACING.SIDE_PADDING} * 2 - ${ALBUM_AREA.LP_SIZE} - ${LP_SPACING})`,
           height: ALBUM_AREA.LP_SIZE,
           overflowY: shouldScroll ? 'auto' : 'hidden',
           overflowX: 'hidden',
@@ -153,7 +181,7 @@ export default function AlbumArea({
       >
         {!hasContent ? (
           <div style={MESSAGE_STYLE}>
-            <div>앨범명과 설명을</div>
+            <div>앨범 정보를</div>
             <div>채워주세요</div>
           </div>
         ) : (
@@ -207,7 +235,7 @@ export default function AlbumArea({
                 앨범설명: {albumDescription}
               </div>
             )}
-            {step === 3 && (
+            {maxStepReached >= 3 && (
               <div
                 style={{
                   display: 'flex',
