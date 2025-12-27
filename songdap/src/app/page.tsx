@@ -1,7 +1,5 @@
 import Image from "next/image";
-import LandingHeader from "@/features/landing/LandingHeader";
-import LandingMain from "@/features/landing/LandingMain";
-import LandingFooter from "@/features/landing/LandingFooter";
+import { LandingHeader, LandingMain, LandingFooter } from "@/features/landing";
 
 export default function Page() {
     return (
@@ -9,7 +7,7 @@ export default function Page() {
 
             <div className="relative min-h-screen">
                 <Image
-                    src="/mainBackground.png"
+                    src="/images/mainBackground.png"
                     alt="Main background"
                     fill
                     priority

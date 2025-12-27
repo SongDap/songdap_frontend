@@ -4,7 +4,7 @@ export default function LandingFooter() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-10">
       <Image
-        src="/kakaoLoginMain.png"
+        src="/images/kakaoLoginMain.png"
         alt="kakaoLogin"
         width={360}
         height={96}
@@ -19,3 +19,4 @@ export default function LandingFooter() {
     </main>
   );
 }
+
