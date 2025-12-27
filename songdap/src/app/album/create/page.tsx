@@ -24,7 +24,7 @@ export default function AlbumCreatePage() {
         <div className="relative z-10 flex min-h-screen flex-col items-center p-4">
           {/* 서비스 영역 프레임 */}
           <div 
-            className="w-full max-w-[768px] bg-[#fefaf0] relative service-frame"
+            className="w-full max-w-[768px] bg-[#fefaf0] relative service-frame service-frame-scroll"
           >
             {/* 제목 텍스트 */}
             <div 

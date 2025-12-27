@@ -19,7 +19,7 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
   const [lpSize, setLpSize] = useState(250);
   const [containerHeight, setContainerHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const textScrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,25 +38,24 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
   }, []);
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
+    const textContainer = textScrollRef.current;
     const content = contentRef.current;
-    if (!container) return;
+    if (!textContainer) return;
 
     let rafId: number | null = null;
 
     const updateScroll = () => {
-      setContainerHeight(container.clientHeight);
+      setContainerHeight(textContainer.clientHeight);
       if (content) {
         const rect = content.getBoundingClientRect();
-        const topOffset = parseFloat(getComputedStyle(content).top) || 0;
-        const totalHeight = topOffset + rect.height;
+        const totalHeight = rect.height;
         setContentHeight(totalHeight);
         
         // 스크롤 범위를 넘은 영역까지만 제한
-        if (totalHeight > container.clientHeight) {
-          const maxScroll = totalHeight - container.clientHeight;
-          if (container.scrollTop > maxScroll) {
-            container.scrollTop = maxScroll;
+        if (totalHeight > textContainer.clientHeight) {
+          const maxScroll = totalHeight - textContainer.clientHeight;
+          if (textContainer.scrollTop > maxScroll) {
+            textContainer.scrollTop = maxScroll;
           }
         }
       }
@@ -72,7 +71,7 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
     };
 
     updateScroll();
-    container.addEventListener('scroll', handleScroll, { passive: true });
+    textContainer.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', updateScroll);
     
     const observer = new ResizeObserver(updateScroll);
@@ -84,7 +83,7 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
       }
-      container.removeEventListener('scroll', handleScroll);
+      textContainer.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateScroll);
       observer.disconnect();
     };
@@ -93,93 +92,109 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
   const hasContent = albumName.trim().length > 0 || albumDescription.trim().length > 0;
   const messageLeft = `calc(${LP_SIZE_STYLE} + ${LP_SPACING})`;
   const contentMaxWidth = `calc(100% - ${LP_SIZE_STYLE} - ${LP_SPACING})`;
-  const lpBaseTop = containerHeight > 0 ? (containerHeight / 2) - (lpSize / 2) : 0;
-  const shouldScroll = contentHeight > containerHeight && containerHeight > 0;
   const albumAreaHeight = `calc(${LP_SIZE_STYLE} + ${LP_PADDING})`;
+  const shouldScroll = contentHeight > containerHeight && containerHeight > 0;
 
   return (
     <div
-      ref={scrollContainerRef}
-      className="album-area-scroll"
       style={{
         position: 'relative',
         width: '100%',
         height: albumAreaHeight,
-        overflowY: shouldScroll ? 'auto' : 'hidden',
       }}
     >
-      {/* LP */}
+      {/* LP - 고정 위치 */}
       <div
         style={{
           position: 'absolute',
           left: '0',
-          top: containerHeight > 0 ? `${lpBaseTop}px` : `calc(50% - ${LP_SIZE_STYLE} / 2)`,
+          top: `calc(50% - ${LP_SIZE_STYLE} / 2)`,
           width: LP_SIZE_STYLE,
           height: LP_SIZE_STYLE,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          zIndex: 1,
         }}
       >
         <LP size={lpSize} circleColor="#ffffff" />
       </div>
 
-      {/* 메시지 또는 앨범명/설명 */}
-      {!hasContent ? (
-        <div
-          className="font-[var(--font-galmuri9)]"
-          style={{
-            position: 'absolute',
-            left: messageLeft,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            padding: '10px',
-            border: '1px solid #000000',
-            borderRadius: '10px',
-            backgroundColor: '#ffffff',
-            fontSize: MESSAGE_TEXT_SIZE,
-            maxWidth: `calc(100% - ${LP_SIZE_STYLE} - ${LP_SPACING} - 20px)`,
-            wordWrap: 'break-word',
-            textAlign: 'center',
-          }}
-        >
-          <div>앨범명과 설명을</div>
-          <div style={{ paddingLeft: MESSAGE_TEXT_SIZE }}>채워주세요</div>
-        </div>
-      ) : (
-        <div
-          ref={contentRef}
-          style={{
-            position: 'absolute',
-            left: messageLeft,
-            top: '0',
-            maxWidth: contentMaxWidth,
-            wordWrap: 'break-word',
-          }}
-        >
-          {albumName.trim().length > 0 && (
-            <div
-              style={{
-                fontSize: ALBUM_TEXT_SIZE,
-                fontFamily: 'var(--font-kyobo-handwriting)',
-                marginBottom: 'calc(10 * 100vh / 1024)',
-              }}
-            >
-              앨범명: {albumName}
-            </div>
-          )}
-          {albumDescription.trim().length > 0 && (
-            <div
-              style={{
-                fontSize: ALBUM_TEXT_SIZE,
-                fontFamily: 'var(--font-kyobo-handwriting)',
-              }}
-            >
-              앨범설명: {albumDescription}
-            </div>
-          )}
-        </div>
-      )}
+      {/* 텍스트 영역 - 스크롤 가능 */}
+      <div
+        ref={textScrollRef}
+        className="album-area-scroll"
+        style={{
+          position: 'absolute',
+          left: messageLeft,
+          top: '0',
+          width: contentMaxWidth,
+          height: '100%',
+          overflowY: shouldScroll ? 'auto' : 'hidden',
+          overflowX: 'hidden',
+        }}
+      >
+        {!hasContent ? (
+          <div
+            className="font-[var(--font-galmuri9)]"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '0',
+              right: '0',
+              transform: 'translateY(-50%)',
+              padding: '10px',
+              border: '1px solid #000000',
+              borderRadius: '10px',
+              backgroundColor: '#ffffff',
+              fontSize: MESSAGE_TEXT_SIZE,
+              maxWidth: '100%',
+              maxHeight: '100%',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+              whiteSpace: 'normal',
+              textAlign: 'center',
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              lineHeight: '1.4',
+              boxSizing: 'border-box',
+            }}
+          >
+            앨범명과 설명을 채워주세요
+          </div>
+        ) : (
+          <div
+            ref={contentRef}
+            style={{
+              wordWrap: 'break-word',
+            }}
+          >
+            {albumName.trim().length > 0 && (
+              <div
+                style={{
+                  fontSize: ALBUM_TEXT_SIZE,
+                  fontFamily: 'var(--font-kyobo-handwriting)',
+                  marginBottom: 'calc(10 * 100vh / 1024)',
+                }}
+              >
+                앨범명: {albumName}
+              </div>
+            )}
+            {albumDescription.trim().length > 0 && (
+              <div
+                style={{
+                  fontSize: ALBUM_TEXT_SIZE,
+                  fontFamily: 'var(--font-kyobo-handwriting)',
+                }}
+              >
+                앨범설명: {albumDescription}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
