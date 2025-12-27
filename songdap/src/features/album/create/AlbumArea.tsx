@@ -7,11 +7,20 @@ import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_ST
 interface AlbumAreaProps {
   albumName?: string;
   albumDescription?: string;
+  category?: string;
+  selectedTag?: string;
+  situationValue?: string;
 }
 
 const LP_SPACING = SPACING.LP_SPACING;
 
-export default function AlbumArea({ albumName = "", albumDescription = "" }: AlbumAreaProps) {
+export default function AlbumArea({ 
+  albumName = "", 
+  albumDescription = "",
+  category = "",
+  selectedTag = "",
+  situationValue = "",
+}: AlbumAreaProps) {
   const [lpSize, setLpSize] = useState(250);
   const [containerHeight, setContainerHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
@@ -134,6 +143,29 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
           </div>
         ) : (
           <div ref={contentRef} style={TEXT_STYLES.WORD_BREAK}>
+            {((category === "mood" && selectedTag && selectedTag !== "+ 직접 입력") || (category === "situation" && situationValue)) && (
+              <div
+                style={{
+                  marginBottom: 'calc(10 * 100vh / 1024)',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '5px 10px',
+                    border: '3px solid #000000',
+                    borderRadius: '20px',
+                    backgroundColor: COLORS.BUTTON_ENABLED_OUTER,
+                    fontFamily: FONTS.KYOBO_HANDWRITING,
+                    fontSize: 'calc(25 * min(100vw, 768px) / 768)',
+                    color: COLORS.BLACK,
+                    boxSizing: 'border-box',
+                    display: 'inline-block',
+                  }}
+                >
+                  {category === "mood" ? selectedTag : situationValue}
+                </div>
+              </div>
+            )}
             {albumName.trim().length > 0 && (
               <div
                 style={{

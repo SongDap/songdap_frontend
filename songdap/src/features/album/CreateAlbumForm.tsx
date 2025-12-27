@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { AlbumArea, AlbumButtonSection, AlbumInputSection } from "@/features/album/create";
+import { AlbumArea, AlbumButtonSection, AlbumInputSection, AlbumInputSectionStep2 } from "@/features/album/create";
 import { COLORS, FONTS, responsive, ALBUM_AREA } from "@/features/album/create/constants";
 
 // 제목 관련 상수
-const TITLE_TEXT = "앨범의 제목과 설명을";
-const TITLE_SUBTEXT = "알려주세요~";
+const TITLE_TEXT_STEP1 = "앨범의 제목과 설명을";
+const TITLE_SUBTEXT_STEP1 = "알려주세요~";
+const TITLE_TEXT_STEP2 = "앨범 카테고리를";
+const TITLE_SUBTEXT_STEP2 = "만들어 주세요~";
 const TITLE_SPACING = 40; // 제목과 앨범 영역 간격
 
 // 폰트 크기 계산 상수
@@ -20,11 +22,18 @@ export default function CreateAlbumForm() {
   const [step, setStep] = useState(1); // 단계 관리
   const [albumName, setAlbumName] = useState("");
   const [albumDescription, setAlbumDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [selectedTag, setSelectedTag] = useState("");
+  const [situationValue, setSituationValue] = useState("");
   const [titleFontSize, setTitleFontSize] = useState(60);
   const [titleHeight, setTitleHeight] = useState(0);
   const titleRef = useRef<HTMLDivElement>(null);
   const serviceFrameRef = useRef<HTMLDivElement>(null);
   const isButtonEnabled = albumName.trim().length > 0;
+
+  // step에 따른 제목 텍스트
+  const titleText = step === 1 ? TITLE_TEXT_STEP1 : TITLE_TEXT_STEP2;
+  const titleSubtext = step === 1 ? TITLE_SUBTEXT_STEP1 : TITLE_SUBTEXT_STEP2;
 
   useEffect(() => {
     const updateFontSize = () => {
@@ -39,10 +48,10 @@ export default function CreateAlbumForm() {
         fontFamily: FONTS.DUNG_GEUN_MO,
         fontWeight: '900',
       });
-      tempElement.textContent = TITLE_TEXT;
+      tempElement.textContent = titleText;
       document.body.appendChild(tempElement);
       
-      let fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, (targetWidth / TITLE_TEXT.length) * 1.2));
+      let fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, (targetWidth / titleText.length) * 1.2));
       let step = fontSize / 4;
       let direction = 1;
       
@@ -104,7 +113,7 @@ export default function CreateAlbumForm() {
       resizeObserver.disconnect();
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [step, titleText]);
 
   // 앨범 영역 top 위치 계산
   const albumAreaTop = titleHeight > 0 
@@ -141,8 +150,8 @@ export default function CreateAlbumForm() {
             whiteSpace: 'normal',
           }}
         >
-          <div>{TITLE_TEXT}</div>
-          <div>{TITLE_SUBTEXT}</div>
+          <div>{titleText}</div>
+          <div>{titleSubtext}</div>
         </div>
         
         <div
@@ -153,7 +162,13 @@ export default function CreateAlbumForm() {
             width: '100%',
           }}
         >
-          <AlbumArea albumName={albumName} albumDescription={albumDescription} />
+          <AlbumArea 
+            albumName={albumName} 
+            albumDescription={albumDescription}
+            category={category}
+            selectedTag={selectedTag}
+            situationValue={situationValue}
+          />
         </div>
         
         <div
@@ -177,10 +192,14 @@ export default function CreateAlbumForm() {
               onAlbumDescriptionChange={setAlbumDescription}
             />
           ) : (
-            <div>
-              {/* TODO: 2단계 입력 섹션 컴포넌트 추가 */}
-              <div>2단계 입력 섹션</div>
-            </div>
+            <AlbumInputSectionStep2
+              category={category}
+              onCategoryChange={setCategory}
+              selectedTag={selectedTag}
+              onTagChange={setSelectedTag}
+              situationValue={situationValue}
+              onSituationChange={setSituationValue}
+            />
           )}
         </div>
         
@@ -210,7 +229,7 @@ export default function CreateAlbumForm() {
               }
             }}
             nextDisabled={step === 1 && !isButtonEnabled}
-            nextText={step === 1 ? "다음" : "완료"}
+            nextText="다음"
           />
         </div>
       </div>

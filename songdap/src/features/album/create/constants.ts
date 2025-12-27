@@ -76,3 +76,51 @@ export const MESSAGE_STYLE = {
   whiteSpace: 'normal' as const,
 } as const;
 
+// 입력창 공통 스타일
+export const INPUT_BOX_STYLE = {
+  width: '100%',
+  border: '3px solid #000000',
+  borderRadius: '10px',
+  backgroundColor: COLORS.WHITE,
+  paddingLeft: responsive.vh(30),
+  paddingRight: responsive.vw(16),
+  paddingTop: responsive.vh(16),
+  paddingBottom: responsive.vh(16),
+  boxSizing: 'border-box' as const,
+} as const;
+
+// 카테고리 입력 박스 스타일
+export const CATEGORY_INPUT_BOX_STYLE = {
+  ...INPUT_BOX_STYLE,
+  display: 'flex',
+  alignItems: 'center',
+} as const;
+
+// 기분 태그 컨테이너 스타일
+export const MOOD_TAG_CONTAINER_STYLE = {
+  ...INPUT_BOX_STYLE,
+  minHeight: responsive.vh(140),
+  overflowY: 'auto' as const,
+} as const;
+
+// 상황 입력창 스타일
+export const SITUATION_INPUT_STYLE = {
+  ...INPUT_BOX_STYLE,
+  fontFamily: FONTS.KYOBO_HANDWRITING,
+  fontSize: TEXT_SIZES.INPUT,
+  outline: 'none',
+  resize: 'none' as const,
+  overflowY: 'auto' as const,
+  color: COLORS.BLACK,
+  height: responsive.vh(80),
+} as const;
+
+// 라벨 스타일
+export const LABEL_STYLE = {
+  fontFamily: FONTS.CAFE24_PROSLIM,
+  fontSize: TEXT_SIZES.LABEL,
+  marginBottom: responsive.vh(6),
+  color: COLORS.BLACK,
+  fontWeight: 'bold' as const,
+} as const;
+
