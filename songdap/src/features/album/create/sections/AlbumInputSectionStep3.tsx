@@ -11,8 +11,8 @@ import {
   SONG_COUNT_INPUT_STYLE,
   SONG_COUNT_TEXT_STYLE,
   responsive,
-} from "./constants";
-import PublicRadioGroup from "./PublicRadioGroup";
+} from "../constants";
+import PublicRadioGroup from "../components/PublicRadioGroup";
 
 interface AlbumInputSectionStep3Props {
   isPublic?: string;

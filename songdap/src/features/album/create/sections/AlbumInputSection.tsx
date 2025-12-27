@@ -1,7 +1,7 @@
 "use client";
 
-import AlbumNameInput from "./AlbumNameInput";
-import AlbumDescriptionInput from "./AlbumDescriptionInput";
+import AlbumNameInput from "../inputs/AlbumNameInput";
+import AlbumDescriptionInput from "../inputs/AlbumDescriptionInput";
 
 interface AlbumInputSectionProps {
   albumName: string;

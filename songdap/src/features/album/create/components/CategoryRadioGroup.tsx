@@ -1,6 +1,6 @@
 "use client";
 
-import { COLORS, FONTS, TEXT_SIZES } from "./constants";
+import { COLORS, FONTS, TEXT_SIZES } from "../constants";
 
 interface CategoryRadioGroupProps {
   value?: string;

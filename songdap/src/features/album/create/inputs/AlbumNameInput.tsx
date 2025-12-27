@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { COLORS, FONTS, TEXT_SIZES, responsive } from "./constants";
+import { COLORS, FONTS, TEXT_SIZES, responsive } from "../constants";
 
 interface AlbumNameInputProps {
   value?: string;
