@@ -25,6 +25,12 @@ const galmuri9 = localFont({
   display: "swap",
 });
 
+const cafe24PROslim = localFont({
+  src: "../../public/fonts/Cafe24PROSlimMax.ttf",
+  variable: "--font-cafe24-proslim",
+  display: "swap",
+});
+
 const dungGeunMo = localFont({
   src: "../../public/fonts/DungGeunMo.ttf",
   variable: "--font-dung-geun-mo",
@@ -50,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${kyoboHandwriting.variable} ${galmuri9.variable} ${dungGeunMo.variable} ${hssaemaeul.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${kyoboHandwriting.variable} ${galmuri9.variable} ${dungGeunMo.variable} ${hssaemaeul.variable} ${cafe24PROslim.variable} antialiased`}
       >
         {children}
       </body>
