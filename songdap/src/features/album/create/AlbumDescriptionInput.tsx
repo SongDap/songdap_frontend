@@ -1,12 +1,48 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { COLORS, FONTS, TEXT_SIZES, responsive } from "./constants";
 
 interface AlbumDescriptionInputProps {
   value?: string;
   onChange?: (value: string) => void;
   maxLength?: number;
 }
+
+const INPUT_STYLE = {
+  width: '100%',
+  border: '3px solid #000000',
+  borderRadius: '10px',
+  backgroundColor: COLORS.WHITE,
+  paddingLeft: responsive.vh(30),
+  paddingRight: responsive.vw(16),
+  paddingTop: responsive.vh(16),
+  paddingBottom: responsive.vh(16),
+  boxSizing: 'border-box' as const,
+  fontFamily: FONTS.KYOBO_HANDWRITING,
+  fontSize: TEXT_SIZES.INPUT,
+  outline: 'none',
+  resize: 'none' as const,
+  overflowY: 'auto' as const,
+  color: COLORS.BLACK,
+};
+
+const LABEL_STYLE = {
+  fontFamily: FONTS.CAFE24_PROSLIM,
+  fontSize: TEXT_SIZES.LABEL,
+  marginBottom: responsive.vh(6),
+  color: COLORS.BLACK,
+  fontWeight: 'bold' as const,
+};
+
+const CHAR_COUNT_STYLE = {
+  position: 'absolute' as const,
+  top: '0',
+  right: '0',
+  fontFamily: FONTS.CAFE24_PROSLIM,
+  fontSize: TEXT_SIZES.LABEL,
+  color: COLORS.BLACK,
+};
 
 export default function AlbumDescriptionInput({ 
   value = "", 
@@ -29,52 +65,16 @@ export default function AlbumDescriptionInput({
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* 라벨 */}
-      <div
-        className="font-[var(--font-galmuri9)] font-bold"
-        style={{
-          fontSize: 'calc(30 * 100vh / 1024)',
-          marginBottom: 'calc(6 * 100vh / 1024)',
-        }}
-      >
-        앨범설명
-      </div>
-
-      {/* 글자 제한 표시 */}
-      <div
-        className="font-[var(--font-galmuri9)]"
-        style={{
-          position: 'absolute',
-          top: '0',
-          right: '0',
-          fontSize: 'calc(30 * 100vh / 1024)',
-        }}
-      >
-        {inputValue.length}/{maxLength}
-      </div>
-
-      {/* 입력창 */}
+      <div style={LABEL_STYLE}>앨범설명</div>
+      <div style={CHAR_COUNT_STYLE}>{inputValue.length}/{maxLength}</div>
       <textarea
         className="album-description-scroll"
         value={inputValue}
         onChange={handleChange}
         maxLength={maxLength}
         style={{
-          width: '100%',
-          height: 'calc(140 * 100vh / 1024)',
-          border: '3px solid #000000',
-          borderRadius: '10px',
-          backgroundColor: '#ffffff',
-          paddingLeft: 'calc(30 * 100vh / 1024)',
-          paddingRight: 'calc(16 * 100vw / 768)',
-          paddingTop: 'calc(16 * 100vh / 1024)',
-          paddingBottom: 'calc(16 * 100vh / 1024)',
-          boxSizing: 'border-box',
-          fontFamily: 'var(--font-kyobo-handwriting)',
-          fontSize: 'calc(30 * 100vh / 1024)',
-          outline: 'none',
-          resize: 'none',
-          overflowY: 'auto',
+          ...INPUT_STYLE,
+          height: responsive.vh(140),
         }}
       />
     </div>

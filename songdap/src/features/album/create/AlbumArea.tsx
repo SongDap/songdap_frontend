@@ -2,18 +2,14 @@
 
 import { useEffect, useState, useRef } from "react";
 import LP from "@/shared/ui/LP";
+import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_STYLE } from "./constants";
 
 interface AlbumAreaProps {
   albumName?: string;
   albumDescription?: string;
 }
 
-// 상수 정의
-const MESSAGE_TEXT_SIZE = 'calc(30 * min(100vw, 768px) / 768)';
-const LP_SIZE_STYLE = 'clamp(calc(200 * 100vh / 1024), calc(250 * 100vh / 1024), calc(300 * 100vh / 1024))';
-const ALBUM_TEXT_SIZE = 'calc(35 * min(100vw, 768px) / 768)';
-const LP_PADDING = 'calc(10 * 100vh / 1024)';
-const LP_SPACING = 'calc(30 * min(100vw, 768px) / 768)';
+const LP_SPACING = SPACING.LP_SPACING;
 
 export default function AlbumArea({ albumName = "", albumDescription = "" }: AlbumAreaProps) {
   const [lpSize, setLpSize] = useState(250);
@@ -22,14 +18,11 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
   const textScrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // LP 크기 업데이트
   useEffect(() => {
     const updateLpSize = () => {
-      const vh = window.innerHeight;
-      const baseSize = (250 * vh) / 1024;
-      const minSize = (200 * vh) / 1024;
-      const maxSize = (300 * vh) / 1024;
-      const calculatedSize = Math.max(minSize, Math.min(maxSize, baseSize));
-      setLpSize(Math.round(calculatedSize));
+      const albumAreaHeight = (270 * window.innerHeight) / 1024;
+      setLpSize(Math.round(albumAreaHeight - 20));
     };
 
     updateLpSize();
@@ -37,6 +30,7 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
     return () => window.removeEventListener('resize', updateLpSize);
   }, []);
 
+  // 텍스트 스크롤 관리
   useEffect(() => {
     const textContainer = textScrollRef.current;
     const content = contentRef.current;
@@ -47,11 +41,10 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
     const updateScroll = () => {
       setContainerHeight(textContainer.clientHeight);
       if (content) {
-        const rect = content.getBoundingClientRect();
-        const totalHeight = rect.height;
+        const totalHeight = content.getBoundingClientRect().height;
         setContentHeight(totalHeight);
         
-        // 스크롤 범위를 넘은 영역까지만 제한
+        // 스크롤 범위 제한
         if (totalHeight > textContainer.clientHeight) {
           const maxScroll = totalHeight - textContainer.clientHeight;
           if (textContainer.scrollTop > maxScroll) {
@@ -90,9 +83,6 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
   }, [albumName, albumDescription]);
 
   const hasContent = albumName.trim().length > 0 || albumDescription.trim().length > 0;
-  const messageLeft = `calc(${LP_SIZE_STYLE} + ${LP_SPACING})`;
-  const contentMaxWidth = `calc(100% - ${LP_SIZE_STYLE} - ${LP_SPACING})`;
-  const albumAreaHeight = `calc(${LP_SIZE_STYLE} + ${LP_PADDING})`;
   const shouldScroll = contentHeight > containerHeight && containerHeight > 0;
 
   return (
@@ -100,83 +90,58 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
       style={{
         position: 'relative',
         width: '100%',
-        height: albumAreaHeight,
+        height: ALBUM_AREA.HEIGHT,
+        paddingTop: SPACING.LP_PADDING,
+        paddingBottom: SPACING.LP_PADDING,
+        paddingLeft: SPACING.SIDE_PADDING,
+        paddingRight: SPACING.SIDE_PADDING,
+        boxSizing: 'border-box',
       }}
     >
-      {/* LP - 고정 위치 */}
       <div
         style={{
           position: 'absolute',
-          left: '0',
-          top: `calc(50% - ${LP_SIZE_STYLE} / 2)`,
-          width: LP_SIZE_STYLE,
-          height: LP_SIZE_STYLE,
+          left: SPACING.SIDE_PADDING,
+          top: SPACING.LP_PADDING,
+          width: ALBUM_AREA.LP_SIZE,
+          height: ALBUM_AREA.LP_SIZE,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1,
         }}
       >
-        <LP size={lpSize} circleColor="#ffffff" />
+        <LP size={lpSize} circleColor={COLORS.WHITE} />
       </div>
 
-      {/* 텍스트 영역 - 스크롤 가능 */}
       <div
         ref={textScrollRef}
         className="album-area-scroll"
         style={{
           position: 'absolute',
-          left: messageLeft,
-          top: '0',
-          width: contentMaxWidth,
-          height: '100%',
+          left: `calc(${SPACING.SIDE_PADDING} + ${ALBUM_AREA.LP_SIZE} + ${LP_SPACING})`,
+          top: SPACING.LP_PADDING,
+          width: `calc(100% - ${SPACING.SIDE_PADDING} * 2 - ${ALBUM_AREA.LP_SIZE} - ${LP_SPACING})`,
+          height: ALBUM_AREA.LP_SIZE,
           overflowY: shouldScroll ? 'auto' : 'hidden',
           overflowX: 'hidden',
         }}
       >
         {!hasContent ? (
-          <div
-            className="font-[var(--font-galmuri9)]"
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '0',
-              right: '0',
-              transform: 'translateY(-50%)',
-              padding: '10px',
-              border: '1px solid #000000',
-              borderRadius: '10px',
-              backgroundColor: '#ffffff',
-              fontSize: MESSAGE_TEXT_SIZE,
-              maxWidth: '100%',
-              maxHeight: '100%',
-              wordBreak: 'break-word',
-              overflowWrap: 'break-word',
-              whiteSpace: 'normal',
-              textAlign: 'center',
-              overflow: 'hidden',
-              display: '-webkit-box',
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              lineHeight: '1.4',
-              boxSizing: 'border-box',
-            }}
-          >
-            앨범명과 설명을 채워주세요
+          <div style={MESSAGE_STYLE}>
+            <div>앨범명과 설명을</div>
+            <div>채워주세요</div>
           </div>
         ) : (
-          <div
-            ref={contentRef}
-            style={{
-              wordWrap: 'break-word',
-            }}
-          >
+          <div ref={contentRef} style={TEXT_STYLES.WORD_BREAK}>
             {albumName.trim().length > 0 && (
               <div
                 style={{
-                  fontSize: ALBUM_TEXT_SIZE,
-                  fontFamily: 'var(--font-kyobo-handwriting)',
+                  fontSize: TEXT_SIZES.ALBUM_TEXT,
+                  fontFamily: FONTS.KYOBO_HANDWRITING,
                   marginBottom: 'calc(10 * 100vh / 1024)',
+                  color: COLORS.BLACK,
+                  ...TEXT_STYLES.WORD_BREAK,
                 }}
               >
                 앨범명: {albumName}
@@ -185,8 +150,10 @@ export default function AlbumArea({ albumName = "", albumDescription = "" }: Alb
             {albumDescription.trim().length > 0 && (
               <div
                 style={{
-                  fontSize: ALBUM_TEXT_SIZE,
-                  fontFamily: 'var(--font-kyobo-handwriting)',
+                  fontSize: TEXT_SIZES.ALBUM_TEXT,
+                  fontFamily: FONTS.KYOBO_HANDWRITING,
+                  color: COLORS.BLACK,
+                  ...TEXT_STYLES.WORD_BREAK,
                 }}
               >
                 앨범설명: {albumDescription}
