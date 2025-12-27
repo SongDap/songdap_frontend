@@ -19,25 +19,14 @@ export default function LandingFooter() {
       <button
         type="button"
         onClick={handleLogin}
-        className="
-    border-0
-    bg-transparent
-    p-0
-    cursor-pointer
-    appearance-none
-  "
-      >        <Image
+        className="border-0 bg-transparent p-0 cursor-pointer appearance-none
+  ">     <Image
           src="/kakaoLoginMain.png"
           alt="kakaoLogin"
           width={360}
           height={96}
           priority
-          className="
-          w-[35vw]
-          max-w-[360px]
-          min-w-[260px]
-          h-auto
-        "
+          className="w-[35vw] max-w-[360px] min-w-[260px] h-auto"
         />
       </button>
     </main>

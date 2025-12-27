@@ -4,7 +4,7 @@ export default function LandingMain() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-10">
       <Image
-        src="/lp_mainpage.png"
+        src="/images/lp_mainpage.png"
         alt="mainpage"
         width={360}
         height={360}
@@ -19,3 +19,4 @@ export default function LandingMain() {
     </main>
   );
 }
+
