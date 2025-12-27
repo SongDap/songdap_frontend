@@ -3,5 +3,6 @@ export { default as AlbumDescriptionInput } from "./AlbumDescriptionInput";
 export { default as AlbumArea } from "./AlbumArea";
 export { default as AlbumInputSection } from "./AlbumInputSection";
 export { default as AlbumInputSectionStep2 } from "./AlbumInputSectionStep2";
+export { default as AlbumInputSectionStep3 } from "./AlbumInputSectionStep3";
 export { default as AlbumButtonSection } from "./AlbumButtonSection";
 

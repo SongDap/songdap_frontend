@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { HiLockClosed, HiLockOpen } from "react-icons/hi2";
 import LP from "@/shared/ui/LP";
 import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_STYLE } from "./constants";
 
@@ -10,6 +11,9 @@ interface AlbumAreaProps {
   category?: string;
   selectedTag?: string;
   situationValue?: string;
+  isPublic?: string;
+  songCount?: number;
+  step?: number;
 }
 
 const LP_SPACING = SPACING.LP_SPACING;
@@ -20,6 +24,9 @@ export default function AlbumArea({
   category = "",
   selectedTag = "",
   situationValue = "",
+  isPublic = "",
+  songCount = 15,
+  step = 1,
 }: AlbumAreaProps) {
   const [lpSize, setLpSize] = useState(250);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -89,7 +96,15 @@ export default function AlbumArea({
       window.removeEventListener('resize', updateScroll);
       observer.disconnect();
     };
-  }, [albumName, albumDescription]);
+  }, [
+    albumName ?? '',
+    albumDescription ?? '',
+    category ?? '',
+    selectedTag ?? '',
+    situationValue ?? '',
+    isPublic ?? '',
+    songCount ?? 15,
+  ]);
 
   const hasContent = albumName.trim().length > 0 || albumDescription.trim().length > 0;
   const shouldScroll = contentHeight > containerHeight && containerHeight > 0;
@@ -184,11 +199,60 @@ export default function AlbumArea({
                 style={{
                   fontSize: TEXT_SIZES.ALBUM_TEXT,
                   fontFamily: FONTS.KYOBO_HANDWRITING,
+                  marginBottom: 'calc(10 * 100vh / 1024)',
                   color: COLORS.BLACK,
                   ...TEXT_STYLES.WORD_BREAK,
                 }}
               >
                 앨범설명: {albumDescription}
+              </div>
+            )}
+            {step === 3 && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                  alignItems: 'center',
+                }}
+              >
+                {isPublic && (
+                  <div
+                    style={{
+                      padding: '5px 10px',
+                      border: '3px solid #000000',
+                      borderRadius: '20px',
+                      backgroundColor: COLORS.WHITE,
+                      fontFamily: FONTS.KYOBO_HANDWRITING,
+                      fontSize: 'calc(25 * min(100vw, 768px) / 768)',
+                      color: COLORS.BLACK,
+                      boxSizing: 'border-box',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    {isPublic === "public" ? <HiLockOpen size={16} /> : <HiLockClosed size={16} />}
+                    <span>{isPublic === "public" ? "공개" : "비공개"}</span>
+                  </div>
+                )}
+                {songCount > 0 && (
+                  <div
+                    style={{
+                      padding: '5px 10px',
+                      border: '3px solid #000000',
+                      borderRadius: '20px',
+                      backgroundColor: COLORS.WHITE,
+                      fontFamily: FONTS.KYOBO_HANDWRITING,
+                      fontSize: 'calc(25 * min(100vw, 768px) / 768)',
+                      color: COLORS.BLACK,
+                      boxSizing: 'border-box',
+                      display: 'inline-block',
+                    }}
+                  >
+                    {songCount}곡
+                  </div>
+                )}
               </div>
             )}
           </div>

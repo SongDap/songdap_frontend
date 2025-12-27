@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { AlbumArea, AlbumButtonSection, AlbumInputSection, AlbumInputSectionStep2 } from "@/features/album/create";
+import { AlbumArea, AlbumButtonSection, AlbumInputSection, AlbumInputSectionStep2, AlbumInputSectionStep3 } from "@/features/album/create";
 import { COLORS, FONTS, responsive, ALBUM_AREA } from "@/features/album/create/constants";
 
 // 제목 관련 상수
@@ -9,7 +9,10 @@ const TITLE_TEXT_STEP1 = "앨범의 제목과 설명을";
 const TITLE_SUBTEXT_STEP1 = "알려주세요~";
 const TITLE_TEXT_STEP2 = "앨범 카테고리를";
 const TITLE_SUBTEXT_STEP2 = "만들어 주세요~";
+const TITLE_TEXT_STEP3 = "앨범의 세부 정보를";
+const TITLE_SUBTEXT_STEP3 = "입력해주세요~";
 const TITLE_SPACING = 40; // 제목과 앨범 영역 간격
+const INPUT_SECTION_SPACING = 20; // 앨범 영역과 입력 섹션 간격
 
 // 폰트 크기 계산 상수
 const TARGET_WIDTH_RATIO = 0.7;
@@ -25,6 +28,8 @@ export default function CreateAlbumForm() {
   const [category, setCategory] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
   const [situationValue, setSituationValue] = useState("");
+  const [isPublic, setIsPublic] = useState("public");
+  const [songCount, setSongCount] = useState(15);
   const [titleFontSize, setTitleFontSize] = useState(60);
   const [titleHeight, setTitleHeight] = useState(0);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -32,12 +37,22 @@ export default function CreateAlbumForm() {
   const isButtonEnabled = albumName.trim().length > 0;
 
   // step에 따른 제목 텍스트
-  const titleText = step === 1 ? TITLE_TEXT_STEP1 : TITLE_TEXT_STEP2;
-  const titleSubtext = step === 1 ? TITLE_SUBTEXT_STEP1 : TITLE_SUBTEXT_STEP2;
+  const titleText = step === 1 ? TITLE_TEXT_STEP1 : step === 2 ? TITLE_TEXT_STEP2 : TITLE_TEXT_STEP3;
+  const titleSubtext = step === 1 ? TITLE_SUBTEXT_STEP1 : step === 2 ? TITLE_SUBTEXT_STEP2 : TITLE_SUBTEXT_STEP3;
 
   useEffect(() => {
     const updateFontSize = () => {
       if (!serviceFrameRef.current) return;
+      
+      // 가장 긴 텍스트를 기준으로 폰트 크기 계산 (모든 step에서 동일한 크기 유지)
+      const longestText = Math.max(
+        TITLE_TEXT_STEP1.length,
+        TITLE_TEXT_STEP2.length,
+        TITLE_TEXT_STEP3.length
+      );
+      const baseText = longestText === TITLE_TEXT_STEP1.length ? TITLE_TEXT_STEP1 :
+                       longestText === TITLE_TEXT_STEP2.length ? TITLE_TEXT_STEP2 :
+                       TITLE_TEXT_STEP3;
       
       const targetWidth = serviceFrameRef.current.offsetWidth * TARGET_WIDTH_RATIO;
       const tempElement = document.createElement('div');
@@ -48,10 +63,10 @@ export default function CreateAlbumForm() {
         fontFamily: FONTS.DUNG_GEUN_MO,
         fontWeight: '900',
       });
-      tempElement.textContent = titleText;
+      tempElement.textContent = baseText;
       document.body.appendChild(tempElement);
       
-      let fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, (targetWidth / titleText.length) * 1.2));
+      let fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, (targetWidth / baseText.length) * 1.2));
       let step = fontSize / 4;
       let direction = 1;
       
@@ -122,8 +137,8 @@ export default function CreateAlbumForm() {
 
   // 입력 섹션 top 위치 계산
   const inputSectionTop = titleHeight > 0 
-    ? `calc(max(80px, calc(100 * 100vh / 1024)) + ${titleHeight}px + ${responsive.vh(TITLE_SPACING)} + ${ALBUM_AREA.HEIGHT} + ${responsive.vh(TITLE_SPACING)})`
-    : `calc(226 * max(700px, 100vh) / 1024 + ${ALBUM_AREA.HEIGHT} + ${responsive.vh(TITLE_SPACING)})`;
+    ? `calc(max(80px, calc(100 * 100vh / 1024)) + ${titleHeight}px + ${responsive.vh(TITLE_SPACING)} + ${ALBUM_AREA.HEIGHT} + ${responsive.vh(INPUT_SECTION_SPACING)})`
+    : `calc(226 * max(700px, 100vh) / 1024 + ${ALBUM_AREA.HEIGHT} + ${responsive.vh(INPUT_SECTION_SPACING)})`;
 
   return (
     <div className="relative z-10 flex min-h-screen flex-col items-center p-4">
@@ -168,6 +183,9 @@ export default function CreateAlbumForm() {
             category={category}
             selectedTag={selectedTag}
             situationValue={situationValue}
+            isPublic={isPublic}
+            songCount={songCount}
+            step={step}
           />
         </div>
         
@@ -191,7 +209,7 @@ export default function CreateAlbumForm() {
               onAlbumNameChange={setAlbumName}
               onAlbumDescriptionChange={setAlbumDescription}
             />
-          ) : (
+          ) : step === 2 ? (
             <AlbumInputSectionStep2
               category={category}
               onCategoryChange={setCategory}
@@ -199,6 +217,13 @@ export default function CreateAlbumForm() {
               onTagChange={setSelectedTag}
               situationValue={situationValue}
               onSituationChange={setSituationValue}
+            />
+          ) : (
+            <AlbumInputSectionStep3
+              isPublic={isPublic}
+              onPublicChange={setIsPublic}
+              songCount={songCount}
+              onSongCountChange={setSongCount}
             />
           )}
         </div>
@@ -215,6 +240,8 @@ export default function CreateAlbumForm() {
             onNextClick={() => {
               if (step === 1) {
                 setStep(2);
+              } else if (step === 2) {
+                setStep(3);
               } else {
                 // TODO: 앨범 생성 로직 구현
                 console.log('앨범 생성');
