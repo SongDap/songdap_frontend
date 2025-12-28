@@ -18,30 +18,51 @@ export const FONTS = {
 
 // 반응형 계산 유틸리티
 export const responsive = {
+  // vh 기반 계산 (1024px 기준)
   vh: (value: number) => `calc(${value} * 100vh / 1024)`,
+  // vw 기반 계산 (768px 기준)
   vw: (value: number) => `calc(${value} * 100vw / 768)`,
+  // 최소값 제한 (기본 768px 기준)
   min: (value: number, base: number = 768) => `min(calc(${value} * 100% / ${base}), ${value}px)`,
+  // 반응형 폰트 크기 (모바일 ~ 데스크탑)
+  fontSize: (mobile: number, tablet: number, laptop: number, desktop: number) => 
+    `clamp(${mobile}px, calc(${tablet} * 100vw / 768), ${desktop}px)`,
+  // 반응형 크기 (vh 기반, 모바일 ~ 데스크탑)
+  sizeVh: (mobile: number, tablet: number, laptop: number, desktop: number) =>
+    `clamp(${mobile}px, calc(${tablet} * 100vh / 1024), ${desktop}px)`,
+  // 반응형 크기 (vw 기반, 모바일 ~ 데스크탑)
+  sizeVw: (mobile: number, tablet: number, laptop: number, desktop: number) =>
+    `clamp(${mobile}px, calc(${tablet} * 100vw / 768), ${desktop}px)`,
+  // 반응형 높이 (vh 기반)
+  height: (mobile: number, tablet: number, laptop: number, desktop: number) =>
+    `clamp(${mobile}px, calc(${tablet} * 100vh / 1024), ${desktop}px)`,
 } as const;
 
-// 공통 패딩/마진
+// 공통 패딩/마진 (반응형)
 export const SPACING = {
   SIDE_PADDING: responsive.min(32),
-  LP_PADDING: '10px',
-  LP_SPACING: 'calc(20 * min(100vw, 768px) / 768)',
+  LP_PADDING: responsive.sizeVh(8, 10, 10, 10),
+  LP_SPACING: responsive.sizeVw(12, 20, 20, 20),
 } as const;
 
-// 텍스트 크기
+// 텍스트 크기 (반응형)
 export const TEXT_SIZES = {
-  LABEL: responsive.vh(30),
-  INPUT: responsive.vh(30),
-  ALBUM_TEXT: 'calc(35 * min(100vw, 768px) / 768)',
-  MESSAGE_TEXT: 'calc(30 * min(100vw, 768px) / 768)',
+  LABEL: responsive.fontSize(16, 24, 28, 30),
+  INPUT: responsive.fontSize(16, 24, 28, 30),
+  ALBUM_TEXT: responsive.fontSize(20, 28, 32, 35),
+  MESSAGE_TEXT: responsive.fontSize(18, 24, 28, 30),
+  TITLE: responsive.fontSize(32, 48, 64, 80),
+  BUTTON: responsive.fontSize(20, 28, 32, 35),
 } as const;
 
-// 앨범 영역 상수
+// 앨범 영역 상수 (반응형)
 export const ALBUM_AREA = {
-  HEIGHT: responsive.vh(270),
-  LP_SIZE: `calc(${responsive.vh(270)} - ${SPACING.LP_PADDING} * 2)`,
+  HEIGHT: responsive.height(180, 220, 250, 270),
+  // LP 크기는 동적으로 계산되므로 여기서는 최소/최대만 정의
+  LP_SIZE_MIN: 150,
+  LP_SIZE_MAX: 250,
+  LP_SIZE_RATIO: 0.9, // 앨범 영역 높이의 90%
+  COVER_SIZE_RATIO: 1.0, // LP와 동일한 크기
 } as const;
 
 // 공통 텍스트 스타일
@@ -76,16 +97,16 @@ export const MESSAGE_STYLE = {
   whiteSpace: 'normal' as const,
 } as const;
 
-// 입력창 공통 스타일
+// 입력창 공통 스타일 (반응형)
 export const INPUT_BOX_STYLE = {
   width: '100%',
   border: '3px solid #000000',
   borderRadius: '10px',
   backgroundColor: COLORS.WHITE,
-  paddingLeft: responsive.vh(30),
-  paddingRight: responsive.vw(16),
-  paddingTop: responsive.vh(16),
-  paddingBottom: responsive.vh(16),
+  paddingLeft: responsive.sizeVh(16, 30, 30, 30),
+  paddingRight: responsive.sizeVw(12, 16, 16, 16),
+  paddingTop: responsive.sizeVh(12, 16, 16, 16),
+  paddingBottom: responsive.sizeVh(12, 16, 16, 16),
   boxSizing: 'border-box' as const,
 } as const;
 
@@ -96,14 +117,14 @@ export const CATEGORY_INPUT_BOX_STYLE = {
   alignItems: 'center',
 } as const;
 
-// 기분 태그 컨테이너 스타일
+// 기분 태그 컨테이너 스타일 (반응형)
 export const MOOD_TAG_CONTAINER_STYLE = {
   ...INPUT_BOX_STYLE,
-  minHeight: responsive.vh(140),
+  minHeight: responsive.sizeVh(100, 140, 140, 140),
   overflowY: 'auto' as const,
 } as const;
 
-// 상황 입력창 스타일
+// 상황 입력창 스타일 (반응형)
 export const SITUATION_INPUT_STYLE = {
   ...INPUT_BOX_STYLE,
   fontFamily: FONTS.KYOBO_HANDWRITING,
@@ -112,14 +133,14 @@ export const SITUATION_INPUT_STYLE = {
   resize: 'none' as const,
   overflowY: 'auto' as const,
   color: COLORS.BLACK,
-  height: responsive.vh(80),
+  height: responsive.sizeVh(60, 80, 80, 80),
 } as const;
 
-// 라벨 스타일
+// 라벨 스타일 (반응형)
 export const LABEL_STYLE = {
   fontFamily: FONTS.CAFE24_PROSLIM,
   fontSize: TEXT_SIZES.LABEL,
-  marginBottom: responsive.vh(6),
+  marginBottom: responsive.sizeVh(4, 6, 6, 6),
   color: COLORS.BLACK,
   fontWeight: 'bold' as const,
 } as const;
@@ -142,21 +163,21 @@ export const CHECKBOX_INPUT_STYLE = {
   cursor: 'pointer',
 } as const;
 
-// 곡 개수 설정 컨테이너 스타일
+// 곡 개수 설정 컨테이너 스타일 (반응형)
 export const SONG_COUNT_CONTAINER_STYLE = {
   ...CATEGORY_INPUT_BOX_STYLE,
-  paddingTop: responsive.vh(16),
-  paddingBottom: responsive.vh(16),
+  paddingTop: responsive.sizeVh(12, 16, 16, 16),
+  paddingBottom: responsive.sizeVh(12, 16, 16, 16),
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-start',
-  gap: responsive.vh(10),
+  gap: responsive.sizeVh(8, 10, 10, 10),
 } as const;
 
-// 곡 개수 버튼 스타일 (+/-)
+// 곡 개수 버튼 스타일 (+/-) (반응형)
 export const SONG_COUNT_BUTTON_STYLE = {
-  width: responsive.vh(40),
-  height: responsive.vh(40),
+  width: responsive.sizeVh(32, 40, 40, 40),
+  height: responsive.sizeVh(32, 40, 40, 40),
   border: '3px solid #000000',
   borderRadius: '10px',
   backgroundColor: COLORS.WHITE,
@@ -170,15 +191,15 @@ export const SONG_COUNT_BUTTON_STYLE = {
   boxSizing: 'border-box' as const,
 } as const;
 
-// 곡 개수 입력 필드 스타일
+// 곡 개수 입력 필드 스타일 (반응형)
 export const SONG_COUNT_INPUT_STYLE = {
-  width: '100px',
-  height: responsive.vh(40),
+  width: responsive.sizeVw(80, 100, 100, 100),
+  height: responsive.sizeVh(32, 40, 40, 40),
   border: '3px solid #000000',
   borderRadius: '10px',
   backgroundColor: COLORS.WHITE,
-  paddingLeft: '10px',
-  paddingRight: '10px',
+  paddingLeft: responsive.sizeVw(8, 10, 10, 10),
+  paddingRight: responsive.sizeVw(8, 10, 10, 10),
   boxSizing: 'border-box' as const,
   fontFamily: FONTS.KYOBO_HANDWRITING,
   fontSize: TEXT_SIZES.INPUT,
