@@ -44,11 +44,35 @@ export default function AlbumArea({
   const textScrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // LP 크기 업데이트
+  // LP 크기 업데이트 (반응형)
   useEffect(() => {
     const updateLpSize = () => {
-      const albumAreaHeight = (270 * window.innerHeight) / 1024;
-      setLpSize(Math.round(albumAreaHeight - 20));
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // LP 크기 계산 (화면 크기에 따라 반응형)
+      const minSize = 150;
+      const maxSize = 250;
+      let calculatedLpSize: number;
+      
+      if (viewportHeight < 500) {
+        // 매우 작은 화면 (높이 500px 미만)
+        calculatedLpSize = Math.max(minSize, Math.min(viewportHeight * 0.35, maxSize));
+      } else if (viewportWidth <= 480) {
+        // 모바일
+        calculatedLpSize = Math.max(minSize, Math.min(viewportHeight * 0.3, 200));
+      } else if (viewportWidth <= 768) {
+        // 태블릿
+        calculatedLpSize = Math.max(180, Math.min(viewportHeight * 0.32, 220));
+      } else if (viewportWidth <= 1024) {
+        // 노트북
+        calculatedLpSize = Math.max(200, Math.min(viewportHeight * 0.35, 240));
+      } else {
+        // 데스크탑 - 화면 높이에 비례하되 최대값 제한
+        calculatedLpSize = Math.max(220, Math.min((250 * viewportHeight) / 1024, maxSize));
+      }
+      
+      setLpSize(Math.round(calculatedLpSize));
     };
 
     updateLpSize();
@@ -128,9 +152,10 @@ export default function AlbumArea({
       style={{
         position: 'relative',
         width: '100%',
-        height: step === 5 ? 'auto' : ALBUM_AREA.HEIGHT,
-        paddingTop: step === 5 ? responsive.vh(40) : SPACING.LP_PADDING,
-        paddingBottom: step === 5 ? responsive.vh(40) : SPACING.LP_PADDING,
+        minHeight: step === 5 ? 'auto' : `calc(${lpSize}px + clamp(16px, calc(20 * 100vh / 1024), 20px))`,
+        height: step === 5 ? 'auto' : `calc(${lpSize}px + clamp(16px, calc(20 * 100vh / 1024), 20px))`,
+        paddingTop: step === 5 ? 'clamp(20px, calc(40 * 100vh / 1024), 40px)' : '10px',
+        paddingBottom: step === 5 ? 'clamp(20px, calc(40 * 100vh / 1024), 40px)' : 'clamp(8px, calc(10 * 100vh / 1024), 10px)',
         paddingLeft: SPACING.SIDE_PADDING,
         paddingRight: SPACING.SIDE_PADDING,
         boxSizing: 'border-box',
@@ -144,8 +169,8 @@ export default function AlbumArea({
           position: step === 5 ? 'relative' : 'absolute',
           left: step === 5 ? 'auto' : SPACING.SIDE_PADDING,
           top: step === 5 ? 'auto' : SPACING.LP_PADDING,
-          width: step === 5 ? 'auto' : ALBUM_AREA.LP_SIZE,
-          height: step === 5 ? 'auto' : ALBUM_AREA.LP_SIZE,
+          width: step === 5 ? 'auto' : `${lpSize}px`,
+          height: step === 5 ? 'auto' : `${lpSize}px`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: step === 5 ? 'center' : (maxStepReached >= 4 ? 'flex-start' : 'center'),
@@ -159,8 +184,8 @@ export default function AlbumArea({
             coverColor={coverColor}
             lpCircleColor={coverColor}
             lpCircleImageUrl={coverImageUrl}
-            lpSize={Math.round(lpSize * (225 / 250))}
-            coverSize={lpSize}
+            lpSize={Math.round(lpSize * 0.9)} // LP는 커버보다 10% 작게
+            coverSize={lpSize} // 앨범 커버는 LP와 동일한 크기 (가로세로 비율 유지)
             albumName={step === 5 ? albumName : undefined}
             tag={step === 5 ? (category === "mood" && selectedTag && selectedTag !== "+ 직접 입력" ? selectedTag : category === "situation" ? situationValue : undefined) : undefined}
             nickname={step === 5 ? "닉네임" : undefined}
@@ -176,11 +201,11 @@ export default function AlbumArea({
       {step === 5 && (
         <div
           style={{
-            marginTop: responsive.vh(30),
+            marginTop: 'clamp(15px, calc(30 * 100vh / 1024), 30px)',
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: responsive.vh(15),
+            gap: 'clamp(8px, calc(15 * 100vh / 1024), 15px)',
             width: "100%",
           }}
         >
@@ -257,8 +282,8 @@ export default function AlbumArea({
           <div
             style={{
               display: "flex",
-              gap: responsive.vh(16),
-              marginTop: responsive.vh(20),
+              gap: 'clamp(8px, calc(16 * 100vh / 1024), 16px)',
+              marginTop: 'clamp(10px, calc(20 * 100vh / 1024), 20px)',
               width: "100%",
               justifyContent: "center",
             }}
@@ -266,14 +291,13 @@ export default function AlbumArea({
             {/* 카카오톡에 공유하기 */}
             <button
               onClick={() => {
-                // TODO: 카카오톡 공유 기능 구현
-                console.log("카카오톡 공유");
+                // 카카오톡 공유 기능 구현 예정
               }}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: responsive.vh(8),
-                padding: `${responsive.vh(12)} ${responsive.vh(24)}`,
+                gap: 'clamp(4px, calc(8 * 100vh / 1024), 8px)',
+                padding: `clamp(8px, calc(12 * 100vh / 1024), 12px) clamp(16px, calc(24 * 100vh / 1024), 24px)`,
                 border: "3px solid #000000",
                 borderRadius: "10px",
                 backgroundColor: COLORS.WHITE,
@@ -294,17 +318,16 @@ export default function AlbumArea({
                 try {
                   const currentUrl = window.location.href;
                   await navigator.clipboard.writeText(currentUrl);
-                  // TODO: 복사 완료 알림 표시
-                  console.log("링크 복사 완료:", currentUrl);
+                  // 복사 완료 알림 표시 예정
                 } catch (err) {
-                  console.error("링크 복사 실패:", err);
+                  // 에러 처리 예정
                 }
               }}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: responsive.vh(8),
-                padding: `${responsive.vh(12)} ${responsive.vh(24)}`,
+                gap: 'clamp(4px, calc(8 * 100vh / 1024), 8px)',
+                padding: `clamp(8px, calc(12 * 100vh / 1024), 12px) clamp(16px, calc(24 * 100vh / 1024), 24px)`,
                 border: "3px solid #000000",
                 borderRadius: "10px",
                 backgroundColor: COLORS.WHITE,
@@ -329,13 +352,13 @@ export default function AlbumArea({
           style={{
             position: 'absolute',
             left: maxStepReached >= 4
-              ? `calc(${SPACING.SIDE_PADDING} + ${lpSize}px + ${lpSize * (225 / 250) / 2}px + ${responsive.min(10, 768)})`
-              : `calc(${SPACING.SIDE_PADDING} + ${ALBUM_AREA.LP_SIZE} + ${LP_SPACING})`,
+              ? `calc(${SPACING.SIDE_PADDING} + ${lpSize}px + ${lpSize * 0.9 / 2}px + ${responsive.min(10, 768)})`
+              : `calc(${SPACING.SIDE_PADDING} + ${lpSize}px + ${LP_SPACING})`,
             top: SPACING.LP_PADDING,
             width: maxStepReached >= 4
-              ? `calc(100% - ${SPACING.SIDE_PADDING} * 2 - ${lpSize}px - ${lpSize * (225 / 250) / 2}px - ${responsive.min(10, 768)})`
-              : `calc(100% - ${SPACING.SIDE_PADDING} * 2 - ${ALBUM_AREA.LP_SIZE} - ${LP_SPACING})`,
-            height: ALBUM_AREA.LP_SIZE,
+              ? `calc(100% - ${SPACING.SIDE_PADDING} * 2 - ${lpSize}px - ${lpSize * 0.9 / 2}px - ${responsive.min(10, 768)})`
+              : `calc(100% - ${SPACING.SIDE_PADDING} * 2 - ${lpSize}px - ${LP_SPACING})`,
+            height: `${lpSize}px`,
             overflowY: shouldScroll ? 'auto' : 'hidden',
             overflowX: 'hidden',
           }}
@@ -360,7 +383,7 @@ export default function AlbumArea({
                     borderRadius: '20px',
                     backgroundColor: COLORS.BUTTON_ENABLED_OUTER,
                     fontFamily: FONTS.KYOBO_HANDWRITING,
-                    fontSize: 'calc(25 * min(100vw, 768px) / 768)',
+                    fontSize: TEXT_SIZES.ALBUM_TEXT,
                     color: COLORS.BLACK,
                     boxSizing: 'border-box',
                     display: 'inline-block',
@@ -413,7 +436,7 @@ export default function AlbumArea({
                       borderRadius: '20px',
                       backgroundColor: COLORS.WHITE,
                       fontFamily: FONTS.KYOBO_HANDWRITING,
-                      fontSize: 'calc(25 * min(100vw, 768px) / 768)',
+                      fontSize: TEXT_SIZES.ALBUM_TEXT,
                       color: COLORS.BLACK,
                       boxSizing: 'border-box',
                       display: 'inline-flex',
@@ -433,7 +456,7 @@ export default function AlbumArea({
                       borderRadius: '20px',
                       backgroundColor: COLORS.WHITE,
                       fontFamily: FONTS.KYOBO_HANDWRITING,
-                      fontSize: 'calc(25 * min(100vw, 768px) / 768)',
+                      fontSize: TEXT_SIZES.ALBUM_TEXT,
                       color: COLORS.BLACK,
                       boxSizing: 'border-box',
                       display: 'inline-block',
