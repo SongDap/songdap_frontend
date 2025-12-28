@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { COLORS, FONTS, TEXT_SIZES, responsive } from "./constants";
+import { COLORS, FONTS, TEXT_SIZES, responsive } from "../constants";
 
-interface CategoryInputProps {
+interface AlbumNameInputProps {
   value?: string;
   onChange?: (value: string) => void;
   maxLength?: number;
@@ -40,11 +40,11 @@ const CHAR_COUNT_STYLE = {
   color: COLORS.BLACK,
 };
 
-export default function CategoryInput({ 
+export default function AlbumNameInput({ 
   value = "", 
   onChange,
-  maxLength = 20 
-}: CategoryInputProps) {
+  maxLength = 16 
+}: AlbumNameInputProps) {
   const [inputValue, setInputValue] = useState(value);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +57,7 @@ export default function CategoryInput({
 
   return (
     <div style={{ position: 'relative' }}>
-      <div style={LABEL_STYLE}>카테고리</div>
+      <div style={LABEL_STYLE}>앨범명(필수)</div>
       <div style={CHAR_COUNT_STYLE}>{inputValue.length}/{maxLength}</div>
       <input
         type="text"

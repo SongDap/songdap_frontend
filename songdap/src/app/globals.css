@@ -104,3 +104,10 @@ body {
   background: #555 !important;
 }
 
+/* 숫자 입력 필드 스피너 제거 */
+.number-input-no-spinner::-webkit-inner-spin-button,
+.number-input-no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+

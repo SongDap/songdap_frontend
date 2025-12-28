@@ -1,21 +1,21 @@
 "use client";
 
-import { COLORS, FONTS, TEXT_SIZES } from "./constants";
+import { COLORS, FONTS, TEXT_SIZES } from "../constants";
 
-interface CategoryRadioGroupProps {
+interface PublicRadioGroupProps {
   value?: string;
   onChange?: (value: string) => void;
 }
 
 const RADIO_OPTIONS = [
-  { label: "기분", value: "mood" },
-  { label: "상황", value: "situation" },
+  { label: "공개", value: "public" },
+  { label: "비공개", value: "private" },
 ] as const;
 
-export default function CategoryRadioGroup({
+export default function PublicRadioGroup({
   value,
   onChange,
-}: CategoryRadioGroupProps) {
+}: PublicRadioGroupProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
       {RADIO_OPTIONS.map((option) => (
@@ -32,7 +32,7 @@ export default function CategoryRadioGroup({
         >
           <input
             type="radio"
-            name="category"
+            name="public"
             value={option.value}
             checked={value === option.value}
             onChange={(e) => onChange?.(e.target.value)}

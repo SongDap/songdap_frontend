@@ -124,3 +124,74 @@ export const LABEL_STYLE = {
   fontWeight: 'bold' as const,
 } as const;
 
+// 체크박스 라벨 스타일
+export const CHECKBOX_LABEL_STYLE = {
+  display: 'flex',
+  alignItems: 'center',
+  cursor: 'pointer',
+  fontFamily: FONTS.KYOBO_HANDWRITING,
+  fontSize: TEXT_SIZES.INPUT,
+  color: COLORS.BLACK,
+} as const;
+
+// 체크박스 입력 스타일
+export const CHECKBOX_INPUT_STYLE = {
+  marginRight: '10px',
+  width: '20px',
+  height: '20px',
+  cursor: 'pointer',
+} as const;
+
+// 곡 개수 설정 컨테이너 스타일
+export const SONG_COUNT_CONTAINER_STYLE = {
+  ...CATEGORY_INPUT_BOX_STYLE,
+  paddingTop: responsive.vh(16),
+  paddingBottom: responsive.vh(16),
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  gap: responsive.vh(10),
+} as const;
+
+// 곡 개수 버튼 스타일 (+/-)
+export const SONG_COUNT_BUTTON_STYLE = {
+  width: responsive.vh(40),
+  height: responsive.vh(40),
+  border: '3px solid #000000',
+  borderRadius: '10px',
+  backgroundColor: COLORS.WHITE,
+  fontFamily: FONTS.KYOBO_HANDWRITING,
+  fontSize: TEXT_SIZES.INPUT,
+  color: COLORS.BLACK,
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxSizing: 'border-box' as const,
+} as const;
+
+// 곡 개수 입력 필드 스타일
+export const SONG_COUNT_INPUT_STYLE = {
+  width: '100px',
+  height: responsive.vh(40),
+  border: '3px solid #000000',
+  borderRadius: '10px',
+  backgroundColor: COLORS.WHITE,
+  paddingLeft: '10px',
+  paddingRight: '10px',
+  boxSizing: 'border-box' as const,
+  fontFamily: FONTS.KYOBO_HANDWRITING,
+  fontSize: TEXT_SIZES.INPUT,
+  outline: 'none',
+  color: COLORS.BLACK,
+  textAlign: 'center' as const,
+  MozAppearance: 'textfield' as const,
+} as const;
+
+// 곡 개수 텍스트 스타일
+export const SONG_COUNT_TEXT_STYLE = {
+  fontFamily: FONTS.KYOBO_HANDWRITING,
+  fontSize: TEXT_SIZES.INPUT,
+  color: COLORS.BLACK,
+} as const;
+

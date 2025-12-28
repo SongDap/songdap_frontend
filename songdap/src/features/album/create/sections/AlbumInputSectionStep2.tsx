@@ -1,8 +1,8 @@
 "use client";
 
-import { responsive, LABEL_STYLE, CATEGORY_INPUT_BOX_STYLE, MOOD_TAG_CONTAINER_STYLE, SITUATION_INPUT_STYLE } from "./constants";
-import CategoryRadioGroup from "./CategoryRadioGroup";
-import MoodTagList from "./MoodTagList";
+import { responsive, LABEL_STYLE, CATEGORY_INPUT_BOX_STYLE, MOOD_TAG_CONTAINER_STYLE, SITUATION_INPUT_STYLE } from "../constants";
+import CategoryRadioGroup from "../components/CategoryRadioGroup";
+import MoodTagList from "../components/MoodTagList";
 
 interface AlbumInputSectionStep2Props {
   category: string;

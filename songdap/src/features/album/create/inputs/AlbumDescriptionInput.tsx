@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { COLORS, FONTS, TEXT_SIZES, responsive } from "./constants";
+import { useState, useEffect } from "react";
+import { COLORS, FONTS, TEXT_SIZES, responsive } from "../constants";
 
-interface AlbumNameInputProps {
+interface AlbumDescriptionInputProps {
   value?: string;
   onChange?: (value: string) => void;
   maxLength?: number;
@@ -16,10 +16,14 @@ const INPUT_STYLE = {
   backgroundColor: COLORS.WHITE,
   paddingLeft: responsive.vh(30),
   paddingRight: responsive.vw(16),
+  paddingTop: responsive.vh(16),
+  paddingBottom: responsive.vh(16),
   boxSizing: 'border-box' as const,
   fontFamily: FONTS.KYOBO_HANDWRITING,
   fontSize: TEXT_SIZES.INPUT,
   outline: 'none',
+  resize: 'none' as const,
+  overflowY: 'auto' as const,
   color: COLORS.BLACK,
 };
 
@@ -40,14 +44,18 @@ const CHAR_COUNT_STYLE = {
   color: COLORS.BLACK,
 };
 
-export default function AlbumNameInput({ 
+export default function AlbumDescriptionInput({ 
   value = "", 
   onChange,
-  maxLength = 16 
-}: AlbumNameInputProps) {
+  maxLength = 200 
+}: AlbumDescriptionInputProps) {
   const [inputValue, setInputValue] = useState(value);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     if (newValue.length <= maxLength) {
       setInputValue(newValue);
@@ -57,16 +65,16 @@ export default function AlbumNameInput({
 
   return (
     <div style={{ position: 'relative' }}>
-      <div style={LABEL_STYLE}>앨범명(필수)</div>
+      <div style={LABEL_STYLE}>앨범설명</div>
       <div style={CHAR_COUNT_STYLE}>{inputValue.length}/{maxLength}</div>
-      <input
-        type="text"
+      <textarea
+        className="album-description-scroll"
         value={inputValue}
         onChange={handleChange}
         maxLength={maxLength}
         style={{
           ...INPUT_STYLE,
-          height: responsive.vh(80),
+          height: responsive.vh(140),
         }}
       />
     </div>
