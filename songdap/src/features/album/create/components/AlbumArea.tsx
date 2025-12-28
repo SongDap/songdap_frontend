@@ -18,6 +18,7 @@ interface AlbumAreaProps {
   step?: number;
   maxStepReached?: number;
   lpColor?: string;
+  lpCircleImageUrl?: string;
   coverColor?: string;
   coverImageUrl?: string;
 }
@@ -35,6 +36,7 @@ export default function AlbumArea({
   step = 1,
   maxStepReached = 1,
   lpColor = COLORS.WHITE,
+  lpCircleImageUrl,
   coverColor = COLORS.WHITE,
   coverImageUrl,
 }: AlbumAreaProps) {
@@ -43,33 +45,42 @@ export default function AlbumArea({
   const [contentHeight, setContentHeight] = useState(0);
   const textScrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // LP 크기 업데이트 (반응형)
+  // LP 크기 업데이트 (서비스 프레임 가로 길이 기준 반응형)
   useEffect(() => {
     const updateLpSize = () => {
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+      // 서비스 프레임 요소 찾기
+      const serviceFrame = document.querySelector('.service-frame') as HTMLElement;
+      if (!serviceFrame) {
+        // 서비스 프레임을 찾을 수 없으면 기본값 사용
+        setLpSize(250);
+        return;
+      }
       
-      // LP 크기 계산 (화면 크기에 따라 반응형)
+      const serviceFrameWidth = serviceFrame.clientWidth;
+      
+      // LP 크기 계산 (서비스 프레임 가로 길이 기준)
       const minSize = 150;
       const maxSize = 250;
       let calculatedLpSize: number;
       
-      if (viewportHeight < 500) {
-        // 매우 작은 화면 (높이 500px 미만)
-        calculatedLpSize = Math.max(minSize, Math.min(viewportHeight * 0.35, maxSize));
-      } else if (viewportWidth <= 480) {
+      // 서비스 프레임 너비에 비례하여 계산
+      // 모바일: 너비의 40-50%
+      // 태블릿: 너비의 30-35%
+      // 데스크탑: 너비의 25-30%
+      if (serviceFrameWidth <= 480) {
         // 모바일
-        calculatedLpSize = Math.max(minSize, Math.min(viewportHeight * 0.3, 200));
-      } else if (viewportWidth <= 768) {
+        calculatedLpSize = Math.max(minSize, Math.min(serviceFrameWidth * 0.45, 200));
+      } else if (serviceFrameWidth <= 768) {
         // 태블릿
-        calculatedLpSize = Math.max(180, Math.min(viewportHeight * 0.32, 220));
-      } else if (viewportWidth <= 1024) {
+        calculatedLpSize = Math.max(180, Math.min(serviceFrameWidth * 0.32, 220));
+      } else if (serviceFrameWidth <= 1024) {
         // 노트북
-        calculatedLpSize = Math.max(200, Math.min(viewportHeight * 0.35, 240));
+        calculatedLpSize = Math.max(200, Math.min(serviceFrameWidth * 0.28, 240));
       } else {
-        // 데스크탑 - 화면 높이에 비례하되 최대값 제한
-        calculatedLpSize = Math.max(220, Math.min((250 * viewportHeight) / 1024, maxSize));
+        // 데스크탑
+        calculatedLpSize = Math.max(220, Math.min(serviceFrameWidth * 0.25, maxSize));
       }
       
       setLpSize(Math.round(calculatedLpSize));
@@ -77,6 +88,19 @@ export default function AlbumArea({
 
     updateLpSize();
     window.addEventListener('resize', updateLpSize);
+    
+    // ResizeObserver로 서비스 프레임 크기 변화 감지
+    const serviceFrame = document.querySelector('.service-frame') as HTMLElement;
+    if (serviceFrame) {
+      const resizeObserver = new ResizeObserver(updateLpSize);
+      resizeObserver.observe(serviceFrame);
+      
+      return () => {
+        window.removeEventListener('resize', updateLpSize);
+        resizeObserver.disconnect();
+      };
+    }
+    
     return () => window.removeEventListener('resize', updateLpSize);
   }, []);
 
@@ -182,8 +206,8 @@ export default function AlbumArea({
           <AlbumCoverWithLP
             coverImageUrl={coverImageUrl}
             coverColor={coverColor}
-            lpCircleColor={coverColor}
-            lpCircleImageUrl={coverImageUrl}
+            lpCircleColor={lpColor}
+            lpCircleImageUrl={lpCircleImageUrl}
             lpSize={Math.round(lpSize * 0.9)} // LP는 커버보다 10% 작게
             coverSize={lpSize} // 앨범 커버는 LP와 동일한 크기 (가로세로 비율 유지)
             albumName={step === 5 ? albumName : undefined}
@@ -214,7 +238,7 @@ export default function AlbumArea({
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: "10px",
+              gap: responsive.sizeVh(6, 10, 10, 10),
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -222,32 +246,32 @@ export default function AlbumArea({
             {isPublic && (
               <div
                 style={{
-                  padding: "5px 10px",
+                  padding: `${responsive.sizeVh(4, 5, 5, 5)} ${responsive.sizeVh(8, 10, 10, 10)}`,
                   border: "3px solid #000000",
-                  borderRadius: "20px",
+                  borderRadius: responsive.sizeVh(12, 20, 20, 20),
                   backgroundColor: COLORS.WHITE,
                   fontFamily: FONTS.KYOBO_HANDWRITING,
-                  fontSize: "calc(25 * min(100vw, 768px) / 768)",
+                  fontSize: responsive.fontSize(16, 20, 22, 25),
                   color: COLORS.BLACK,
                   boxSizing: "border-box",
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "5px",
+                  gap: responsive.sizeVh(4, 5, 5, 5),
                 }}
               >
-                {isPublic === "public" ? <HiLockOpen size={16} /> : <HiLockClosed size={16} />}
+                {isPublic === "public" ? <HiLockOpen size={responsive.sizeVh(16, 20, 22, 25)} /> : <HiLockClosed size={responsive.sizeVh(16, 20, 22, 25)} />}
                 <span>{isPublic === "public" ? "공개" : "비공개"}</span>
               </div>
             )}
             {songCount > 0 && (
               <div
                 style={{
-                  padding: "5px 10px",
+                  padding: `${responsive.sizeVh(4, 5, 5, 5)} ${responsive.sizeVh(8, 10, 10, 10)}`,
                   border: "3px solid #000000",
-                  borderRadius: "20px",
+                  borderRadius: responsive.sizeVh(12, 20, 20, 20),
                   backgroundColor: COLORS.WHITE,
                   fontFamily: FONTS.KYOBO_HANDWRITING,
-                  fontSize: "calc(25 * min(100vw, 768px) / 768)",
+                  fontSize: responsive.fontSize(16, 20, 22, 25),
                   color: COLORS.BLACK,
                   boxSizing: "border-box",
                   display: "inline-block",
@@ -424,16 +448,16 @@ export default function AlbumArea({
                 style={{
                   display: 'flex',
                   flexWrap: 'wrap',
-                  gap: '10px',
+                  gap: responsive.sizeVh(6, 10, 10, 10),
                   alignItems: 'center',
                 }}
               >
                 {isPublic && (
                   <div
                     style={{
-                      padding: '5px 10px',
+                      padding: `${responsive.sizeVh(4, 5, 5, 5)} ${responsive.sizeVh(8, 10, 10, 10)}`,
                       border: '3px solid #000000',
-                      borderRadius: '20px',
+                      borderRadius: responsive.sizeVh(12, 20, 20, 20),
                       backgroundColor: COLORS.WHITE,
                       fontFamily: FONTS.KYOBO_HANDWRITING,
                       fontSize: TEXT_SIZES.ALBUM_TEXT,
@@ -441,19 +465,19 @@ export default function AlbumArea({
                       boxSizing: 'border-box',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '5px',
+                      gap: responsive.sizeVh(4, 5, 5, 5),
                     }}
                   >
-                    {isPublic === "public" ? <HiLockOpen size={16} /> : <HiLockClosed size={16} />}
+                    {isPublic === "public" ? <HiLockOpen size={responsive.sizeVh(16, 20, 22, 25)} /> : <HiLockClosed size={responsive.sizeVh(16, 20, 22, 25)} />}
                     <span>{isPublic === "public" ? "공개" : "비공개"}</span>
                   </div>
                 )}
                 {songCount > 0 && (
                   <div
                     style={{
-                      padding: '5px 10px',
+                      padding: `${responsive.sizeVh(4, 5, 5, 5)} ${responsive.sizeVh(8, 10, 10, 10)}`,
                       border: '3px solid #000000',
-                      borderRadius: '20px',
+                      borderRadius: responsive.sizeVh(12, 20, 20, 20),
                       backgroundColor: COLORS.WHITE,
                       fontFamily: FONTS.KYOBO_HANDWRITING,
                       fontSize: TEXT_SIZES.ALBUM_TEXT,
