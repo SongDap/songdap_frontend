@@ -72,8 +72,8 @@ export default function AlbumCoverWithLP({
         }}
       >
         <LP 
-          circleColor={lpCircleColor || coverColor} 
-          circleImageUrl={lpCircleImageUrl || coverImageUrl}
+          circleColor={lpCircleColor !== undefined ? lpCircleColor : coverColor} 
+          circleImageUrl={lpCircleImageUrl !== undefined ? lpCircleImageUrl : coverImageUrl}
           size={lpSize} 
         />
       </div>
