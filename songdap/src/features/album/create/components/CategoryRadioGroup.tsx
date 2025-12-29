@@ -17,36 +17,39 @@ export default function CategoryRadioGroup({
   onChange,
 }: CategoryRadioGroupProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
+    <div style={{ display: 'flex', flexDirection: 'row', gap: '15px' }}>
       {RADIO_OPTIONS.map((option) => (
-        <label
+        <button
           key={option.value}
+          type="button"
+          onClick={() => onChange?.(option.value)}
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
+            padding: '8px 24px',
+            border: '3px solid #000000',
+            borderRadius: '25px',
+            backgroundColor: value === option.value ? COLORS.BUTTON_ENABLED_OUTER : COLORS.WHITE,
             fontFamily: FONTS.KYOBO_HANDWRITING,
             fontSize: TEXT_SIZES.INPUT,
             color: COLORS.BLACK,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            transform: value === option.value ? 'translateY(-2px)' : 'none',
+            boxShadow: value === option.value ? '0 4px 8px rgba(0,0,0,0.1)' : 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = value === option.value ? COLORS.BUTTON_ENABLED_INNER : '#f0f0f0';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = value === option.value ? COLORS.BUTTON_ENABLED_OUTER : COLORS.WHITE;
+            e.currentTarget.style.transform = value === option.value ? 'translateY(-2px)' : 'none';
           }}
         >
-          <input
-            type="radio"
-            name="category"
-            value={option.value}
-            checked={value === option.value}
-            onChange={(e) => onChange?.(e.target.value)}
-            style={{
-              marginRight: '10px',
-              width: '20px',
-              height: '20px',
-              cursor: 'pointer',
-            }}
-          />
           {option.label}
-        </label>
+        </button>
       ))}
     </div>
   );
 }
+
 

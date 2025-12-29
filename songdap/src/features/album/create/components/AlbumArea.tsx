@@ -5,7 +5,18 @@ import { HiLockClosed, HiLockOpen } from "react-icons/hi2";
 import { FaComment, FaLink } from "react-icons/fa";
 import LP from "@/shared/ui/LP";
 import { AlbumCoverWithLP } from "@/shared/ui";
+import NicknameTag from "@/shared/ui/NicknameTag";
+import AlbumDescriptionPaper from "./AlbumDescriptionPaper";
 import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_STYLE, responsive } from "../constants";
+
+/**
+ * 앨범 미리보기 영역 컴포넌트
+ * 
+ * @description
+ * - step 1-4: LP 또는 앨범 커버 미리보기 + 입력 필드
+ * - step 5: 최종 앨범 미리보기 + 카테고리/공개여부/곡개수 태그 + 공유 버튼
+ * - 앨범 설명이 있으면 세모 띠를 당겨 펼쳐볼 수 있음
+ */
 
 interface AlbumAreaProps {
   albumName?: string;
@@ -21,6 +32,7 @@ interface AlbumAreaProps {
   lpCircleImageUrl?: string;
   coverColor?: string;
   coverImageUrl?: string;
+  profileImageUrl?: string;
 }
 
 const LP_SPACING = SPACING.LP_SPACING;
@@ -39,15 +51,20 @@ export default function AlbumArea({
   lpCircleImageUrl,
   coverColor = COLORS.WHITE,
   coverImageUrl,
+  profileImageUrl,
 }: AlbumAreaProps) {
+  // ==================== 상태 관리 ====================
   const [mounted, setMounted] = useState(false);
   const [lpSize, setLpSize] = useState(250);
   const [containerHeight, setContainerHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  
   const textScrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // ==================== 초기화 ====================
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -208,25 +225,49 @@ export default function AlbumArea({
         }}
       >
         {maxStepReached >= 4 ? (
-          <AlbumCoverWithLP
-            coverImageUrl={coverImageUrl}
-            coverColor={coverColor}
-            lpCircleColor={lpColor}
-            lpCircleImageUrl={lpCircleImageUrl}
-            lpSize={Math.round(lpSize * 0.9)} // LP는 커버보다 10% 작게
-            coverSize={lpSize} // 앨범 커버는 LP와 동일한 크기 (가로세로 비율 유지)
-            albumName={step === 5 ? albumName : undefined}
-            tag={step === 5 ? (category === "mood" && selectedTag && selectedTag !== "+ 직접 입력" ? selectedTag : category === "situation" ? situationValue : undefined) : undefined}
-            nickname={step === 5 ? "닉네임" : undefined}
-            date={step === 5 && mounted ? new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : undefined}
-            showCoverText={step === 5}
-          />
+          <div style={{ position: 'relative', display: 'inline-block', overflow: step === 5 ? 'hidden' : 'visible' }}>
+            <AlbumCoverWithLP
+              coverImageUrl={coverImageUrl}
+              coverColor={coverColor}
+              lpCircleColor={lpColor}
+              lpCircleImageUrl={lpCircleImageUrl}
+              lpSize={Math.round(lpSize * 0.9)} // LP는 커버보다 10% 작게
+              coverSize={lpSize} // 앨범 커버는 LP와 동일한 크기 (가로세로 비율 유지)
+              albumName={step === 5 ? albumName : undefined}
+              tag={undefined}
+              bottomContent={step === 5 ? (
+                <NicknameTag
+                  nickname="닉네임"
+                  profileImageUrl={profileImageUrl}
+                  coverSize={lpSize}
+                />
+              ) : undefined}
+              date={step === 5 && mounted ? (() => {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                return `${year}.${month}.${day}`;
+              })() : undefined}
+              showCoverText={step === 5}
+            />
+            
+            {/* 앨범 설명 종이 (step 5일 때만) */}
+            {step === 5 && albumDescription.trim().length > 0 && (
+              <AlbumDescriptionPaper
+                albumDescription={albumDescription}
+                lpSize={lpSize}
+                isExpanded={isDescriptionExpanded}
+                onToggle={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              />
+            )}
+          </div>
         ) : (
           <LP size={lpSize} circleColor={lpColor} />
         )}
       </div>
 
-      {/* step5일 때 앨범 아래 정보 표시 */}
+      {/* ==================== step 5: 최종 미리보기 영역 ==================== */}
       {step === 5 && (
         <div
           style={{
@@ -238,7 +279,7 @@ export default function AlbumArea({
             width: "100%",
           }}
         >
-          {/* 공개여부, 노래 개수 태그 */}
+          {/* 태그 섹션: 카테고리 → 공개여부 → 곡개수 */}
           <div
             style={{
               display: "flex",
@@ -248,6 +289,24 @@ export default function AlbumArea({
               justifyContent: "center",
             }}
           >
+            {/* 카테고리 태그 */}
+            {(category === "mood" && selectedTag && selectedTag !== "+ 직접 입력") || (category === "situation" && situationValue) ? (
+              <div
+                style={{
+                  padding: `${responsive.sizeVh(4, 5, 5, 5)} ${responsive.sizeVh(8, 10, 10, 10)}`,
+                  border: "3px solid #000000",
+                  borderRadius: responsive.sizeVh(12, 20, 20, 20),
+                  backgroundColor: COLORS.WHITE,
+                  fontFamily: FONTS.KYOBO_HANDWRITING,
+                  fontSize: responsive.fontSize(16, 20, 22, 25),
+                  color: COLORS.BLACK,
+                  boxSizing: "border-box",
+                  display: "inline-block",
+                }}
+              >
+                {category === "mood" && selectedTag && selectedTag !== "+ 직접 입력" ? selectedTag : situationValue}
+              </div>
+            ) : null}
             {isPublic && (
               <div
                 style={{
@@ -286,28 +345,8 @@ export default function AlbumArea({
               </div>
             )}
           </div>
-          {/* 앨범설명 */}
-          {albumDescription.trim().length > 0 && (
-            <div
-              style={{
-                fontSize: TEXT_SIZES.ALBUM_TEXT,
-                fontFamily: FONTS.KYOBO_HANDWRITING,
-                color: COLORS.BLACK,
-                textAlign: "center",
-                width: `${lpSize}px`,
-                maxWidth: `${lpSize}px`,
-                maxHeight: `calc(${TEXT_SIZES.ALBUM_TEXT} * 1.5 * 2)`,
-                overflowY: "auto",
-                lineHeight: "1.5",
-                ...TEXT_STYLES.WORD_BREAK,
-                boxSizing: "border-box",
-              }}
-            >
-              {albumDescription}
-            </div>
-          )}
-          
-          {/* 공유 버튼 */}
+
+          {/* 공유 버튼 섹션: 카카오톡 공유 & 링크 복사 */}
           <div
             style={{
               display: "flex",
@@ -317,10 +356,10 @@ export default function AlbumArea({
               justifyContent: "center",
             }}
           >
-            {/* 카카오톡에 공유하기 */}
+            {/* 카카오톡 공유 버튼 */}
             <button
               onClick={() => {
-                // 카카오톡 공유 기능 구현 예정
+                // TODO: 카카오톡 공유 기능 구현
               }}
               style={{
                 display: "flex",
