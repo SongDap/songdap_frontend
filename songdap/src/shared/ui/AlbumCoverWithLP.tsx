@@ -3,10 +3,17 @@
 import Image from "next/image";
 import LP from "./LP";
 
-// 폰트 상수
+/**
+ * 폰트 상수
+ * - KYOBO_HANDWRITING: 교보 손글씨체 (태그)
+ * - CAFE24_PROSLIM: 카페24 프로 슬림 (닉네임)
+ * - CAFE24_SSURROUND: 카페24 써라운드 (앨범명, 날짜)
+ */
 const FONTS = {
   KYOBO_HANDWRITING: 'var(--font-kyobo-handwriting)',
   CAFE24_PROSLIM: 'var(--font-cafe24-proslim)',
+  HSS_AEMAEUL: 'var(--font-hssaemaeul)',
+  CAFE24_SSURROUND: 'var(--font-cafe24-ssurround)',
 } as const;
 
 interface AlbumCoverWithLPProps {
@@ -18,11 +25,20 @@ interface AlbumCoverWithLPProps {
   coverSize?: number;
   albumName?: string;
   tag?: string;
-  nickname?: string;
+  /** 하단에 표시할 커스텀 콘텐츠 (닉네임 태그, 기타 정보 등) */
+  bottomContent?: React.ReactNode;
   date?: string;
   showCoverText?: boolean;
 }
 
+/**
+ * 앨범 커버와 LP를 함께 표시하는 컴포넌트
+ * 
+ * @description
+ * - LP는 앨범 커버 뒤에 배치되며, 커버의 오른쪽 끝이 LP 중심에 오도록 위치
+ * - step 5에서는 앨범명, 닉네임, 날짜가 앨범 커버 위에 표시됨
+ * - 하단에 18% padding을 두어 세모 띠 공간 확보
+ */
 export default function AlbumCoverWithLP({
   coverImageUrl,
   coverColor = "#ffffff",
@@ -32,10 +48,35 @@ export default function AlbumCoverWithLP({
   coverSize = 250,
   albumName,
   tag,
-  nickname,
+  bottomContent,
   date,
   showCoverText = false,
 }: AlbumCoverWithLPProps) {
+  /**
+   * 색상을 어둡게 만드는 함수 (앨범 커버 테두리용)
+   * @param hex - 원본 hex 색상
+   * @returns 80% 어두워진 hex 색상
+   */
+  const getDarkerColor = (hex: string) => {
+    // # 제거
+    const color = hex.replace("#", "");
+    // R, G, B 추출
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+    
+    // 각각 20% 정도 어둡게 (최소값 0)
+    const darken = (val: number) => Math.max(0, Math.min(255, Math.floor(val * 0.8)));
+    
+    const dr = darken(r).toString(16).padStart(2, "0");
+    const dg = darken(g).toString(16).padStart(2, "0");
+    const db = darken(b).toString(16).padStart(2, "0");
+    
+    return `#${dr}${dg}${db}`;
+  };
+
+  const borderColor = getDarkerColor(coverColor);
+
   // 앨범 커버의 왼쪽 끝을 기준으로 위치 조정
   // 앨범 커버의 오른쪽 끝이 LP의 중심에 오도록 위치 계산
   // LP 중심: lpSize / 2
@@ -87,14 +128,14 @@ export default function AlbumCoverWithLP({
           width: coverSize,
           height: coverSize,
           backgroundColor: coverColor,
-          border: "2.5px solid #000",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)",
+          border: `5px solid ${borderColor}`,
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: showCoverText ? "flex-start" : "center",
           zIndex: 10,
-          padding: showCoverText ? `${coverSize * 0.08}px ${coverSize * 0.06}px` : 0,
+          padding: showCoverText ? `${coverSize * 0.05}px ${coverSize * 0.06}px ${coverSize * 0.18}px ${coverSize * 0.06}px` : 0,
           boxSizing: "border-box",
           overflow: "hidden",
         }}
@@ -126,66 +167,79 @@ export default function AlbumCoverWithLP({
                   justifyContent: "space-between",
                 }}
               >
-                {/* 상단: 태그 */}
-                {tag && (
-                  <div
-                    style={{
-                      alignSelf: "flex-start",
-                      padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
-                      border: "2px solid #000",
-                      borderRadius: `${coverSize * 0.04}px`,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      fontFamily: FONTS.KYOBO_HANDWRITING,
-                      fontSize: `${coverSize * 0.08}px`,
-                      color: "#000",
-                    }}
-                  >
-                    {tag}
-                  </div>
-                )}
-                
-                {/* 하단: 앨범명, 닉네임, 날짜 */}
+                {/* 상단: 태그 & 앨범명 */}
                 <div
                   style={{
                     display: "flex",
                     flexDirection: "column",
                     gap: `${coverSize * 0.02}px`,
                     width: "100%",
+                    maxHeight: "65%",
                   }}
                 >
-                  {albumName && (
+                  {tag && (
                     <div
                       style={{
+                        alignSelf: "flex-start",
+                        padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
+                        border: "2px solid #000",
+                        borderRadius: `${coverSize * 0.04}px`,
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
                         fontFamily: FONTS.KYOBO_HANDWRITING,
+                        fontSize: `${coverSize * 0.10}px`,
+                        color: "#000",
+                      }}
+                    >
+                      {tag}
+                    </div>
+                  )}
+                  {albumName && (
+                    <div
+                      className="album-title-scroll"
+                      style={{
+                        fontFamily: FONTS.CAFE24_SSURROUND,
                         fontSize: `${coverSize * 0.12}px`,
                         color: "#000",
-                        fontWeight: "bold",
-                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
+                        fontWeight: "900",
+                        WebkitTextStroke: "2px #ffffff",
+                        paintOrder: "stroke fill",
+                        textShadow: "0 0 2px rgba(255, 255, 255, 0.8)",
                         wordBreak: "break-word",
+                        overflowY: "auto",
+                        maxHeight: `${coverSize * 0.45}px`,
+                        lineHeight: "1.2",
+                        paddingTop: `${coverSize * 0.01}px`,
                       }}
                     >
                       {albumName}
                     </div>
                   )}
-                  {nickname && (
-                    <div
-                      style={{
-                        fontFamily: FONTS.CAFE24_PROSLIM,
-                        fontSize: `${coverSize * 0.07}px`,
-                        color: "#000",
-                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
-                      }}
-                    >
-                      {nickname}
-                    </div>
-                  )}
+                </div>
+                
+                {/* 하단: 커스텀 콘텐츠 (닉네임 등), 날짜 */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: `${coverSize * 0.02}px`,
+                    width: "100%",
+                    marginBottom: 0,
+                  }}
+                >
+                  {/* 커스텀 콘텐츠 슬롯 (재사용 가능) */}
+                  {bottomContent}
+                  
+                  {/* 날짜 */}
                   {date && (
                     <div
                       style={{
-                        fontFamily: FONTS.CAFE24_PROSLIM,
-                        fontSize: `${coverSize * 0.06}px`,
-                        color: "#666",
-                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
+                        fontFamily: FONTS.CAFE24_SSURROUND,
+                        fontSize: `${coverSize * 0.08}px`,
+                        color: "#000",
+                        fontWeight: "900",
+                        WebkitTextStroke: "1.5px #ffffff",
+                        paintOrder: "stroke fill",
+                        textShadow: "0 0 2px rgba(255, 255, 255, 0.9)",
                       }}
                     >
                       {date}
@@ -216,67 +270,82 @@ export default function AlbumCoverWithLP({
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
-                  padding: `${coverSize * 0.08}px ${coverSize * 0.06}px`,
+                  padding: `${coverSize * 0.05}px ${coverSize * 0.06}px ${coverSize * 0.18}px ${coverSize * 0.06}px`,
                   boxSizing: "border-box",
                 }}
               >
-                {/* 상단: 태그 */}
-                {tag && (
-                  <div
-                    style={{
-                      alignSelf: "flex-start",
-                      padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
-                      border: "2px solid #000",
-                      borderRadius: `${coverSize * 0.04}px`,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      fontFamily: FONTS.KYOBO_HANDWRITING,
-                      fontSize: `${coverSize * 0.08}px`,
-                      color: "#000",
-                    }}
-                  >
-                    {tag}
-                  </div>
-                )}
-                
-                {/* 하단: 앨범명, 닉네임, 날짜 */}
+                {/* 상단: 태그 & 앨범명 */}
                 <div
                   style={{
                     display: "flex",
                     flexDirection: "column",
                     gap: `${coverSize * 0.02}px`,
                     width: "100%",
+                    maxHeight: "65%",
                   }}
                 >
-                  {albumName && (
+                  {tag && (
                     <div
                       style={{
+                        alignSelf: "flex-start",
+                        padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
+                        border: "2px solid #000",
+                        borderRadius: `${coverSize * 0.04}px`,
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
                         fontFamily: FONTS.KYOBO_HANDWRITING,
+                        fontSize: `${coverSize * 0.10}px`,
+                        color: "#000",
+                      }}
+                    >
+                      {tag}
+                    </div>
+                  )}
+                  {albumName && (
+                    <div
+                      className="album-title-scroll"
+                      style={{
+                        fontFamily: FONTS.CAFE24_SSURROUND,
                         fontSize: `${coverSize * 0.12}px`,
                         color: "#000",
-                        fontWeight: "bold",
+                        fontWeight: "900",
+                        WebkitTextStroke: "2px #ffffff",
+                        paintOrder: "stroke fill",
+                        textShadow: "0 0 2px rgba(255, 255, 255, 0.8)",
                         wordBreak: "break-word",
+                        overflowY: "auto",
+                        maxHeight: `${coverSize * 0.45}px`,
+                        lineHeight: "1.2",
+                        paddingTop: `${coverSize * 0.01}px`,
                       }}
                     >
                       {albumName}
                     </div>
                   )}
-                  {nickname && (
-                    <div
-                      style={{
-                        fontFamily: FONTS.CAFE24_PROSLIM,
-                        fontSize: `${coverSize * 0.07}px`,
-                        color: "#000",
-                      }}
-                    >
-                      {nickname}
-                    </div>
-                  )}
+                </div>
+                
+                {/* 하단: 커스텀 콘텐츠 (닉네임 등), 날짜 */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: `${coverSize * 0.02}px`,
+                    width: "100%",
+                    marginBottom: 0,
+                  }}
+                >
+                  {/* 커스텀 콘텐츠 슬롯 (재사용 가능) */}
+                  {bottomContent}
+                  
+                  {/* 날짜 */}
                   {date && (
                     <div
                       style={{
-                        fontFamily: FONTS.CAFE24_PROSLIM,
-                        fontSize: `${coverSize * 0.06}px`,
-                        color: "#666",
+                        fontFamily: FONTS.CAFE24_SSURROUND,
+                        fontSize: `${coverSize * 0.08}px`,
+                        color: "#000",
+                        fontWeight: "900",
+                        WebkitTextStroke: "1.5px #ffffff",
+                        paintOrder: "stroke fill",
                       }}
                     >
                       {date}

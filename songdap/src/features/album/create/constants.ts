@@ -1,4 +1,16 @@
-// 공통 스타일 상수
+/**
+ * 앨범 생성 페이지 상수 정의
+ * 
+ * @description
+ * - COLORS: 색상 팔레트
+ * - FONTS: 폰트 변수
+ * - responsive: 반응형 계산 유틸리티
+ * - SPACING: 공통 여백
+ * - TEXT_SIZES: 텍스트 크기
+ * - ALBUM_AREA: 앨범 영역 설정
+ */
+
+// ==================== 색상 ====================
 export const COLORS = {
   BLACK: '#000000',
   WHITE: '#ffffff',
@@ -9,14 +21,23 @@ export const COLORS = {
   BUTTON_ENABLED_INNER: '#8BC9C4',
 } as const;
 
+// ==================== 폰트 ====================
 export const FONTS = {
   DUNG_GEUN_MO: 'var(--font-dung-geun-mo)',
   GALMURI9: 'var(--font-galmuri9)',
   CAFE24_PROSLIM: 'var(--font-cafe24-proslim)',
   KYOBO_HANDWRITING: 'var(--font-kyobo-handwriting)',
+  CAFE24_SSURROUND: 'var(--font-cafe24-ssurround)',
 } as const;
 
-// 반응형 계산 유틸리티
+// ==================== 반응형 유틸리티 ====================
+/**
+ * 반응형 크기 계산 헬퍼 함수
+ * 
+ * @example
+ * responsive.fontSize(16, 20, 24, 28) // 모바일 16px ~ 데스크탑 28px
+ * responsive.sizeVh(10, 15, 20, 25) // vh 기반 반응형
+ */
 export const responsive = {
   // vh 기반 계산 (1024px 기준)
   vh: (value: number) => `calc(${value} * 100vh / 1024)`,
@@ -101,7 +122,7 @@ export const MESSAGE_STYLE = {
 export const INPUT_BOX_STYLE = {
   width: '100%',
   border: '3px solid #000000',
-  borderRadius: '10px',
+  borderRadius: '20px',
   backgroundColor: COLORS.WHITE,
   paddingLeft: responsive.sizeVh(16, 30, 30, 30),
   paddingRight: responsive.sizeVw(12, 16, 16, 16),
@@ -176,33 +197,34 @@ export const SONG_COUNT_CONTAINER_STYLE = {
 
 // 곡 개수 버튼 스타일 (+/-) (반응형)
 export const SONG_COUNT_BUTTON_STYLE = {
-  width: responsive.sizeVh(32, 40, 40, 40),
-  height: responsive.sizeVh(32, 40, 40, 40),
+  width: responsive.sizeVh(40, 50, 50, 50),
+  height: responsive.sizeVh(40, 50, 50, 50),
   border: '3px solid #000000',
-  borderRadius: '10px',
+  borderRadius: '12px',
   backgroundColor: COLORS.WHITE,
   fontFamily: FONTS.KYOBO_HANDWRITING,
-  fontSize: TEXT_SIZES.INPUT,
+  fontSize: responsive.fontSize(20, 26, 26, 26),
   color: COLORS.BLACK,
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   boxSizing: 'border-box' as const,
+  transition: 'all 0.2s ease',
 } as const;
 
 // 곡 개수 입력 필드 스타일 (반응형)
 export const SONG_COUNT_INPUT_STYLE = {
-  width: responsive.sizeVw(80, 100, 100, 100),
-  height: responsive.sizeVh(32, 40, 40, 40),
+  width: responsive.sizeVw(100, 140, 140, 140),
+  height: responsive.sizeVh(40, 50, 50, 50),
   border: '3px solid #000000',
-  borderRadius: '10px',
+  borderRadius: '12px',
   backgroundColor: COLORS.WHITE,
   paddingLeft: responsive.sizeVw(8, 10, 10, 10),
   paddingRight: responsive.sizeVw(8, 10, 10, 10),
   boxSizing: 'border-box' as const,
   fontFamily: FONTS.KYOBO_HANDWRITING,
-  fontSize: TEXT_SIZES.INPUT,
+  fontSize: responsive.fontSize(20, 26, 26, 26),
   outline: 'none',
   color: COLORS.BLACK,
   textAlign: 'center' as const,

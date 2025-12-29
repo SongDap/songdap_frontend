@@ -17,7 +17,7 @@ export default function MoodTagList({
   showTitle = true,
 }: MoodTagListProps) {
   const [customInput, setCustomInput] = useState("");
-  const [customTag, setCustomTag] = useState<string | null>(null); // 하나만 저장
+  const [customTag, setCustomTag] = useState<string | null>(null);
   const [editingTag, setEditingTag] = useState<string | null>(null);
   const isDirectInputSelected = selectedTag === "+ 직접 입력";
 
@@ -31,7 +31,6 @@ export default function MoodTagList({
   };
 
   const handleCustomTagClick = (tag: string) => {
-    // 커스텀 태그 클릭 시 수정 모드로 전환
     setEditingTag(tag);
     setCustomInput(tag);
     onTagChange?.(tag);
@@ -39,7 +38,6 @@ export default function MoodTagList({
 
   const handleConfirm = () => {
     if (customInput.trim()) {
-      // 커스텀 태그는 하나만 저장
       setCustomTag(customInput.trim());
       onTagChange?.(customInput.trim());
       setCustomInput("");
@@ -48,7 +46,6 @@ export default function MoodTagList({
   };
 
   const handleReset = () => {
-    // 초기화: 커스텀 태그 삭제하고 "+ 직접 입력" 태그로 복귀
     setCustomTag(null);
     setCustomInput("");
     setEditingTag(null);
@@ -56,7 +53,6 @@ export default function MoodTagList({
   };
 
   const handleCancel = () => {
-    // 취소: 입력 취소하고 "+ 직접 입력" 태그로 복귀
     setCustomInput("");
     setEditingTag(null);
     onTagChange?.("");
@@ -69,7 +65,7 @@ export default function MoodTagList({
   };
 
   return (
-    <div>
+    <div style={{ width: '100%' }}>
       {showTitle && (
         <div
           style={{
@@ -87,7 +83,8 @@ export default function MoodTagList({
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '10px',
+          gap: '12px',
+          alignItems: 'center',
         }}
       >
         {MOOD_TAGS.map((tag) => (
@@ -96,15 +93,26 @@ export default function MoodTagList({
             type="button"
             onClick={() => handleTagClick(tag)}
             style={{
-              padding: '5px 10px',
+              padding: '8px 16px',
               border: '3px solid #000000',
-              borderRadius: '20px',
+              borderRadius: '25px',
               backgroundColor: selectedTag === tag ? COLORS.BUTTON_ENABLED_OUTER : COLORS.WHITE,
               fontFamily: FONTS.KYOBO_HANDWRITING,
               fontSize: TEXT_SIZES.INPUT,
               color: COLORS.BLACK,
               cursor: 'pointer',
               boxSizing: 'border-box',
+              transition: 'all 0.2s ease',
+              transform: selectedTag === tag ? 'translateY(-2px)' : 'none',
+              boxShadow: selectedTag === tag ? '0 4px 8px rgba(0,0,0,0.1)' : 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = selectedTag === tag ? COLORS.BUTTON_ENABLED_INNER : '#f0f0f0';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = selectedTag === tag ? COLORS.BUTTON_ENABLED_OUTER : COLORS.WHITE;
+              e.currentTarget.style.transform = selectedTag === tag ? 'translateY(-2px)' : 'none';
             }}
           >
             {tag}
@@ -112,12 +120,142 @@ export default function MoodTagList({
         ))}
         {customTag && (
           editingTag === customTag ? (
-            // 수정 모드: 입력창으로 표시
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                width: '100%',
+                maxWidth: '450px',
+                minWidth: '280px',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <input
+                  type="text"
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="기분을 입력하세요"
+                  autoFocus
+                  style={{
+                    padding: '8px 45px 8px 16px',
+                    border: '3px solid #000000',
+                    borderRadius: '25px',
+                    backgroundColor: COLORS.WHITE,
+                    fontFamily: FONTS.KYOBO_HANDWRITING,
+                    fontSize: TEXT_SIZES.INPUT,
+                    color: COLORS.BLACK,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    width: '100%',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  style={{
+                    position: 'absolute',
+                    right: '15px',
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    fontSize: '26px',
+                    color: '#999',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                    width: '32px',
+                    height: '32px',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                style={{
+                  padding: '8px 20px',
+                  border: '3px solid #000000',
+                  borderRadius: '25px',
+                  backgroundColor: COLORS.BUTTON_ENABLED_OUTER,
+                  fontFamily: FONTS.KYOBO_HANDWRITING,
+                  fontSize: TEXT_SIZES.INPUT,
+                  color: COLORS.BLACK,
+                  cursor: 'pointer',
+                  boxSizing: 'border-box',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.BUTTON_ENABLED_INNER;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = COLORS.BUTTON_ENABLED_OUTER;
+                  e.currentTarget.style.transform = 'none';
+                }}
+              >
+                확인
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleCustomTagClick(customTag)}
+              style={{
+                padding: '8px 16px',
+                border: '3px solid #000000',
+                borderRadius: '25px',
+                backgroundColor: selectedTag === customTag ? COLORS.BUTTON_ENABLED_OUTER : COLORS.WHITE,
+                fontFamily: FONTS.KYOBO_HANDWRITING,
+                fontSize: TEXT_SIZES.INPUT,
+                color: COLORS.BLACK,
+                cursor: 'pointer',
+                boxSizing: 'border-box',
+                transition: 'all 0.2s ease',
+                transform: selectedTag === customTag ? 'translateY(-2px)' : 'none',
+                boxShadow: selectedTag === customTag ? '0 4px 8px rgba(0,0,0,0.1)' : 'none',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = selectedTag === customTag ? COLORS.BUTTON_ENABLED_INNER : '#f0f0f0';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = selectedTag === customTag ? COLORS.BUTTON_ENABLED_OUTER : COLORS.WHITE;
+                e.currentTarget.style.transform = selectedTag === customTag ? 'translateY(-2px)' : 'none';
+              }}
+            >
+              {customTag}
+            </button>
+          )
+        )}
+        {!customTag && isDirectInputSelected && !editingTag ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              width: '100%',
+              maxWidth: '450px',
+              minWidth: '280px',
+            }}
+          >
             <div
               style={{
                 position: 'relative',
-                display: 'inline-block',
-                minWidth: '150px',
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
               <input
@@ -128,9 +266,9 @@ export default function MoodTagList({
                 placeholder="기분을 입력하세요"
                 autoFocus
                 style={{
-                  padding: '5px 130px 5px 10px',
+                  padding: '8px 45px 8px 16px',
                   border: '3px solid #000000',
-                  borderRadius: '20px',
+                  borderRadius: '25px',
                   backgroundColor: COLORS.WHITE,
                   fontFamily: FONTS.KYOBO_HANDWRITING,
                   fontSize: TEXT_SIZES.INPUT,
@@ -142,134 +280,49 @@ export default function MoodTagList({
               />
               <button
                 type="button"
-                onClick={handleReset}
+                onClick={handleCancel}
                 style={{
                   position: 'absolute',
-                  right: '70px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  padding: '5px 15px',
+                  right: '15px',
                   border: 'none',
-                  borderRadius: '20px',
-                  backgroundColor: COLORS.BUTTON_DISABLED_OUTER,
-                  fontFamily: FONTS.KYOBO_HANDWRITING,
-                  fontSize: TEXT_SIZES.INPUT,
-                  color: COLORS.BLACK,
+                  background: 'none',
                   cursor: 'pointer',
-                  boxSizing: 'border-box',
+                  fontSize: '26px',
+                  color: '#999',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0,
+                  width: '32px',
+                  height: '32px',
                 }}
               >
-                삭제
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirm}
-                style={{
-                  position: 'absolute',
-                  right: '5px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  padding: '5px 15px',
-                  border: 'none',
-                  borderRadius: '20px',
-                  backgroundColor: COLORS.BUTTON_ENABLED_OUTER,
-                  fontFamily: FONTS.KYOBO_HANDWRITING,
-                  fontSize: TEXT_SIZES.INPUT,
-                  color: COLORS.BLACK,
-                  cursor: 'pointer',
-                  boxSizing: 'border-box',
-                }}
-              >
-                확인
+                ✕
               </button>
             </div>
-          ) : (
-            // 일반 모드: 버튼으로 표시
-            <button
-              type="button"
-              onClick={() => handleCustomTagClick(customTag)}
-              style={{
-                padding: '5px 10px',
-                border: '3px solid #000000',
-                borderRadius: '20px',
-                backgroundColor: selectedTag === customTag ? COLORS.BUTTON_ENABLED_OUTER : COLORS.WHITE,
-                fontFamily: FONTS.KYOBO_HANDWRITING,
-                fontSize: TEXT_SIZES.INPUT,
-                color: COLORS.BLACK,
-                cursor: 'pointer',
-                boxSizing: 'border-box',
-              }}
-            >
-              {customTag}
-            </button>
-          )
-        )}
-        {!customTag && isDirectInputSelected && !editingTag ? (
-          <div
-            style={{
-              position: 'relative',
-              display: 'inline-block',
-              minWidth: '150px',
-            }}
-          >
-            <input
-              type="text"
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="기분을 입력하세요"
-              autoFocus
-              style={{
-                padding: '5px 130px 5px 10px',
-                border: '3px solid #000000',
-                borderRadius: '20px',
-                backgroundColor: COLORS.WHITE,
-                fontFamily: FONTS.KYOBO_HANDWRITING,
-                fontSize: TEXT_SIZES.INPUT,
-                color: COLORS.BLACK,
-                outline: 'none',
-                boxSizing: 'border-box',
-                width: '100%',
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleCancel}
-              style={{
-                position: 'absolute',
-                right: '70px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                padding: '5px 15px',
-                border: 'none',
-                borderRadius: '15px',
-                backgroundColor: COLORS.BUTTON_DISABLED_OUTER,
-                fontFamily: FONTS.KYOBO_HANDWRITING,
-                fontSize: TEXT_SIZES.INPUT,
-                color: COLORS.BLACK,
-                cursor: 'pointer',
-                boxSizing: 'border-box',
-              }}
-            >
-              취소
-            </button>
             <button
               type="button"
               onClick={handleConfirm}
               style={{
-                position: 'absolute',
-                right: '5px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                padding: '5px 15px',
-                border: 'none',
-                borderRadius: '15px',
+                padding: '8px 20px',
+                border: '3px solid #000000',
+                borderRadius: '25px',
                 backgroundColor: COLORS.BUTTON_ENABLED_OUTER,
                 fontFamily: FONTS.KYOBO_HANDWRITING,
                 fontSize: TEXT_SIZES.INPUT,
                 color: COLORS.BLACK,
                 cursor: 'pointer',
                 boxSizing: 'border-box',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.BUTTON_ENABLED_INNER;
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.BUTTON_ENABLED_OUTER;
+                e.currentTarget.style.transform = 'none';
               }}
             >
               확인
@@ -280,9 +333,9 @@ export default function MoodTagList({
             type="button"
             onClick={() => handleTagClick("+ 직접 입력")}
             style={{
-              padding: '5px 10px',
+              padding: '8px 16px',
               border: '3px solid #000000',
-              borderRadius: '20px',
+              borderRadius: '25px',
               backgroundColor: COLORS.WHITE,
               fontFamily: FONTS.KYOBO_HANDWRITING,
               fontSize: TEXT_SIZES.INPUT,
@@ -292,6 +345,15 @@ export default function MoodTagList({
               display: 'flex',
               alignItems: 'center',
               gap: '5px',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f0f0f0';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.WHITE;
+              e.currentTarget.style.transform = 'none';
             }}
           >
             <span style={{ fontSize: TEXT_SIZES.INPUT, lineHeight: '1' }}>+</span>
@@ -302,4 +364,5 @@ export default function MoodTagList({
     </div>
   );
 }
+
 

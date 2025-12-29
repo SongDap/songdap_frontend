@@ -71,7 +71,11 @@ const buttonSectionStyle = {
   flexShrink: 0,
 };
 
-// 발매 확인 모달 컴포넌트
+/**
+ * 앨범 발매 확인 모달 컴포넌트
+ * 
+ * @description step 5에서 "다음" 버튼 클릭 시 표시되는 최종 확인 모달
+ */
 function ReleaseConfirmModal({ 
   isOpen, 
   onConfirm, 
@@ -150,16 +154,29 @@ function ReleaseConfirmModal({
   );
 }
 
+/**
+ * 앨범 생성 메인 컴포넌트
+ * 
+ * @description
+ * 5단계 앨범 생성 프로세스 관리
+ * - step 1: 앨범 제목 & 설명
+ * - step 2: 카테고리 선택 (기분/상황)
+ * - step 3: 공개 여부 & 곡 개수
+ * - step 4: 앨범 커버 & LP 디자인
+ * - step 5: 최종 미리보기 & 공유
+ */
 export default function CreateAlbumForm() {
   const router = useRouter();
   const serviceFrameRef = useRef<HTMLDivElement>(null);
 
+  // ==================== 상태 관리 ====================
+  
   // 단계 관리
   const [step, setStep] = useState(1);
   const [maxStepReached, setMaxStepReached] = useState(1);
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
 
-  // 앨범 정보
+  // 앨범 기본 정보
   const [albumName, setAlbumName] = useState("");
   const [albumDescription, setAlbumDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -167,6 +184,7 @@ export default function CreateAlbumForm() {
   const [situationValue, setSituationValue] = useState("");
   const [isPublic, setIsPublic] = useState("public");
   const [songCount, setSongCount] = useState(15);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
 
   // 앨범 커버 & LP 디자인
   const [coverColor, setCoverColor] = useState("#ffffff");
@@ -176,7 +194,12 @@ export default function CreateAlbumForm() {
   const [isSyncEnabled, setIsSyncEnabled] = useState(false);
   const [syncSource, setSyncSource] = useState<"cover" | "lp" | null>(null);
 
-  // 동기화 처리
+  // ==================== 동기화 처리 ====================
+  
+  /**
+   * 앨범 커버와 LP 디자인 동기화
+   * syncSource에 따라 커버→LP 또는 LP→커버로 동기화
+   */
   useEffect(() => {
     if (!isSyncEnabled || !syncSource) return;
 
@@ -189,7 +212,8 @@ export default function CreateAlbumForm() {
     if (lpCircleImageUrl !== sourceImage) setLpCircleImageUrl(sourceImage);
   }, [isSyncEnabled, syncSource, coverColor, coverImageUrl, lpColor, lpCircleImageUrl]);
 
-  // 핸들러
+  // ==================== 이벤트 핸들러 ====================
+  
   const handleSyncChange = (enabled: boolean, source: "cover" | "lp") => {
     setIsSyncEnabled(enabled);
     setSyncSource(enabled ? source : null);
@@ -238,64 +262,65 @@ export default function CreateAlbumForm() {
         
         <div style={scrollContainerStyle}>
           <div style={albumAreaWrapperStyle}>
-            <AlbumArea 
-              albumName={albumName} 
-              albumDescription={albumDescription}
-              category={category}
-              selectedTag={selectedTag}
-              situationValue={situationValue}
-              isPublic={isPublic}
-              songCount={songCount}
-              step={step}
-              maxStepReached={maxStepReached}
+          <AlbumArea 
+            albumName={albumName} 
+            albumDescription={albumDescription}
+            category={category}
+            selectedTag={selectedTag}
+            situationValue={situationValue}
+            isPublic={isPublic}
+            songCount={songCount}
+            step={step}
+            maxStepReached={maxStepReached}
               lpColor={isSyncEnabled ? coverColor : lpColor}
               lpCircleImageUrl={isSyncEnabled ? coverImageUrl : lpCircleImageUrl}
-              coverColor={coverColor}
-              coverImageUrl={coverImageUrl}
-            />
-          </div>
-          
+            coverColor={coverColor}
+            coverImageUrl={coverImageUrl}
+              profileImageUrl={profileImageUrl}
+          />
+        </div>
+        
           <div style={inputSectionStyle}>
             {step === 1 && (
-              <AlbumInputSection
-                albumName={albumName}
-                albumDescription={albumDescription}
-                onAlbumNameChange={setAlbumName}
-                onAlbumDescriptionChange={setAlbumDescription}
-              />
+            <AlbumInputSection
+              albumName={albumName}
+              albumDescription={albumDescription}
+              onAlbumNameChange={setAlbumName}
+              onAlbumDescriptionChange={setAlbumDescription}
+            />
             )}
             {step === 2 && (
-              <AlbumInputSectionStep2
-                category={category}
-                onCategoryChange={setCategory}
-                selectedTag={selectedTag}
-                onTagChange={setSelectedTag}
-                situationValue={situationValue}
-                onSituationChange={setSituationValue}
-              />
+            <AlbumInputSectionStep2
+              category={category}
+              onCategoryChange={setCategory}
+              selectedTag={selectedTag}
+              onTagChange={setSelectedTag}
+              situationValue={situationValue}
+              onSituationChange={setSituationValue}
+            />
             )}
             {step === 3 && (
-              <AlbumInputSectionStep3
-                isPublic={isPublic}
-                onPublicChange={setIsPublic}
-                songCount={songCount}
-                onSongCountChange={setSongCount}
-              />
+            <AlbumInputSectionStep3
+              isPublic={isPublic}
+              onPublicChange={setIsPublic}
+              songCount={songCount}
+              onSongCountChange={setSongCount}
+            />
             )}
             {step === 4 && (
-              <AlbumInputSectionStep4
-                lpColor={lpColor}
-                onLpColorChange={setLpColor}
+            <AlbumInputSectionStep4
+              lpColor={lpColor}
+              onLpColorChange={setLpColor}
                 lpCircleImageUrl={lpCircleImageUrl}
                 onLpCircleImageUrlChange={setLpCircleImageUrl}
                 coverColor={coverColor}
                 onCoverColorChange={setCoverColor}
-                coverImageUrl={coverImageUrl}
-                onCoverImageUrlChange={setCoverImageUrl}
+              coverImageUrl={coverImageUrl}
+              onCoverImageUrlChange={setCoverImageUrl}
                 isSyncEnabled={isSyncEnabled}
                 onSyncEnabledChange={handleSyncChange}
-              />
-            )}
+            />
+          )}
             {step === 5 && <AlbumShareSection />}
           </div>
         </div>
