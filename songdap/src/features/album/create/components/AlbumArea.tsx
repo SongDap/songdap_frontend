@@ -40,12 +40,17 @@ export default function AlbumArea({
   coverColor = COLORS.WHITE,
   coverImageUrl,
 }: AlbumAreaProps) {
+  const [mounted, setMounted] = useState(false);
   const [lpSize, setLpSize] = useState(250);
   const [containerHeight, setContainerHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const textScrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // LP 크기 업데이트 (서비스 프레임 가로 길이 기준 반응형)
   useEffect(() => {
@@ -213,7 +218,7 @@ export default function AlbumArea({
             albumName={step === 5 ? albumName : undefined}
             tag={step === 5 ? (category === "mood" && selectedTag && selectedTag !== "+ 직접 입력" ? selectedTag : category === "situation" ? situationValue : undefined) : undefined}
             nickname={step === 5 ? "닉네임" : undefined}
-            date={step === 5 ? new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : undefined}
+            date={step === 5 && mounted ? new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : undefined}
             showCoverText={step === 5}
           />
         ) : (
