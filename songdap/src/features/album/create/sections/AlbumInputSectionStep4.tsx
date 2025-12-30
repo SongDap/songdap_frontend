@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { AlbumCoverWithLP } from "@/shared/ui";
 import { FaPalette, FaPaintBrush, FaImages, FaRedo } from "react-icons/fa";
 import {
@@ -51,13 +51,13 @@ export default function AlbumInputSectionStep4({
   // 앨범 커버 관련 상태
   const [isCoverColorModalOpen, setIsCoverColorModalOpen] = useState(false);
   const [isCoverImageModalOpen, setIsCoverImageModalOpen] = useState(false);
-  const [previewCoverColor, setPreviewCoverColor] = useState(coverColor);
+  const [previewCoverColor, setPreviewCoverColor] = useState(coverImageUrl ? undefined : coverColor);
   const [previewCoverImageUrl, setPreviewCoverImageUrl] = useState<string | undefined>(coverImageUrl);
   
 // LP 관련 상태
   const [isLpColorModalOpen, setIsLpColorModalOpen] = useState(false);
   const [isLpImageModalOpen, setIsLpImageModalOpen] = useState(false);
-  const [previewLpColor, setPreviewLpColor] = useState(lpColor);
+  const [previewLpColor, setPreviewLpColor] = useState(lpCircleImageUrl ? undefined : lpColor);
   const [previewLpImageUrl, setPreviewLpImageUrl] = useState<string | undefined>(lpCircleImageUrl);
   
   // 색상 추가 관련 상태
@@ -67,22 +67,49 @@ export default function AlbumInputSectionStep4({
   const [currentColorModalType, setCurrentColorModalType] = useState<'cover' | 'lp'>('cover');
   const colorInputRef = React.useRef<HTMLInputElement>(null);
 
+  // 공통: 프리뷰 상태 적용 유틸
+  const applyCoverColorPreview = (color?: string) => {
+    setPreviewCoverColor(color);
+    setPreviewCoverImageUrl(undefined);
+    if (isSyncEnabled) {
+      setPreviewLpColor(color);
+      setPreviewLpImageUrl(undefined);
+    }
+  };
+
+  const applyLpColorPreview = (color?: string) => {
+    setPreviewLpColor(color);
+    setPreviewLpImageUrl(undefined);
+  };
+
+  const applyCoverImagePreview = (url?: string) => {
+    setPreviewCoverImageUrl(url);
+    setPreviewCoverColor(undefined);
+    if (isSyncEnabled) {
+      setPreviewLpImageUrl(url);
+      setPreviewLpColor(undefined);
+    }
+  };
+
+  const applyLpImagePreview = (url?: string) => {
+    setPreviewLpImageUrl(url);
+    setPreviewLpColor(undefined);
+  };
+
   // 앨범 커버 preview 업데이트
   useEffect(() => {
-    setPreviewCoverColor(coverColor);
-  }, [coverColor]);
-
-  useEffect(() => {
+    // 이미지가 있으면 색상은 비움
+    setPreviewCoverColor(coverImageUrl ? undefined : coverColor);
     setPreviewCoverImageUrl(coverImageUrl);
-  }, [coverImageUrl]);
+  }, [coverColor, coverImageUrl]);
 
-  // LP preview 업데이트 (동기화 여부에 따라)
+  // LP preview 업데이트 (동기화 여부에 따라), 이미지가 있으면 색상 비움
   useEffect(() => {
     if (isSyncEnabled) {
-      setPreviewLpColor(coverColor);
+      setPreviewLpColor(coverImageUrl ? undefined : coverColor);
       setPreviewLpImageUrl(coverImageUrl);
     } else {
-      setPreviewLpColor(lpColor);
+      setPreviewLpColor(lpCircleImageUrl ? undefined : lpColor);
       setPreviewLpImageUrl(lpCircleImageUrl);
     }
   }, [isSyncEnabled, coverColor, coverImageUrl, lpColor, lpCircleImageUrl]);
@@ -91,16 +118,16 @@ export default function AlbumInputSectionStep4({
     if (isCustom && customColor) {
       setIsAddingColor(true);
       setCustomColorInput(customColor.value);
-      if (currentColorModalType === 'cover') {
-        setPreviewCoverColor(customColor.value);
-    } else {
-        setPreviewLpColor(customColor.value);
+      if (currentColorModalType === "cover") {
+        applyCoverColorPreview(customColor.value);
+      } else {
+        applyLpColorPreview(customColor.value);
       }
     } else {
-      if (currentColorModalType === 'cover') {
-        setPreviewCoverColor(color);
+      if (currentColorModalType === "cover") {
+        applyCoverColorPreview(color);
       } else {
-        setPreviewLpColor(color);
+        applyLpColorPreview(color);
       }
     }
   };
@@ -116,10 +143,10 @@ export default function AlbumInputSectionStep4({
   const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const color = e.target.value;
     setCustomColorInput(color);
-    if (currentColorModalType === 'cover') {
-      setPreviewCoverColor(color);
+    if (currentColorModalType === "cover") {
+      applyCoverColorPreview(color);
     } else {
-      setPreviewLpColor(color);
+      applyLpColorPreview(color);
     }
   };
 
@@ -130,10 +157,10 @@ export default function AlbumInputSectionStep4({
         value: customColorInput,
       };
       setCustomColor(newColor);
-      if (currentColorModalType === 'cover') {
-        setPreviewCoverColor(customColorInput);
+      if (currentColorModalType === "cover") {
+        applyCoverColorPreview(customColorInput);
       } else {
-        setPreviewLpColor(customColorInput);
+        applyLpColorPreview(customColorInput);
       }
       setCustomColorInput("");
       setIsAddingColor(false);
@@ -151,7 +178,7 @@ export default function AlbumInputSectionStep4({
       const reader = new FileReader();
       reader.onloadend = () => {
         const imageUrl = reader.result as string;
-        setPreviewCoverImageUrl(imageUrl);
+        applyCoverImagePreview(imageUrl);
       };
       reader.readAsDataURL(file);
     }
@@ -162,7 +189,7 @@ export default function AlbumInputSectionStep4({
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewLpImageUrl(reader.result as string);
+        applyLpImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -195,6 +222,91 @@ export default function AlbumInputSectionStep4({
       setPreviewLpImageUrl(undefined);
     }
   };
+
+  // 미리보기 상태를 현재 props 기반으로 리셋 (취소/닫기용)
+  const resetCoverPreview = () => {
+    setPreviewCoverColor(coverColor);
+    setPreviewCoverImageUrl(coverImageUrl);
+    if (isSyncEnabled) {
+      setPreviewLpColor(coverColor);
+      setPreviewLpImageUrl(coverImageUrl);
+    }
+  };
+
+  const resetLpPreview = () => {
+    if (isSyncEnabled) {
+      setPreviewLpColor(coverColor);
+      setPreviewLpImageUrl(coverImageUrl);
+    } else {
+      setPreviewLpColor(lpColor);
+      setPreviewLpImageUrl(lpCircleImageUrl);
+    }
+  };
+
+  // 모달/미리보기용 크기 (중복 계산 정리)
+  const { previewLpSize, previewCoverSize } = useMemo(() => {
+    if (typeof window === "undefined") {
+      return { previewLpSize: 180, previewCoverSize: 200 };
+    }
+    const base = Math.min(window.innerWidth, window.innerHeight);
+    return {
+      previewLpSize: Math.round(base * 0.15),
+      previewCoverSize: Math.round(base * 0.18),
+    };
+  }, []);
+
+  // 미리보기용 색/이미지 결정 (선택된 것만 우선) + 동기화 시 LP에 커버 적용
+  const {
+    previewCoverImageEffective,
+    previewCoverColorEffective,
+    previewLpImageEffective,
+    previewLpColorEffective,
+  } = useMemo(() => {
+    const forceCoverPreview = isCoverColorModalOpen || isCoverImageModalOpen;
+    const forceLpPreview = isLpColorModalOpen || isLpImageModalOpen;
+
+    const coverImg = forceCoverPreview
+      ? previewCoverImageUrl
+      : (previewCoverImageUrl ?? coverImageUrl);
+    const coverCol = coverImg
+      ? "#ffffff" // 이미지가 있을 때도 테두리 계산 등을 위해 안전한 값 유지
+      : forceCoverPreview
+        ? (previewCoverColor ?? "#ffffff")
+        : (previewCoverColor ?? coverColor ?? "#ffffff");
+
+    const lpImgRaw = forceLpPreview
+      ? previewLpImageUrl
+      : (previewLpImageUrl ?? lpCircleImageUrl);
+    const lpColRaw = lpImgRaw
+      ? "#ffffff"
+      : forceLpPreview
+        ? (previewLpColor ?? "#ffffff")
+        : (previewLpColor ?? lpColor ?? "#ffffff");
+
+    const lpImg = isSyncEnabled ? coverImg : lpImgRaw;
+    const lpCol = isSyncEnabled ? coverCol : lpColRaw;
+
+    return {
+      previewCoverImageEffective: coverImg,
+      previewCoverColorEffective: coverCol,
+      previewLpImageEffective: lpImg,
+      previewLpColorEffective: lpCol,
+    };
+  }, [
+    isCoverColorModalOpen,
+    isCoverImageModalOpen,
+    isLpColorModalOpen,
+    isLpImageModalOpen,
+    previewCoverImageUrl,
+    coverImageUrl,
+    previewCoverColor,
+    coverColor,
+    previewLpImageUrl,
+    lpCircleImageUrl,
+    previewLpColor,
+    lpColor,
+    isSyncEnabled,
+  ]);
 
   // LP 원 초기화 핸들러
   const handleResetLp = () => {
@@ -558,7 +670,10 @@ export default function AlbumInputSectionStep4({
       {isCoverColorModalOpen && (
         <>
           <div
-            onClick={() => setIsCoverColorModalOpen(false)}
+            onClick={() => {
+              resetCoverPreview();
+              setIsCoverColorModalOpen(false);
+            }}
             style={{
               position: "fixed",
               top: 0,
@@ -642,12 +757,12 @@ export default function AlbumInputSectionStep4({
                 }}
               >
                 <AlbumCoverWithLP
-                  coverImageUrl={undefined}
-                  coverColor={previewCoverColor}
-                  lpCircleColor={isSyncEnabled ? previewCoverColor : previewLpColor}
-                  lpCircleImageUrl={isSyncEnabled ? undefined : previewLpImageUrl}
-                  lpSize={typeof window !== 'undefined' ? Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.15) : 180}
-                  coverSize={typeof window !== 'undefined' ? Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.18) : 200}
+                  coverImageUrl={previewCoverImageEffective}
+                  coverColor={previewCoverColorEffective}
+                  lpCircleColor={isSyncEnabled ? previewCoverColorEffective : previewLpColorEffective}
+                  lpCircleImageUrl={isSyncEnabled ? previewCoverImageEffective : previewLpImageEffective}
+                  lpSize={previewLpSize}
+                  coverSize={previewCoverSize}
                 />
               </div>
 
@@ -812,7 +927,10 @@ export default function AlbumInputSectionStep4({
               }}
             >
               <button
-                onClick={() => setIsCoverColorModalOpen(false)}
+                onClick={() => {
+                  resetCoverPreview();
+                  setIsCoverColorModalOpen(false);
+                }}
                 style={{
                   flex: 1,
                   padding: responsive.sizeVh(10, 15, 15, 15),
@@ -829,8 +947,12 @@ export default function AlbumInputSectionStep4({
               </button>
               <button
                 onClick={() => {
-                  onCoverColorChange?.(previewCoverColor);
+                  onCoverColorChange?.(previewCoverColor ?? COLORS.WHITE);
                   onCoverImageUrlChange?.(undefined);
+                  if (isSyncEnabled) {
+                    onLpColorChange?.(previewCoverColor ?? COLORS.WHITE);
+                    onLpCircleImageUrlChange?.(undefined);
+                  }
                   setIsCoverColorModalOpen(false);
                 }}
                 style={{
@@ -856,7 +978,10 @@ export default function AlbumInputSectionStep4({
       {isCoverImageModalOpen && (
         <>
           <div
-            onClick={() => setIsCoverImageModalOpen(false)}
+            onClick={() => {
+              resetCoverPreview();
+              setIsCoverImageModalOpen(false);
+            }}
             style={{
               position: "fixed",
               top: 0,
@@ -940,12 +1065,12 @@ export default function AlbumInputSectionStep4({
                 }}
               >
                 <AlbumCoverWithLP
-                  coverImageUrl={previewCoverImageUrl}
-                  coverColor={COLORS.WHITE}
-                  lpCircleColor={isSyncEnabled ? COLORS.WHITE : previewLpColor}
-                  lpCircleImageUrl={isSyncEnabled ? previewCoverImageUrl : previewLpImageUrl}
-                  lpSize={typeof window !== 'undefined' ? Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.15) : 180}
-                  coverSize={typeof window !== 'undefined' ? Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.18) : 200}
+                  coverImageUrl={previewCoverImageEffective}
+                  coverColor={previewCoverColorEffective}
+                  lpCircleColor={isSyncEnabled ? previewCoverColorEffective : previewLpColorEffective}
+                  lpCircleImageUrl={isSyncEnabled ? previewCoverImageEffective : previewLpImageEffective}
+                  lpSize={previewLpSize}
+                  coverSize={previewCoverSize}
                 />
               </div>
 
@@ -999,7 +1124,7 @@ export default function AlbumInputSectionStep4({
             >
               <button
                 onClick={() => {
-                  setPreviewCoverImageUrl(coverImageUrl);
+                  resetCoverPreview();
                   setIsCoverImageModalOpen(false);
                 }}
                 style={{
@@ -1019,7 +1144,11 @@ export default function AlbumInputSectionStep4({
               <button
                 onClick={() => {
                   onCoverImageUrlChange?.(previewCoverImageUrl);
-                  onCoverColorChange?.(COLORS.WHITE);
+                  onCoverColorChange?.(COLORS.WHITE); // 이미지 적용 시 색상은 기본값으로 유지
+                  if (isSyncEnabled) {
+                    onLpCircleImageUrlChange?.(previewCoverImageUrl);
+                    onLpColorChange?.(COLORS.WHITE);
+                  }
                   setIsCoverImageModalOpen(false);
                 }}
                 style={{
@@ -1045,7 +1174,10 @@ export default function AlbumInputSectionStep4({
       {isLpColorModalOpen && (
         <>
           <div
-            onClick={() => setIsLpColorModalOpen(false)}
+            onClick={() => {
+              resetLpPreview();
+              setIsLpColorModalOpen(false);
+            }}
             style={{
               position: "fixed",
               top: 0,
@@ -1122,12 +1254,12 @@ export default function AlbumInputSectionStep4({
                 }}
               >
                 <AlbumCoverWithLP
-                  coverImageUrl={coverImageUrl}
-                  coverColor={coverColor}
-                  lpCircleColor={previewLpColor}
-                  lpCircleImageUrl={null as any}
-                  lpSize={typeof window !== 'undefined' ? Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.15) : 180}
-                  coverSize={typeof window !== 'undefined' ? Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.18) : 200}
+                  coverImageUrl={previewCoverImageEffective}
+                  coverColor={previewCoverColorEffective}
+                  lpCircleColor={previewLpColorEffective}
+                  lpCircleImageUrl={previewLpImageEffective}
+                  lpSize={previewLpSize}
+                  coverSize={previewCoverSize}
                 />
               </div>
 
@@ -1290,7 +1422,10 @@ export default function AlbumInputSectionStep4({
               }}
             >
               <button
-                onClick={() => setIsLpColorModalOpen(false)}
+                onClick={() => {
+                  resetLpPreview();
+                  setIsLpColorModalOpen(false);
+                }}
                 style={{
                   flex: 1,
                   padding: responsive.sizeVh(10, 15, 15, 15),
@@ -1310,8 +1445,9 @@ export default function AlbumInputSectionStep4({
                   if (isSyncEnabled) {
                     onSyncEnabledChange?.(false);
                   }
-                  onLpColorChange?.(previewLpColor);
+                  // 색상 선택 시 이미지 제거하여 색상이 우선 적용
                   onLpCircleImageUrlChange?.(undefined);
+                  onLpColorChange?.(previewLpColor ?? COLORS.WHITE);
                   setIsLpColorModalOpen(false);
                 }}
                 style={{
@@ -1337,7 +1473,10 @@ export default function AlbumInputSectionStep4({
       {isLpImageModalOpen && (
         <>
           <div
-            onClick={() => setIsLpImageModalOpen(false)}
+            onClick={() => {
+              resetLpPreview();
+              setIsLpImageModalOpen(false);
+            }}
             style={{
               position: "fixed",
               top: 0,
@@ -1414,12 +1553,12 @@ export default function AlbumInputSectionStep4({
                 }}
               >
                 <AlbumCoverWithLP
-                  coverImageUrl={coverImageUrl}
-                  coverColor={coverColor}
-                  lpCircleColor={previewLpColor}
-                  lpCircleImageUrl={previewLpImageUrl}
-                  lpSize={typeof window !== 'undefined' ? Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.15) : 180}
-                  coverSize={typeof window !== 'undefined' ? Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.18) : 200}
+                  coverImageUrl={previewCoverImageEffective}
+                  coverColor={previewCoverColorEffective}
+                  lpCircleColor={previewLpColorEffective}
+                  lpCircleImageUrl={previewLpImageEffective}
+                  lpSize={previewLpSize}
+                  coverSize={previewCoverSize}
                 />
               </div>
 
@@ -1470,7 +1609,7 @@ export default function AlbumInputSectionStep4({
             >
               <button
                 onClick={() => {
-                  setPreviewLpImageUrl(lpCircleImageUrl);
+                  resetLpPreview();
                   setIsLpImageModalOpen(false);
                 }}
                 style={{
@@ -1493,7 +1632,12 @@ export default function AlbumInputSectionStep4({
                     onSyncEnabledChange?.(false);
                   }
                   onLpCircleImageUrlChange?.(previewLpImageUrl);
+                  // 이미지 적용 시 색상은 기본값으로 유지
                   onLpColorChange?.(COLORS.WHITE);
+                  if (isSyncEnabled) {
+                    onCoverImageUrlChange?.(previewLpImageUrl);
+                    onCoverColorChange?.(COLORS.WHITE);
+                  }
                   setIsLpImageModalOpen(false);
                 }}
                 style={{

@@ -6,7 +6,6 @@ import { FaComment, FaLink } from "react-icons/fa";
 import LP from "@/shared/ui/LP";
 import { AlbumCoverWithLP } from "@/shared/ui";
 import NicknameTag from "@/shared/ui/NicknameTag";
-import AlbumDescriptionPaper from "./AlbumDescriptionPaper";
 import { COLORS, FONTS, TEXT_SIZES, SPACING, ALBUM_AREA, TEXT_STYLES, MESSAGE_STYLE, responsive } from "../constants";
 
 /**
@@ -58,7 +57,6 @@ export default function AlbumArea({
   const [lpSize, setLpSize] = useState(250);
   const [containerHeight, setContainerHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   
   const textScrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -234,7 +232,13 @@ export default function AlbumArea({
               lpSize={Math.round(lpSize * 0.9)} // LP는 커버보다 10% 작게
               coverSize={lpSize} // 앨범 커버는 LP와 동일한 크기 (가로세로 비율 유지)
               albumName={step === 5 ? albumName : undefined}
-              tag={undefined}
+              tag={
+                step === 5
+                  ? category === "mood"
+                    ? (selectedTag && selectedTag !== "+ 직접 입력" ? selectedTag : undefined)
+                    : (situationValue || undefined)
+                  : undefined
+              }
               bottomContent={step === 5 ? (
                 <NicknameTag
                   nickname="닉네임"
@@ -251,16 +255,6 @@ export default function AlbumArea({
               })() : undefined}
               showCoverText={step === 5}
             />
-            
-            {/* 앨범 설명 종이 (step 5일 때만) */}
-            {step === 5 && albumDescription.trim().length > 0 && (
-              <AlbumDescriptionPaper
-                albumDescription={albumDescription}
-                lpSize={lpSize}
-                isExpanded={isDescriptionExpanded}
-                onToggle={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              />
-            )}
           </div>
         ) : (
           <LP size={lpSize} circleColor={lpColor} />
@@ -279,7 +273,7 @@ export default function AlbumArea({
             width: "100%",
           }}
         >
-          {/* 태그 섹션: 카테고리 → 공개여부 → 곡개수 */}
+          {/* 태그 섹션: 공개여부 → 곡개수 */}
           <div
             style={{
               display: "flex",
@@ -289,24 +283,6 @@ export default function AlbumArea({
               justifyContent: "center",
             }}
           >
-            {/* 카테고리 태그 */}
-            {(category === "mood" && selectedTag && selectedTag !== "+ 직접 입력") || (category === "situation" && situationValue) ? (
-              <div
-                style={{
-                  padding: `${responsive.sizeVh(4, 5, 5, 5)} ${responsive.sizeVh(8, 10, 10, 10)}`,
-                  border: "3px solid #000000",
-                  borderRadius: responsive.sizeVh(12, 20, 20, 20),
-                  backgroundColor: COLORS.WHITE,
-                  fontFamily: FONTS.KYOBO_HANDWRITING,
-                  fontSize: responsive.fontSize(16, 20, 22, 25),
-                  color: COLORS.BLACK,
-                  boxSizing: "border-box",
-                  display: "inline-block",
-                }}
-              >
-                {category === "mood" && selectedTag && selectedTag !== "+ 직접 입력" ? selectedTag : situationValue}
-              </div>
-            ) : null}
             {isPublic && (
               <div
                 style={{
@@ -345,6 +321,34 @@ export default function AlbumArea({
               </div>
             )}
           </div>
+
+          {/* 앨범 설명 섹션: 상세 모달과 동일한 스타일 */}
+          {albumDescription.trim().length > 0 && (
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "500px",
+                padding: responsive.sizeVh(12, 16, 20, 20),
+                backgroundColor: "rgba(255, 255, 255, 0.5)",
+                borderRadius: "10px",
+                marginTop: responsive.sizeVh(10, 15, 15, 15),
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: FONTS.KYOBO_HANDWRITING,
+                  fontSize: responsive.fontSize(16, 20, 22, 25),
+                  color: COLORS.BLACK,
+                  lineHeight: "1.6",
+                  wordBreak: "break-word",
+                  whiteSpace: "pre-wrap",
+                  textAlign: "center",
+                }}
+              >
+                앨범 설명: {albumDescription}
+              </div>
+            </div>
+          )}
 
           {/* 공유 버튼 섹션: 카카오톡 공유 & 링크 복사 */}
           <div
