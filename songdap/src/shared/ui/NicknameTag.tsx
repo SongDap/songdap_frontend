@@ -36,7 +36,7 @@ export default function NicknameTag({
         display: "flex",
         alignItems: "center",
         gap: `${coverSize * 0.02}px`,
-        alignSelf: "flex-start",
+        alignSelf: "center",
         padding: `${coverSize * 0.015}px ${coverSize * 0.04}px`,
         border: "1.5px solid #000",
         borderRadius: `${coverSize * 0.1}px`,
