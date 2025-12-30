@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { AlbumArea, AlbumButtonSection, AlbumInputSection, AlbumInputSectionStep2, AlbumInputSectionStep3, AlbumInputSectionStep4, AlbumShareSection } from "@/features/album/create";
+import { AlbumArea, AlbumButtonSection, AlbumInputSectionStep2, AlbumInputSectionStep3, AlbumInputSectionStep4, AlbumShareSection } from "@/features/album/create";
+import AlbumInputSection from "./create/sections/AlbumInputSection";
 import { COLORS, FONTS, responsive, TEXT_SIZES } from "@/features/album/create/constants";
 import { ROUTES } from "@/app/lib/routes";
 
@@ -217,12 +218,12 @@ export default function CreateAlbumForm() {
   const handleSyncChange = (enabled: boolean, source: "cover" | "lp") => {
     setIsSyncEnabled(enabled);
     setSyncSource(enabled ? source : null);
-  };
+    };
 
   const goToStep = (target: number) => {
     setStep(target);
     setMaxStepReached((prev) => Math.max(prev, target));
-  };
+    };
 
   const handleNextClick = () => {
     if (step < 4) {
@@ -230,6 +231,39 @@ export default function CreateAlbumForm() {
     } else if (step === 4) {
       setIsReleaseModalOpen(true);
     } else if (step === 5) {
+      // 앨범 데이터를 로컬 스토리지에 저장
+      const albumData = {
+        albumName,
+        albumDescription,
+        category,
+        categoryTag: selectedTag,
+        isPublic,
+        songCount,
+        coverColor,
+        lpColor: isSyncEnabled ? coverColor : lpColor,
+        coverImageUrl,
+        lpCircleImageUrl: isSyncEnabled ? coverImageUrl : lpCircleImageUrl,
+        nickname: "음악러버", // TODO: 실제 사용자 닉네임으로 변경
+        createdDate: new Date().toLocaleDateString("ko-KR", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).replace(/\./g, "").replace(/\s/g, "."),
+      };
+      
+      // 기존 앨범 목록 불러오기
+      const existingAlbums = typeof window !== "undefined" 
+        ? JSON.parse(localStorage.getItem("albums") || "[]")
+        : [];
+      
+      // 새 앨범 추가
+      existingAlbums.push(albumData);
+      
+      // 로컬 스토리지에 저장
+      if (typeof window !== "undefined") {
+        localStorage.setItem("albums", JSON.stringify(existingAlbums));
+      }
+      
       router.push(ROUTES.ALBUM.BASE);
     }
   };
@@ -241,7 +275,7 @@ export default function CreateAlbumForm() {
   const handleReleaseConfirm = () => {
     setStep(5);
     setIsReleaseModalOpen(false);
-  };
+    };
 
   // 계산된 값
   const currentTitle = TITLE_TEXTS[step - 1] || TITLE_TEXTS[0];

@@ -120,7 +120,7 @@ export default function AlbumInputSectionStep4({
       setCustomColorInput(customColor.value);
       if (currentColorModalType === "cover") {
         applyCoverColorPreview(customColor.value);
-      } else {
+    } else {
         applyLpColorPreview(customColor.value);
       }
     } else {
@@ -429,7 +429,7 @@ export default function AlbumInputSectionStep4({
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)";
               }}
-            >
+        >
               <FaRedo size={responsive.sizeVh(12, 14, 14, 14)} />
           초기화
         </button>
@@ -441,8 +441,8 @@ export default function AlbumInputSectionStep4({
           display: "flex",
             gap: responsive.sizeVh(10, 15, 15, 15),
             padding: responsive.sizeVh(12, 16, 16, 16),
-          }}
-        >
+        }}
+      >
         <button
           onClick={() => {
               setCurrentColorModalType('cover');
@@ -614,7 +614,7 @@ export default function AlbumInputSectionStep4({
                 gap: responsive.sizeVh(6, 8, 8, 8),
                 transition: "all 0.2s ease",
                 boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-              }}
+            }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "#fafafa";
                 e.currentTarget.style.transform = "translateY(-2px)";
