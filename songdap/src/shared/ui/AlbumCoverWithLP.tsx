@@ -205,7 +205,7 @@ export default function AlbumCoverWithLP({
       </div>
     </div>
   ) : null;
-
+  
   return (
     <div
       className="relative"
@@ -224,10 +224,10 @@ export default function AlbumCoverWithLP({
           height: lpSize,
         }}
       >
-        <LP
+        <LP 
           circleColor={resolvedLpColor}
           circleImageUrl={resolvedLpImage}
-          size={lpSize}
+          size={lpSize} 
         />
       </div>
 
@@ -253,28 +253,28 @@ export default function AlbumCoverWithLP({
         }}
       >
         {coverImageUrl ? (
-          <Image
-            src={coverImageUrl}
-            alt="Album cover"
-            width={coverSize}
-            height={coverSize}
-            className="w-full h-full object-cover"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              zIndex: 0,
-            }}
-          />
+            <Image
+              src={coverImageUrl}
+              alt="Album cover"
+              width={coverSize}
+              height={coverSize}
+              className="w-full h-full object-cover"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                zIndex: 0,
+              }}
+            />
         ) : (
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: coverColor,
-              position: "relative",
-            }}
-          />
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                backgroundColor: coverColor,
+                position: "relative",
+              }}
+            />
         )}
         {coverTextContent}
       </div>

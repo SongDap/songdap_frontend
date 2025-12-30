@@ -51,8 +51,8 @@ export default function AlbumInputSectionStep3({
     // 앞에 붙은 0 제거 및 숫자로 변환
     const value = parseInt(rawValue, 10);
     if (!isNaN(value)) {
-      setCustomCount(value);
-      onSongCountChange?.(value);
+    setCustomCount(value);
+    onSongCountChange?.(value);
     }
   };
 
@@ -117,15 +117,15 @@ export default function AlbumInputSectionStep3({
             >
               -
             </button>
-            <input
-              type="number"
+              <input
+                type="number"
               value={customCount === 0 ? "" : customCount}
-              onChange={handleCountChange}
-              min="1"
-              className="number-input-no-spinner"
-              style={SONG_COUNT_INPUT_STYLE}
-              onWheel={(e) => e.currentTarget.blur()}
-            />
+                onChange={handleCountChange}
+                min="1"
+                className="number-input-no-spinner"
+                style={SONG_COUNT_INPUT_STYLE}
+                onWheel={(e) => e.currentTarget.blur()}
+              />
             <button
               type="button"
               onClick={handleIncrease}

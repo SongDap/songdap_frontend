@@ -224,9 +224,9 @@ export default function AlbumArea({
       >
         {maxStepReached >= 4 ? (
           <div style={{ position: 'relative', display: 'inline-block', overflow: step === 5 ? 'hidden' : 'visible' }}>
-            <AlbumCoverWithLP
-              coverImageUrl={coverImageUrl}
-              coverColor={coverColor}
+          <AlbumCoverWithLP
+            coverImageUrl={coverImageUrl}
+            coverColor={coverColor}
               lpCircleColor={lpColor}
               lpCircleImageUrl={lpCircleImageUrl}
               lpSize={Math.round(lpSize * 0.9)} // LP는 커버보다 10% 작게
@@ -243,7 +243,7 @@ export default function AlbumArea({
                 <NicknameTag
                   nickname="닉네임"
                   profileImageUrl={profileImageUrl}
-                  coverSize={lpSize}
+            coverSize={lpSize}
                 />
               ) : undefined}
               date={step === 5 && mounted ? (() => {
@@ -253,8 +253,8 @@ export default function AlbumArea({
                 const day = String(now.getDate()).padStart(2, '0');
                 return `${year}.${month}.${day}`;
               })() : undefined}
-              showCoverText={step === 5}
-            />
+            showCoverText={step === 5}
+          />
           </div>
         ) : (
           <LP size={lpSize} circleColor={lpColor} />
@@ -336,20 +336,20 @@ export default function AlbumArea({
             >
               <div
                 style={{
-                  fontFamily: FONTS.KYOBO_HANDWRITING,
+                fontFamily: FONTS.KYOBO_HANDWRITING,
                   fontSize: responsive.fontSize(16, 20, 22, 25),
                   color: COLORS.BLACK,
                   lineHeight: "1.6",
                   wordBreak: "break-word",
                   whiteSpace: "pre-wrap",
                   textAlign: "center",
-                }}
-              >
+              }}
+            >
                 앨범 설명: {albumDescription}
               </div>
             </div>
           )}
-
+          
           {/* 공유 버튼 섹션: 카카오톡 공유 & 링크 복사 */}
           <div
             style={{
