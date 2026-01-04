@@ -15,13 +15,12 @@ export default function LandingFooter() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-10">
+    <footer className="flex flex-1 flex-col items-center justify-center gap-10">
       <button
         type="button"
         onClick={handleLogin}
-        className="border-0 bg-transparent p-0 cursor-pointer appearance-none
-  ">     <Image
-          src="/kakaoLoginMain.png"
+        className="border-0 bg-transparent p-0 cursor-pointer appearance-none">     <Image
+          src="images/kakaoLoginMain.png"
           alt="kakaoLogin"
           width={360}
           height={96}
@@ -29,6 +28,6 @@ export default function LandingFooter() {
           className="w-[35vw] max-w-[360px] min-w-[260px] h-auto"
         />
       </button>
-    </main>
+    </footer>
   );
 }
