@@ -1,27 +1,32 @@
 import Image from "next/image";
-import { LandingHeader, LandingMain, LandingFooter } from "@/features/landing";
+import { LandingMain, LandingFooter } from "@/features/landing";
 
 export default function Page() {
     return (
-        // 화면 크기 고정 스크롤을 차단
-        <div className="relative h-dvh overflow-hidden">
+        <div className="min-h-screen flex justify-center relative overflow-hidden">
+            {/* 배경 이미지 */}
+            <Image
+                src="/images/mainBackground.png"
+                alt="backgroundimage"
+                fill
+                className="object-cover z-0"
+                priority // 배경이니까 가장 먼저 로딩
+            />
+            <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[600px] flex-col">
 
-            {/* 배경 기준 좌표 */}
-            <div className="relative min-h-screen">
-                <Image
-                    src="/images/mainBackground.png"
-                    alt="Main background"
-                    fill
-                    priority
-                    className="object-cover object-center"
-                />
-
-                {/* 실제 배경 위 div */}
-                <div className="relative z-10 flex min-h-screen flex-col">
-                    <LandingHeader />
+                {/* 메인 콘텐츠 */}
+                <main className="
+                w-full max-w-[600px]
+                flex flex-col
+                items-center
+                justify-start
+                pt-10 pb-10
+                ">
                     <LandingMain />
+                </main>
+                <footer className="w-full">
                     <LandingFooter />
-                </div>
+                </footer>
             </div>
         </div>
     );

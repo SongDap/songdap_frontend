@@ -1,33 +1,34 @@
-'use client';
 import Image from "next/image";
+import Link from "next/link";
 
 export default function LandingFooter() {
-  // 환경변수 가져오기
-  const REST_API_KEY = process.env.NEXT_PUBLIC_KAKAO_API_KEY;
-  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
-
-  // 카카오 로그인 주소 조합하기
-  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
-
-  // 클릭하면 실행될 함수
-  function handleLogin() {
-    window.location.href = kakaoURL;
-  }
-
   return (
-    <footer className="flex flex-1 flex-col items-center justify-center gap-10">
-      <button
-        type="button"
-        onClick={handleLogin}
-        className="border-0 bg-transparent p-0 cursor-pointer appearance-none">     <Image
-          src="images/kakaoLoginMain.png"
-          alt="kakaoLogin"
-          width={360}
-          height={96}
-          priority
-          className="w-[35vw] max-w-[360px] min-w-[260px] h-auto"
-        />
-      </button>
+    <footer className="w-full bg-black px-6 py-10">
+      <div className="mx-auto flex max-w-md flex-col items-center gap-6 text-center text-white">
+        <p></p>
+        {/* 구분선 */}
+        <hr className="w-full border-white/20" />
+
+        {/* 인스타그램 링크 */}
+        <Link
+          href="https://www.instagram.com/songdap_official/"
+          target="_blank"
+          aria-label="노답 인스타그램"
+          className="transition-transform hover:scale-105 active:scale-95"
+        >
+          <Image
+            src="/images/instaLogo.png"
+            alt="Songdap Instagram"
+            width={28}
+            height={28}
+          />
+        </Link>
+
+        {/* 카피라이트 */}
+        <small className="text-xs text-white/70 leading-relaxed">
+          Copyright © songdap. All rights reserved.
+        </small>
+      </div>
     </footer>
   );
 }
