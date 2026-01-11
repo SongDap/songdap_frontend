@@ -54,13 +54,13 @@ export default function SignupForm() {
     return (
         <main className="w-full px-4 pt-4 sm:pt-6 flex flex-col items-center">
             <article>
-                <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[600px] flex-col">
+                <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[768px] h-[1024] flex-col">
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6" aria-labelledby="signup-title">
                         <header className="text-left" style={{ fontFamily: 'YangJin' }}>
                             <h1
                                 id="signup-title"
                                 className="leading-[1.05] font-extrabold tracking-tight text-[#111]"
-                                style={{ fontSize: 'clamp(2rem, 6vw, 2.75rem)' }}
+                                style={{ fontSize: 'clamp(4rem, 6vw, 2.75rem)' }}
                             >
                                 사용할 <span className="text-[#4A86E8]">닉네임</span>을
                                 <br />
