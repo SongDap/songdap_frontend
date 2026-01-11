@@ -43,6 +43,12 @@ const hssaemaeul = localFont({
   display: "swap",
 });
 
+const cafe24Ssurround = localFont({
+  src: "../../public/fonts/Cafe24Ssurround-v2.0.ttf",
+  variable: "--font-cafe24-ssurround",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "노래로 답해줘",
   description: "SongDap",
@@ -56,7 +62,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${kyoboHandwriting.variable} ${galmuri9.variable} ${dungGeunMo.variable} ${hssaemaeul.variable} ${cafe24PROslim.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${kyoboHandwriting.variable} ${galmuri9.variable} ${dungGeunMo.variable} ${hssaemaeul.variable} ${cafe24PROslim.variable} ${cafe24Ssurround.variable} antialiased`}
       >
         {children}
       </body>

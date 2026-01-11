@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  COLORS,
   LABEL_STYLE,
   CATEGORY_INPUT_BOX_STYLE,
   CHECKBOX_LABEL_STYLE,
@@ -40,9 +41,19 @@ export default function AlbumInputSectionStep3({
   };
 
   const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || 0;
+    const rawValue = e.target.value;
+    if (rawValue === "") {
+      setCustomCount(0);
+      onSongCountChange?.(0);
+      return;
+    }
+    
+    // 앞에 붙은 0 제거 및 숫자로 변환
+    const value = parseInt(rawValue, 10);
+    if (!isNaN(value)) {
     setCustomCount(value);
     onSongCountChange?.(value);
+    }
   };
 
   const handleDecrease = () => {
@@ -90,37 +101,52 @@ export default function AlbumInputSectionStep3({
           </div>
         )}
         {isCustomCount && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <button
               type="button"
               onClick={handleDecrease}
               style={SONG_COUNT_BUTTON_STYLE}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f0f0f0';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.WHITE;
+                e.currentTarget.style.transform = 'none';
+              }}
             >
               -
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <input
                 type="number"
-                value={customCount}
+              value={customCount === 0 ? "" : customCount}
                 onChange={handleCountChange}
                 min="1"
                 className="number-input-no-spinner"
                 style={SONG_COUNT_INPUT_STYLE}
                 onWheel={(e) => e.currentTarget.blur()}
               />
-              <span style={SONG_COUNT_TEXT_STYLE}>곡</span>
-            </div>
             <button
               type="button"
               onClick={handleIncrease}
               style={SONG_COUNT_BUTTON_STYLE}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f0f0f0';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = COLORS.WHITE;
+                e.currentTarget.style.transform = 'none';
+              }}
             >
               +
             </button>
+            <span style={{ ...SONG_COUNT_TEXT_STYLE, fontSize: responsive.fontSize(20, 26, 26, 26) }}>곡</span>
           </div>
         )}
       </div>
     </div>
   );
 }
+
 

@@ -3,10 +3,17 @@
 import Image from "next/image";
 import LP from "./LP";
 
-// 폰트 상수
+/**
+ * 폰트 상수
+ * - KYOBO_HANDWRITING: 교보 손글씨체 (태그)
+ * - CAFE24_PROSLIM: 카페24 프로 슬림 (닉네임)
+ * - CAFE24_SSURROUND: 카페24 써라운드 (앨범명, 날짜)
+ */
 const FONTS = {
   KYOBO_HANDWRITING: 'var(--font-kyobo-handwriting)',
   CAFE24_PROSLIM: 'var(--font-cafe24-proslim)',
+  HSS_AEMAEUL: 'var(--font-hssaemaeul)',
+  CAFE24_SSURROUND: 'var(--font-cafe24-ssurround)',
 } as const;
 
 interface AlbumCoverWithLPProps {
@@ -18,11 +25,20 @@ interface AlbumCoverWithLPProps {
   coverSize?: number;
   albumName?: string;
   tag?: string;
-  nickname?: string;
+  /** 하단에 표시할 커스텀 콘텐츠 (닉네임 태그 등) */
+  bottomContent?: React.ReactNode;
   date?: string;
   showCoverText?: boolean;
 }
 
+/**
+ * 앨범 커버와 LP를 함께 표시하는 컴포넌트
+ * 
+ * @description
+ * - LP는 앨범 커버 뒤에 배치되며, 커버의 오른쪽 끝이 LP 중심에 오도록 위치
+ * - step 5에서는 앨범명, 닉네임, 날짜가 앨범 커버 위에 표시됨
+ * - 하단에 18% padding을 두어 세모 띠 공간 확보
+ */
 export default function AlbumCoverWithLP({
   coverImageUrl,
   coverColor = "#ffffff",
@@ -32,10 +48,35 @@ export default function AlbumCoverWithLP({
   coverSize = 250,
   albumName,
   tag,
-  nickname,
+  bottomContent,
   date,
   showCoverText = false,
 }: AlbumCoverWithLPProps) {
+  /**
+   * 색상을 어둡게 만드는 함수 (앨범 커버 테두리용)
+   * @param hex - 원본 hex 색상
+   * @returns 80% 어두워진 hex 색상
+   */
+  const getDarkerColor = (hex: string) => {
+    // # 제거
+    const color = hex.replace("#", "");
+    // R, G, B 추출
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+    
+    // 각각 20% 정도 어둡게 (최소값 0)
+    const darken = (val: number) => Math.max(0, Math.min(255, Math.floor(val * 0.8)));
+    
+    const dr = darken(r).toString(16).padStart(2, "0");
+    const dg = darken(g).toString(16).padStart(2, "0");
+    const db = darken(b).toString(16).padStart(2, "0");
+    
+    return `#${dr}${dg}${db}`;
+  };
+
+  const borderColor = getDarkerColor(coverColor);
+
   // 앨범 커버의 왼쪽 끝을 기준으로 위치 조정
   // 앨범 커버의 오른쪽 끝이 LP의 중심에 오도록 위치 계산
   // LP 중심: lpSize / 2
@@ -52,6 +93,118 @@ export default function AlbumCoverWithLP({
   
   // 앨범 커버의 왼쪽 끝이 컨테이너의 왼쪽 끝에 오도록 LP 위치 조정
   const lpLeft = coverLeft < 0 ? Math.abs(coverLeft) : 0;
+  
+  // 한 번에 하나의 배경만 적용: 이미지가 있으면 색상은 사용하지 않음
+  const resolvedLpImage = lpCircleImageUrl || undefined;
+  const resolvedLpColor = resolvedLpImage ? undefined : (lpCircleColor ?? "#ffffff");
+
+  const renderAlbumTitle = () =>
+    albumName ? (
+      <div
+        className="album-title-scroll"
+        style={{
+          fontFamily: FONTS.CAFE24_SSURROUND,
+          fontSize: `${coverSize * 0.12}px`,
+          color: "#000",
+          fontWeight: "900",
+          WebkitTextStroke: "2px #ffffff",
+          paintOrder: "stroke fill",
+          textShadow: "0 0 2px rgba(255, 255, 255, 0.8)",
+          wordBreak: "break-word",
+          overflowY: "auto",
+          maxHeight: `${coverSize * 0.45}px`,
+          lineHeight: "1.2",
+          paddingTop: `${coverSize * 0.01}px`,
+          textAlign: "center",
+        }}
+      >
+        {albumName}
+      </div>
+    ) : null;
+
+  const renderTag = () =>
+    tag ? (
+      <div
+        style={{
+          padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
+          border: "1.5px solid #000",
+          borderRadius: `${coverSize * 0.04}px`,
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
+          fontFamily: FONTS.KYOBO_HANDWRITING,
+          fontSize: `${coverSize * 0.08}px`,
+          color: "#000",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        {tag}
+      </div>
+    ) : null;
+
+  const renderDate = () =>
+    date ? (
+      <div
+        style={{
+          width: "100%",
+          fontFamily: FONTS.CAFE24_SSURROUND,
+          fontSize: `${coverSize * 0.08}px`,
+          color: "#000",
+          fontWeight: "900",
+          WebkitTextStroke: "1.5px #ffffff",
+          paintOrder: "stroke fill",
+          textShadow: "0 0 2px rgba(255, 255, 255, 0.9)",
+          textAlign: "center",
+        }}
+      >
+        {date}
+      </div>
+    ) : null;
+
+  const coverTextContent = showCoverText ? (
+    <div
+      style={{
+        position: coverImageUrl ? "relative" : "absolute",
+        top: coverImageUrl ? undefined : 0,
+        left: coverImageUrl ? undefined : 0,
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: `${coverSize * 0.05}px ${coverSize * 0.06}px ${coverSize * 0.06}px ${coverSize * 0.06}px`,
+        boxSizing: "border-box",
+        zIndex: coverImageUrl ? 1 : undefined,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: `${coverSize * 0.02}px`,
+          width: "100%",
+          maxHeight: "65%",
+        }}
+      >
+        {renderAlbumTitle()}
+        {!coverImageUrl && renderTag()}
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: `${coverSize * 0.02}px`,
+          width: "100%",
+          marginBottom: 0,
+        }}
+      >
+        {bottomContent}
+        {coverImageUrl && renderTag()}
+        {renderDate()}
+      </div>
+    </div>
+  ) : null;
   
   return (
     <div
@@ -72,8 +225,8 @@ export default function AlbumCoverWithLP({
         }}
       >
         <LP 
-          circleColor={lpCircleColor || coverColor} 
-          circleImageUrl={lpCircleImageUrl || coverImageUrl}
+          circleColor={resolvedLpColor}
+          circleImageUrl={resolvedLpImage}
           size={lpSize} 
         />
       </div>
@@ -87,20 +240,19 @@ export default function AlbumCoverWithLP({
           width: coverSize,
           height: coverSize,
           backgroundColor: coverColor,
-          border: "2.5px solid #000",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.3)",
+          border: `5px solid ${borderColor}`,
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: showCoverText ? "flex-start" : "center",
           zIndex: 10,
-          padding: showCoverText ? `${coverSize * 0.08}px ${coverSize * 0.06}px` : 0,
+          padding: showCoverText ? `${coverSize * 0.05}px ${coverSize * 0.06}px ${coverSize * 0.06}px ${coverSize * 0.06}px` : 0,
           boxSizing: "border-box",
-          overflow: "hidden",
+          overflow: showCoverText ? "auto" : "hidden",
         }}
       >
         {coverImageUrl ? (
-          <>
             <Image
               src={coverImageUrl}
               alt="Album cover"
@@ -114,89 +266,7 @@ export default function AlbumCoverWithLP({
                 zIndex: 0,
               }}
             />
-            {showCoverText && (
-              <div
-                style={{
-                  position: "relative",
-                  zIndex: 1,
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                }}
-              >
-                {/* 상단: 태그 */}
-                {tag && (
-                  <div
-                    style={{
-                      alignSelf: "flex-start",
-                      padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
-                      border: "2px solid #000",
-                      borderRadius: `${coverSize * 0.04}px`,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      fontFamily: FONTS.KYOBO_HANDWRITING,
-                      fontSize: `${coverSize * 0.08}px`,
-                      color: "#000",
-                    }}
-                  >
-                    {tag}
-                  </div>
-                )}
-                
-                {/* 하단: 앨범명, 닉네임, 날짜 */}
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: `${coverSize * 0.02}px`,
-                    width: "100%",
-                  }}
-                >
-                  {albumName && (
-                    <div
-                      style={{
-                        fontFamily: FONTS.KYOBO_HANDWRITING,
-                        fontSize: `${coverSize * 0.12}px`,
-                        color: "#000",
-                        fontWeight: "bold",
-                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {albumName}
-                    </div>
-                  )}
-                  {nickname && (
-                    <div
-                      style={{
-                        fontFamily: FONTS.CAFE24_PROSLIM,
-                        fontSize: `${coverSize * 0.07}px`,
-                        color: "#000",
-                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
-                      }}
-                    >
-                      {nickname}
-                    </div>
-                  )}
-                  {date && (
-                    <div
-                      style={{
-                        fontFamily: FONTS.CAFE24_PROSLIM,
-                        fontSize: `${coverSize * 0.06}px`,
-                        color: "#666",
-                        textShadow: "1px 1px 2px rgba(255, 255, 255, 0.8)",
-                      }}
-                    >
-                      {date}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
         ) : (
-          <>
             <div
               style={{
                 width: "100%",
@@ -205,88 +275,8 @@ export default function AlbumCoverWithLP({
                 position: "relative",
               }}
             />
-            {showCoverText && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  padding: `${coverSize * 0.08}px ${coverSize * 0.06}px`,
-                  boxSizing: "border-box",
-                }}
-              >
-                {/* 상단: 태그 */}
-                {tag && (
-                  <div
-                    style={{
-                      alignSelf: "flex-start",
-                      padding: `${coverSize * 0.02}px ${coverSize * 0.03}px`,
-                      border: "2px solid #000",
-                      borderRadius: `${coverSize * 0.04}px`,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      fontFamily: FONTS.KYOBO_HANDWRITING,
-                      fontSize: `${coverSize * 0.08}px`,
-                      color: "#000",
-                    }}
-                  >
-                    {tag}
-                  </div>
-                )}
-                
-                {/* 하단: 앨범명, 닉네임, 날짜 */}
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: `${coverSize * 0.02}px`,
-                    width: "100%",
-                  }}
-                >
-                  {albumName && (
-                    <div
-                      style={{
-                        fontFamily: FONTS.KYOBO_HANDWRITING,
-                        fontSize: `${coverSize * 0.12}px`,
-                        color: "#000",
-                        fontWeight: "bold",
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {albumName}
-                    </div>
-                  )}
-                  {nickname && (
-                    <div
-                      style={{
-                        fontFamily: FONTS.CAFE24_PROSLIM,
-                        fontSize: `${coverSize * 0.07}px`,
-                        color: "#000",
-                      }}
-                    >
-                      {nickname}
-                    </div>
-                  )}
-                  {date && (
-                    <div
-                      style={{
-                        fontFamily: FONTS.CAFE24_PROSLIM,
-                        fontSize: `${coverSize * 0.06}px`,
-                        color: "#666",
-                      }}
-                    >
-                      {date}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
         )}
+        {coverTextContent}
       </div>
     </div>
   );
