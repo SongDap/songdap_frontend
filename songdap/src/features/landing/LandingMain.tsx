@@ -11,18 +11,48 @@ export default function LandingMain() {
 
   // 클릭하면 실행될 함수
   function handleLogin() {
-    window.location.href = kakaoURL;
+    // 1. 환경변수 미설정 체크
+    if (!REST_API_KEY || !REDIRECT_URI) {
+      console.error("환경변수가 설정되지 않았습니다", {
+        REST_API_KEY,
+        REDIRECT_URI
+      });
+      alert("로그인 설정 누락")
+      return;
+    }
+
+    // 2. URL 유효성 체크
+    try {
+      // redirect uri가 진짜 url인지 검증
+      new URL(REDIRECT_URI);
+      // kakaoURL이 정상 문자열인지 최소 검증
+      if (!kakaoURL.startsWith("https://kauth.kakao.com/oauth/authorize")) {
+        throw new Error("Kakao authorize URL 생성 실패");
+      }
+
+    } catch (error) {
+      console.error("Redirect URI 검증 실패", error);
+      return;
+    }
+
+    // 3. Redirect 실패 처리
+    try {
+      window.location.assign(kakaoURL); // 현재 페이지를 kakaoURL에 담긴 주소로 이동시켜라
+    } catch (error) {
+      console.error("Login Redirect 오류", error)
+    }
   }
 
   return (
 
     <div className="w-full px-4 flex flex-col items-center justify-center -mb-6">
       {/* 타이틀 */}
-      <div className="mb-2 text-center relative z-10">
+      <div className="mb-2 text-center relative z-10" style={{ fontFamily: 'YangJin' }}>
         <h1
-          className="text-[90px] leading-none font-[var(--font-yangjin)] inline-block -mb-8"
+          className="leading-none font-[var(--font-yangjin)] whitespace-nowrap"
           style={{
-            transform: "translateY(50px)", // 요소를 원래자리에서 아래로 50px만큼 이동
+            marginTop: "clamp(2rem, 5vh, 3.125rem)",
+            fontSize: 'clamp(2.5rem, 12vw, 5.625rem)',
             textShadow:
               "3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
           }}
@@ -33,19 +63,20 @@ export default function LandingMain() {
           <span style={{ color: "#8BC9C4" }}>해줘</span>
         </h1>
 
-        <h2 className="mt-0 text-[18px] md:text-[20px] leading-relaxed text-[#5E6F7A] font-[var(--font-cafe24-proslim)] tracking-tight text-center">
-          노래로 전하는 나의 마음
-        </h2>
+        <div className="pt-6">
+          <h2 className="leading-relaxed text-[#5E6F7A] font-[var(--font-cafe24-proslim)] tracking-tight" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.25rem)' }}>
+            노래로 전하는 나의 마음
+          </h2>
+        </div>
       </div>
 
       <p> </p>
 
-      <div className="relative w-80 h-80 mb-12 flex items-center justify-center">
-        <Image
+      <div className="relative mt-10 mb-12" style={{ width: 'clamp(200px, 40vw, 360px)', height: 'clamp(200px, 40vw, 360px)' }}>
+      <Image
           src="/images/lp_mainpage.png"
           alt="LP main"
-          width={360}   // 가로 320px (w-80과 동일)
-          height={360}  // 세로 320px (h-80과 동일)
+          fill
           className="object-contain animate-spin-slow"
           priority
         />
@@ -55,7 +86,7 @@ export default function LandingMain() {
       <p> </p>
 
       {/* 카카오 로그인 버튼 */}
-      <div className="w-full max-w-xs relative h-16 transition-transform hover:scale-105 active:scale-95">
+      <div className="w-full max-w-xs relative transition-transform hover:scale-105 active:scale-95" style={{ height: 'clamp(3rem, 6vh, 4rem)' }}>
         <button
           type="button"
           onClick={handleLogin}

@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 html,
 body {
@@ -75,6 +73,11 @@ body {
   }
 }
 
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 12s linear infinite;
+  }
+}
 
 .service-frame {
   height: max(500px, 100vh);
