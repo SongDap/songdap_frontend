@@ -78,11 +78,11 @@ export default function MemoPaperFrame({ serviceFrameWidth, children }: MemoPape
           <div
             style={{
               position: "absolute",
-              top: responsive.sizeVh(-14, -16, -18, -18),
+              top: responsive.sizeVh(-18, -20, -22, -22), // Moved up to accommodate larger height
               left: "50%",
               transform: "translateX(-50%)",
-              width: responsive.sizeVh(100, 120, 140, 140),
-              height: responsive.sizeVh(24, 28, 32, 32),
+              width: responsive.sizeVh(120, 140, 160, 160),
+              height: responsive.sizeVh(36, 40, 44, 44), // Increased height
               backgroundColor: "rgba(255, 255, 255, 0.7)",
               border: "1px solid rgba(0, 0, 0, 0.1)",
               borderRadius: "2px",
@@ -100,6 +100,7 @@ export default function MemoPaperFrame({ serviceFrameWidth, children }: MemoPape
               overflowY: "auto",
               display: "flex",
               flexDirection: "column",
+              paddingTop: responsive.sizeVh(20, 24, 28, 28), // Added top padding to move content down
             }}
           >
             {children}

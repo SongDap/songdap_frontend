@@ -132,7 +132,7 @@ export default function AddSongPage() {
         />
 
         {/* 컨텐츠 */}
-        <div className="relative z-10 flex min-h-screen flex-col items-center p-4">
+        <div className="relative z-10 flex min-h-screen flex-col items-center">
           <div 
             ref={serviceFrameRef}
             className="bg-[#fefaf0] relative service-frame service-frame-scroll" 
