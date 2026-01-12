@@ -283,7 +283,7 @@ export default function CreateAlbumForm() {
   const nextButtonText = step === 4 ? "발매" : step === 5 ? "완료" : "다음";
 
   return (
-    <div className="relative z-10 flex min-h-screen flex-col items-center p-4">
+    <div className="relative z-10 flex min-h-screen flex-col items-center">
       <div 
         ref={serviceFrameRef}
         className="bg-[#fefaf0] relative service-frame service-frame-scroll"

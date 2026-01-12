@@ -49,7 +49,7 @@ export default function MemoPaperContent({
         <div
           style={{
             fontFamily: FONTS.KYOBO_HANDWRITING,
-            fontSize: responsive.fontSize(18, 20, 22, 22),
+            fontSize: responsive.fontSize(20, 22, 24, 24), // Increased font size
             color: COLORS.BLACK,
           }}
         >
