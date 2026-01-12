@@ -5,12 +5,13 @@ import { responsive } from "@/features/album/create/constants";
 
 interface SongAddSpotifyButtonProps {
   coverSize: number;
+  onClick?: () => void;
 }
 
 /**
  * Spotify 검색 버튼 컴포넌트
  */
-export default function SongAddSpotifyButton({ coverSize }: SongAddSpotifyButtonProps) {
+export default function SongAddSpotifyButton({ coverSize, onClick }: SongAddSpotifyButtonProps) {
   return (
     <div
       style={{
@@ -21,6 +22,7 @@ export default function SongAddSpotifyButton({ coverSize }: SongAddSpotifyButton
     >
       <button
         type="button"
+        onClick={onClick}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -61,4 +63,7 @@ export default function SongAddSpotifyButton({ coverSize }: SongAddSpotifyButton
     </div>
   );
 }
+
+
+
 
