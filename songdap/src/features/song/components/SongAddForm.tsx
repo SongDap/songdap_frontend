@@ -14,6 +14,7 @@ interface SongAddFormProps {
   onSongTitleChange: (value: string) => void;
   onArtistNameChange: (value: string) => void;
   onSongImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSpotifyButtonClick?: () => void;
 }
 
 /**
@@ -29,6 +30,7 @@ export default function SongAddForm({
   onSongTitleChange,
   onArtistNameChange,
   onSongImageChange,
+  onSpotifyButtonClick,
 }: SongAddFormProps) {
   return (
     <div
@@ -42,7 +44,7 @@ export default function SongAddForm({
       }}
     >
       {/* Spotify 검색 버튼 */}
-      <SongAddSpotifyButton coverSize={coverSize} />
+      <SongAddSpotifyButton coverSize={coverSize} onClick={onSpotifyButtonClick} />
 
       {/* 곡 입력 섹션 */}
       <div

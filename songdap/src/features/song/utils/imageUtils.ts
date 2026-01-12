@@ -20,3 +20,6 @@ export const fileToDataURL = (file: File): Promise<string> => {
   });
 };
 
+
+
+
