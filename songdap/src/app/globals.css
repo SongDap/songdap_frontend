@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 html,
 body {
@@ -72,6 +70,12 @@ body {
 @media (min-width: 768px) {
   .album-create-title {
     font-size: clamp(calc(75 * 100vh / 1024 * 0.6), calc(75 * 100vh / 1024), calc((100% - min(calc(32 * 100% / 768), 32px) * 2) / 10)) !important;
+  }
+}
+
+@layer utilities {
+  .animate-spin-slow {
+    animation: spin 12s linear infinite;
   }
 }
 
