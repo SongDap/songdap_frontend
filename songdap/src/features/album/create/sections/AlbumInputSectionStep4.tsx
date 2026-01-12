@@ -201,7 +201,7 @@ export default function AlbumInputSectionStep4({
     onCoverImageUrlChange?.(undefined);
     onLpColorChange?.(COLORS.WHITE);
     onLpCircleImageUrlChange?.(undefined);
-    onSyncEnabledChange?.(false); // 동기화 체크박스 해제
+    onSyncEnabledChange?.(false, "cover"); // 동기화 체크박스 해제
     setPreviewCoverColor(COLORS.WHITE);
     setPreviewCoverImageUrl(undefined);
     setPreviewLpColor(COLORS.WHITE);
@@ -1443,7 +1443,7 @@ export default function AlbumInputSectionStep4({
               <button
                 onClick={() => {
                   if (isSyncEnabled) {
-                    onSyncEnabledChange?.(false);
+                    onSyncEnabledChange?.(false, "cover");
                   }
                   // 색상 선택 시 이미지 제거하여 색상이 우선 적용
                   onLpCircleImageUrlChange?.(undefined);
@@ -1629,7 +1629,7 @@ export default function AlbumInputSectionStep4({
               <button
                 onClick={() => {
                   if (isSyncEnabled) {
-                    onSyncEnabledChange?.(false);
+                    onSyncEnabledChange?.(false, "cover");
                   }
                   onLpCircleImageUrlChange?.(previewLpImageUrl);
                   // 이미지 적용 시 색상은 기본값으로 유지
