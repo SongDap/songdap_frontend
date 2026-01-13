@@ -1,9 +1,17 @@
+/**
+ * 앨범 생성 관련 컴포넌트 및 유틸리티
+ */
+
+// Main Component
+export { default as CreateAlbumForm } from "./CreateAlbumForm";
+
 // Inputs
 export { default as AlbumNameInput } from "./inputs/AlbumNameInput";
 export { default as AlbumDescriptionInput } from "./inputs/AlbumDescriptionInput";
 
 // Components
 export { default as AlbumArea } from "./components/AlbumArea";
+export { default as AlbumDescriptionPaper } from "./components/AlbumDescriptionPaper";
 export { default as CategoryRadioGroup } from "./components/CategoryRadioGroup";
 export { default as PublicRadioGroup } from "./components/PublicRadioGroup";
 export { default as MoodTagList } from "./components/MoodTagList";

@@ -110,12 +110,14 @@ export default function AlbumCoverWithLP({
           WebkitTextStroke: "2px #ffffff",
           paintOrder: "stroke fill",
           textShadow: "0 0 2px rgba(255, 255, 255, 0.8)",
-          wordBreak: "break-word",
+          wordBreak: "keep-all",
+          overflowWrap: "break-word",
           overflowY: "auto",
           maxHeight: `${coverSize * 0.45}px`,
-          lineHeight: "1.2",
+          lineHeight: "1.3",
           paddingTop: `${coverSize * 0.01}px`,
           textAlign: "center",
+          whiteSpace: "normal",
         }}
       >
         {albumName}

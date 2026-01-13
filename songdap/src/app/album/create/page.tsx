@@ -1,5 +1,5 @@
 import Image from "next/image";
-import CreateAlbumForm from "@/features/album/CreateAlbumForm";
+import CreateAlbumForm from "@/features/album/create/CreateAlbumForm";
 
 export default function CreateAlbumPage() {
   return (

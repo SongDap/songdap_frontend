@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AlbumArea, AlbumButtonSection, AlbumInputSectionStep2, AlbumInputSectionStep3, AlbumInputSectionStep4, AlbumShareSection } from "@/features/album/create";
-import AlbumInputSection from "./create/sections/AlbumInputSection";
+import AlbumInputSection from "./sections/AlbumInputSection";
 import { COLORS, FONTS, responsive, TEXT_SIZES } from "@/features/album/create/constants";
 import { ROUTES } from "@/app/lib/routes";
 
