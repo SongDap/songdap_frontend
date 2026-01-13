@@ -49,6 +49,12 @@ const cafe24Ssurround = localFont({
   display: "swap",
 });
 
+const maruburiRegular = localFont({
+  src: "../../public/fonts/MaruBuri-Regular.ttf",
+  variable: "--font-MaruBuri",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "노래로 답해줘",
   description: "SongDap",
@@ -62,7 +68,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${kyoboHandwriting.variable} ${galmuri9.variable} ${dungGeunMo.variable} ${hssaemaeul.variable} ${cafe24PROslim.variable} ${cafe24Ssurround.variable} antialiased`}
+        className={`${maruburiRegular.variable} ${geistSans.variable} ${geistMono.variable} ${kyoboHandwriting.variable} ${galmuri9.variable} ${dungGeunMo.variable} ${hssaemaeul.variable} ${cafe24PROslim.variable} ${cafe24Ssurround.variable} antialiased`}
       >
         {children}
       </body>

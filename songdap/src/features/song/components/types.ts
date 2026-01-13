@@ -20,8 +20,3 @@ export type AlbumData = {
   profileImageUrl?: string;
   createdDate?: string;
 };
-
-
-
-
-
