@@ -34,3 +34,6 @@ export const isLandscapeMode = (): boolean => {
   return window.innerWidth > window.innerHeight;
 };
 
+
+
+

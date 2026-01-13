@@ -1,3 +1,9 @@
+export type SongData = {
+  title: string;
+  artist: string;
+  imageUrl?: string;
+};
+
 export type AlbumData = {
   albumName: string;
   albumDescription: string;
@@ -5,6 +11,7 @@ export type AlbumData = {
   categoryTag?: string;
   isPublic?: string;
   songCount: number;
+  songs?: SongData[];
   coverColor?: string;
   coverImageUrl?: string;
   lpColor?: string;

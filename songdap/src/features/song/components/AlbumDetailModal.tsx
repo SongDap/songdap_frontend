@@ -154,15 +154,18 @@ export default function AlbumDetailModal({
             gap: 10,
             flexWrap: "wrap",
             rowGap: 8,
-            marginBottom: responsive.sizeVh(12, 14, 16, 16),
+            marginBottom: responsive.sizeVh(24, 28, 32, 32),
+            paddingTop: responsive.sizeVh(10, 12, 14, 14),
           }}
         >
           <h2
             style={{
-              fontFamily: FONTS.DUNG_GEUN_MO,
+              fontFamily: FONTS.CAFE24_PROSLIM,
               fontSize: responsive.fontSize(22, 26, 30, 32),
               color: COLORS.BLACK,
+              fontWeight: "bold",
               margin: 0,
+              textAlign: "left",
             }}
           >
             {isEditing ? "앨범 정보 수정" : "앨범 정보"}

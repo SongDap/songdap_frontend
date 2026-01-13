@@ -3,6 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { AlbumDetailModal, SongAddHeader, SongAddForm, SongAddButton } from "@/features/song";
+import MemoPaperFrame from "@/features/song/components/MemoPaperFrame";
+import MemoPaperContent from "@/features/song/components/MemoPaperContent";
+import SongAddCompleteModal from "@/features/song/components/SongAddCompleteModal";
+import SpotifySearchModal from "@/features/song/components/SpotifySearchModal";
 import { responsive } from "@/features/album/create/constants";
 import { calculateCoverSize, calculateLpSize, isLandscapeMode } from "@/features/song/utils/resizeUtils";
 import { fileToDataURL } from "@/features/song/utils/imageUtils";
@@ -26,7 +30,13 @@ export default function AddSongPage() {
   const [artistName, setArtistName] = useState("");
   const [songImage, setSongImage] = useState<File | null>(null);
   const [songImagePreview, setSongImagePreview] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
+  const [nickname, setNickname] = useState("");
   const [isLandscape, setIsLandscape] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [isSpotifyModalOpen, setIsSpotifyModalOpen] = useState(false);
+  const [serviceFrameWidth, setServiceFrameWidth] = useState(768);
   const serviceFrameRef = useRef<HTMLDivElement>(null);
 
   // 반응형 크기 계산
@@ -37,6 +47,7 @@ export default function AddSongPage() {
       setIsLandscape(isLandscapeMode());
       
       const frameWidth = serviceFrameRef.current.offsetWidth;
+      setServiceFrameWidth(frameWidth);
       const size = calculateCoverSize(frameWidth);
       setCoverSize(size);
       setLpSize(calculateLpSize(size));
@@ -121,7 +132,7 @@ export default function AddSongPage() {
         />
 
         {/* 컨텐츠 */}
-        <div className="relative z-10 flex min-h-screen flex-col items-center p-4">
+        <div className="relative z-10 flex min-h-screen flex-col items-center">
           <div 
             ref={serviceFrameRef}
             className="bg-[#fefaf0] relative service-frame service-frame-scroll" 
@@ -143,19 +154,45 @@ export default function AddSongPage() {
             />
 
             {/* 스크롤 가능한 중간 영역 */}
-            <SongAddForm
-              coverSize={coverSize}
-              sidePadding={sidePadding}
-              songTitle={songTitle}
-              artistName={artistName}
-              songImagePreview={songImagePreview}
-              onSongTitleChange={setSongTitle}
-              onArtistNameChange={setArtistName}
-              onSongImageChange={handleSongImageChange}
-            />
+            {isSubmitted ? (
+              <div style={{ flex: 1, overflowY: "auto", overflowX: "visible", paddingTop: responsive.sizeVh(30, 35, 40, 40), display: "flex", flexDirection: "column" }}>
+                <MemoPaperFrame serviceFrameWidth={serviceFrameWidth}>
+                  <MemoPaperContent
+                    songImagePreview={songImagePreview}
+                    songTitle={songTitle}
+                    artistName={artistName}
+                    description={description}
+                    nickname={nickname}
+                    serviceFrameWidth={serviceFrameWidth}
+                    onDescriptionChange={setDescription}
+                    onNicknameChange={setNickname}
+                  />
+                </MemoPaperFrame>
+              </div>
+            ) : (
+              <SongAddForm
+                coverSize={coverSize}
+                sidePadding={sidePadding}
+                songTitle={songTitle}
+                artistName={artistName}
+                songImagePreview={songImagePreview}
+                onSongTitleChange={setSongTitle}
+                onArtistNameChange={setArtistName}
+                onSongImageChange={handleSongImageChange}
+                onSpotifyButtonClick={() => setIsSpotifyModalOpen(true)}
+              />
+            )}
 
             {/* 하단 고정 영역: 추가하기 버튼 */}
-            <SongAddButton />
+            <SongAddButton 
+              isSubmitted={isSubmitted}
+              isCompleteDisabled={!nickname.trim()}
+              onAddClick={() => setIsSubmitted(true)}
+              onPrevClick={() => setIsSubmitted(false)}
+              onCompleteClick={() => {
+                setIsCompleteModalOpen(true);
+              }}
+            />
           </div>
         </div>
       </div>
@@ -166,6 +203,26 @@ export default function AddSongPage() {
         onClose={() => setIsModalOpen(false)}
         albumData={dummyAlbumData}
         editable={false}
+      />
+
+      {/* 노래 추가 완료 모달 */}
+      <SongAddCompleteModal
+        isOpen={isCompleteModalOpen}
+        onClose={() => setIsCompleteModalOpen(false)}
+      />
+
+      {/* Spotify 검색 모달 */}
+      <SpotifySearchModal
+        isOpen={isSpotifyModalOpen}
+        onClose={() => setIsSpotifyModalOpen(false)}
+        onSelectSong={(song) => {
+          setSongTitle(song.title);
+          setArtistName(song.artist);
+          if (song.imageUrl) {
+            // TODO: 이미지 URL을 File로 변환하거나 처리
+            setSongImagePreview(song.imageUrl);
+          }
+        }}
       />
     </div>
   );
