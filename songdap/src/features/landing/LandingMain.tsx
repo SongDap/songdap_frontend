@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import { HiChatBubbleLeftRight } from "react-icons/hi2";
 
 export default function LandingMain() {
   // 환경변수 가져오기
@@ -46,22 +46,14 @@ export default function LandingMain() {
   return (
     <div className="w-full flex flex-col items-center justify-center">
       {/* 카카오 로그인 버튼 */}
-      <div className="w-full max-w-xs relative transition-transform hover:scale-105 active:scale-95" style={{ height: 'clamp(3rem, 6vh, 4rem)' }}>
-        <button
-          type="button"
-          onClick={handleLogin}
-          className="border-0 bg-transparent p-0 cursor-pointer appearance-none"
-        >
-          <Image
-            src="/images/kakaoLoginMain.png"
-            alt="kakaoLogin"
-            width={540}
-            height={96}
-            priority
-            className="w-full max-w-xs h-auto"
-          />
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={handleLogin}
+        className="flex items-center gap-3 px-6 py-3 bg-yellow-300 hover:bg-yellow-400 text-gray-900 font-medium rounded-lg transition-colors active:scale-95 shadow-md"
+      >
+        <HiChatBubbleLeftRight className="w-6 h-6" />
+        <span>카카오로 로그인</span>
+      </button>
     </div>
   );
 }

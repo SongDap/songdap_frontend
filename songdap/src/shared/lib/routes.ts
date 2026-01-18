@@ -17,10 +17,3 @@ export const ROUTES = {
  * 라우트 타입 정의
  */
 export type RoutePath = typeof ROUTES[keyof typeof ROUTES];
-
-
-
-
-
-
-
