@@ -44,47 +44,7 @@ export default function LandingMain() {
   }
 
   return (
-
-    <div className="w-full px-4 flex flex-col items-center justify-center -mb-6">
-      {/* 타이틀 */}
-      <div className="mb-2 text-center relative z-10" style={{ fontFamily: 'YangJin' }}>
-        <h1
-          className="leading-none font-[var(--font-yangjin)] whitespace-nowrap"
-          style={{
-            marginTop: "clamp(2rem, 5vh, 3.125rem)",
-            fontSize: 'clamp(2.5rem, 12vw, 5.625rem)',
-            textShadow:
-              "3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
-          }}
-        >
-          <span style={{ color: "#5088C5" }}>노</span>
-          <span style={{ color: "#8BC9C4", marginRight: "0.5em" }}>래로</span>
-          <span style={{ color: "#5088C5" }}>답</span>
-          <span style={{ color: "#8BC9C4" }}>해줘</span>
-        </h1>
-
-        <div className="pt-6">
-          <h2 className="leading-relaxed text-[#5E6F7A] font-[var(--font-cafe24-proslim)] tracking-tight" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.25rem)' }}>
-            노래로 전하는 나의 마음
-          </h2>
-        </div>
-      </div>
-
-      <p> </p>
-
-      <div className="relative mt-10 mb-12" style={{ width: 'clamp(200px, 40vw, 360px)', height: 'clamp(200px, 40vw, 360px)' }}>
-      <Image
-          src="/images/lp_mainpage.png"
-          alt="LP main"
-          fill
-          className="object-contain animate-spin-slow"
-          priority
-        />
-
-      </div>
-
-      <p> </p>
-
+    <div className="w-full flex flex-col items-center justify-center">
       {/* 카카오 로그인 버튼 */}
       <div className="w-full max-w-xs relative transition-transform hover:scale-105 active:scale-95" style={{ height: 'clamp(3rem, 6vh, 4rem)' }}>
         <button
@@ -92,7 +52,6 @@ export default function LandingMain() {
           onClick={handleLogin}
           className="border-0 bg-transparent p-0 cursor-pointer appearance-none"
         >
-
           <Image
             src="/images/kakaoLoginMain.png"
             alt="kakaoLogin"

@@ -1,2 +1,0 @@
-export { useResponsive } from "./useResponsive";
-
