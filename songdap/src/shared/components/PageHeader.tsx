@@ -1,6 +1,9 @@
 "use client";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import { ROUTES } from "@/shared/lib/routes";
+import { BottomConfirmModal } from "@/shared/ui";
 
 type PageHeaderProps = {
   title: string;
@@ -9,15 +12,37 @@ type PageHeaderProps = {
 export default function PageHeader({ title }: PageHeaderProps) {
   const router = useRouter();
   const { user } = useOauthStore();
+  const [showModal, setShowModal] = useState(false);
+
+  const handleBackClick = () => {
+    // 모바일에서는 모달 표시, PC에서는 window.confirm 사용
+    if (window.innerWidth < 768) {
+      setShowModal(true);
+    } else {
+      if (window.confirm("모든 작업을 취소하고 내 앨범으로 돌아가겠습니까?")) {
+        router.push(ROUTES.ALBUM.LIST);
+      }
+    }
+  };
+
+  const handleConfirm = () => {
+    setShowModal(false);
+    router.push(ROUTES.ALBUM.LIST);
+  };
+
+  const handleCancel = () => {
+    setShowModal(false);
+  };
 
   return (
-    <header className="w-full bg-white border-b border-gray-200">
-      <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto">
-        {/* 이전 버튼 */}
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-base text-gray-800 hover:text-gray-600 transition-colors"
-        >
+    <>
+      <header className="w-full bg-white border-b border-gray-200">
+        <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto">
+          {/* 내 앨범 버튼 */}
+          <button
+            onClick={handleBackClick}
+            className="flex items-center gap-2 text-base text-gray-800 hover:text-gray-600 transition-colors"
+          >
           <svg
             width="24"
             height="24"
@@ -30,7 +55,7 @@ export default function PageHeader({ title }: PageHeaderProps) {
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          <span>이전</span>
+          <span>내 앨범</span>
         </button>
 
         {/* 가운데 타이틀 */}
@@ -50,5 +75,14 @@ export default function PageHeader({ title }: PageHeaderProps) {
         </div>
       </div>
     </header>
+
+    {/* 모바일 확인 모달 */}
+    <BottomConfirmModal
+      isOpen={showModal}
+      message="모든 작업을 취소하고 내 앨범으로 돌아가겠습니까?"
+      onConfirm={handleConfirm}
+      onCancel={handleCancel}
+    />
+  </>
   );
 }

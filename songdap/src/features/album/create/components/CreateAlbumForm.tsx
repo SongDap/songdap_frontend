@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { HiLockOpen, HiLockClosed } from "react-icons/hi";
 import { HiMinus, HiPlus, HiChevronLeft, HiChevronRight } from "react-icons/hi";
+import { ROUTES } from "@/shared/lib/routes";
 
 type CreateAlbumFormProps = {
   albumColor?: string;
@@ -12,6 +14,7 @@ export default function CreateAlbumForm({
   albumColor: initialAlbumColor = "#808080",
   onAlbumColorChange 
 }: CreateAlbumFormProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     albumName: "",
     albumDescription: "",
@@ -19,6 +22,11 @@ export default function CreateAlbumForm({
     songCount: 15,
     albumColor: initialAlbumColor,
   });
+
+  // initialAlbumColor가 변경되면 formData.albumColor도 업데이트
+  useEffect(() => {
+    setFormData((prev) => ({ ...prev, albumColor: initialAlbumColor }));
+  }, [initialAlbumColor]);
 
   useEffect(() => {
     if (onAlbumColorChange) {
@@ -77,8 +85,27 @@ export default function CreateAlbumForm({
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: 앨범 생성 API 호출
+    
+    // 앨범 데이터를 sessionStorage에 저장
+    const albumData = {
+      albumName: formData.albumName,
+      albumDescription: formData.albumDescription,
+      isPublic: formData.isPublic,
+      songCount: formData.songCount,
+      albumColor: formData.albumColor,
+    };
+    
+    sessionStorage.setItem("albumCreateData", JSON.stringify(albumData));
+    
+    // 앨범 공유 페이지로 이동
+    router.push(ROUTES.ALBUM.SHARE);
+  };
+
   return (
-    <form className="mt-8 space-y-6">
+    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
       {/* 앨범명 */}
       <div>
         <label className="block text-base font-medium text-gray-900 mb-2">
@@ -248,7 +275,7 @@ export default function CreateAlbumForm({
           {/* 스크롤 가능한 색상 리스트 */}
           <div
             ref={colorScrollRef}
-            className="flex gap-3 overflow-x-auto scrollbar-hide flex-nowrap flex-1 py-2"
+            className="flex gap-3 overflow-x-auto scrollbar-hide flex-nowrap flex-1 py-2 px-2"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {presetColors.map((color) => (

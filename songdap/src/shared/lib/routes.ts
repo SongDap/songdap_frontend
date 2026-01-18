@@ -16,6 +16,7 @@ export const ROUTES = {
   ALBUM: {
     LIST: "/album/list",
     CREATE: "/album/create",
+    SHARE: "/album/share",
   },
 } as const;
 

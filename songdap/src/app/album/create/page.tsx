@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { CreateAlbumForm } from "@/features/album/create/components";
@@ -28,9 +28,14 @@ function getRandomColorFromPalette(): string {
 }
 
 export default function CreateAlbumPage() {
-  const [albumColor, setAlbumColor] = useState<string>(() => {
-    return getRandomColorFromPalette();
-  });
+  const [albumColor, setAlbumColor] = useState<string>("#929292"); // 기본값으로 고정
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 클라이언트에서만 랜덤 색상 생성
+  useEffect(() => {
+    setIsMounted(true);
+    setAlbumColor(getRandomColorFromPalette());
+  }, []);
 
   return (
     <>
