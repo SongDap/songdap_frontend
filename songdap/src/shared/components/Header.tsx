@@ -40,9 +40,12 @@ export default function Header() {
           className="h-10 md:h-16 w-auto object-contain"
         />
 
-        {/* 모바일에서만 가운데 "내 앨범" 타이틀 표시 */}
+        {/* 모바일에서만 가운데 타이틀 표시 */}
         {pathname === "/album/list" && (
           <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">내 앨범</h1>
+        )}
+        {pathname === "/song/add" && (
+          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">노래 추가</h1>
         )}
 
         {/* PC nav */}

@@ -18,6 +18,11 @@ export const ROUTES = {
     CREATE: "/album/create",
     SHARE: "/album/share",
   },
+
+  // 노래
+  SONG: {
+    ADD: "/song/add",
+  },
 } as const;
 
 /**
