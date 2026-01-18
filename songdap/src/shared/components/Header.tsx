@@ -32,13 +32,18 @@ export default function Header() {
   return (
     <header className="w-full bg-white border-b border-gray-200" onClick={handleClickOutside}>
       {/* top bar */}
-      <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto">
+      <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto relative">
         {/* Logo */}
         <img
           src="/images/logo.png"
           alt="logo"
           className="h-10 md:h-16 w-auto object-contain"
         />
+
+        {/* 모바일에서만 가운데 "내 앨범" 타이틀 표시 */}
+        {pathname === "/album/list" && (
+          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">내 앨범</h1>
+        )}
 
         {/* PC nav */}
         <nav className="hidden md:flex items-center gap-3 ml-auto">

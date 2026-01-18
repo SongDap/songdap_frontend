@@ -4,25 +4,33 @@ import { useRouter } from "next/navigation";
 import { ROUTES } from "@/shared/lib/routes";
 import AlbumFormFields, { type AlbumFormData } from "./AlbumFormFields";
 
-type CreateAlbumFormProps = {
+type EditAlbumFormProps = {
   albumColor?: string;
   onAlbumColorChange?: (color: string) => void;
+  initialData?: {
+    title?: string;
+    description?: string;
+    isPublic?: boolean;
+    musicCountLimit?: number;
+    color?: string;
+  };
 };
 
-export default function CreateAlbumForm({ 
+export default function EditAlbumForm({ 
   albumColor: initialAlbumColor = "#808080",
   onAlbumColorChange,
-}: CreateAlbumFormProps) {
+  initialData,
+}: EditAlbumFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<AlbumFormData>({
-    title: "",
-    description: "",
-    isPublic: true,
-    musicCountLimit: 15,
-    color: initialAlbumColor,
+    title: initialData?.title || "",
+    description: initialData?.description || "",
+    isPublic: initialData?.isPublic ?? true,
+    musicCountLimit: initialData?.musicCountLimit || 15,
+    color: initialData?.color || initialAlbumColor,
   });
 
-  const [songCountInput, setSongCountInput] = useState<string>("15");
+  const [songCountInput, setSongCountInput] = useState<string>(formData.musicCountLimit.toString());
   const colorScrollRef = useRef<HTMLDivElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -43,13 +51,13 @@ export default function CreateAlbumForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: 앨범 생성 API 호출
+    // TODO: 앨범 수정 API 호출
     
     // 앨범 데이터를 sessionStorage에 저장
     sessionStorage.setItem("albumCreateData", JSON.stringify(formData));
     
-    // 앨범 공유 페이지로 이동
-    router.push(ROUTES.ALBUM.SHARE);
+    // 앨범 정보 페이지로 이동
+    router.push(`${ROUTES.ALBUM.SHARE}?mode=info`);
   };
 
   return (
@@ -63,8 +71,19 @@ export default function CreateAlbumForm({
         submitButtonRef={submitButtonRef}
       />
 
-      {/* 완료 버튼 */}
+      {/* 취소 버튼 */}
       <div className="pt-6">
+        <button
+          type="button"
+          onClick={() => router.push(`${ROUTES.ALBUM.SHARE}?mode=info`)}
+          className="w-full py-3 px-4 border border-gray-300 text-gray-700 rounded-lg text-base font-medium hover:bg-gray-50 active:bg-gray-100 focus:outline-none transition-colors"
+        >
+          취소
+        </button>
+      </div>
+
+      {/* 완료 버튼 */}
+      <div className="-mt-[12px]">
         <button
           ref={submitButtonRef}
           type="submit"

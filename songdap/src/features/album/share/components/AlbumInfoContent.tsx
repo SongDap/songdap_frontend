@@ -6,14 +6,14 @@ import { ROUTES } from "@/shared/lib/routes";
 import { useAlbumData } from "./useAlbumData";
 import AlbumInfoDisplay, { type AlbumData } from "./AlbumInfoDisplay";
 
-type AlbumShareContentProps = {
+type AlbumInfoContentProps = {
   albumData?: AlbumData | null;
   onComplete?: () => void;
 };
 
-export default function AlbumShareContent({ albumData: initialAlbumData, onComplete }: AlbumShareContentProps) {
+export default function AlbumInfoContent({ albumData: initialAlbumData, onComplete }: AlbumInfoContentProps) {
   const router = useRouter();
-  const { albumData, albumColor, todayDate } = useAlbumData(initialAlbumData, { shouldRemoveAfterLoad: true });
+  const { albumData, albumColor, todayDate } = useAlbumData(initialAlbumData);
   const [isLinkCopied, setIsLinkCopied] = useState<boolean>(false);
 
   const handleLinkCopy = () => {

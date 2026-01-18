@@ -7,9 +7,10 @@ import { BottomConfirmModal } from "@/shared/ui";
 
 type PageHeaderProps = {
   title: string;
+  backButtonText?: string;
 };
 
-export default function PageHeader({ title }: PageHeaderProps) {
+export default function PageHeader({ title, backButtonText = "내 앨범" }: PageHeaderProps) {
   const router = useRouter();
   const { user } = useOauthStore();
   const [showModal, setShowModal] = useState(false);
@@ -41,7 +42,7 @@ export default function PageHeader({ title }: PageHeaderProps) {
           {/* 내 앨범 버튼 */}
           <button
             onClick={handleBackClick}
-            className="flex items-center gap-2 text-base text-gray-800 hover:text-gray-600 transition-colors"
+            className="flex items-center gap-2 text-base text-gray-800 hover:text-[#006FFF] active:text-[#006FFF] transition-colors"
           >
           <svg
             width="24"
@@ -52,10 +53,11 @@ export default function PageHeader({ title }: PageHeaderProps) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="hidden md:block"
           >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          <span>내 앨범</span>
+          <span className="underline md:no-underline">{backButtonText}</span>
         </button>
 
         {/* 가운데 타이틀 */}

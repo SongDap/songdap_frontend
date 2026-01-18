@@ -1,5 +1,6 @@
 // 모킹만 함 -> 실제 백엔드 API통신 안됨 되면 할 예정
 import { AuthResponse } from '../model/types';
+import { MOCK_AUTH_DATA } from '@/shared/lib/mockData';
 
 // 백엔드 통신 함수 (가짜 버전)
 export async function loginWithKakao(code: string) {
@@ -12,15 +13,7 @@ export async function loginWithKakao(code: string) {
 
   // 2. 가짜 데이터 반환 (백엔드가 보낼 데이터 모양을 흉내 냄)
   // 이 데이터가 나중에 'useOauthStore'의 login 함수로 전달됩니다.
-  const mockData: AuthResponse = {
-    accessToken: "test_access_token_12345", // 가짜 토큰
-    user: {
-      id: 1,
-      nickname: "테스트용 송답",  // 화면에 뜰 이름
-      email: "songdap@test.com",
-      profileImage: "https://via.placeholder.com/150"
-    }
-  };
+  const mockData: AuthResponse = MOCK_AUTH_DATA;
 
   return mockData;
 }

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AlbumCover } from "@/shared/ui";
-import { HiLockOpen, HiLockClosed, HiShare, HiLink } from "react-icons/hi";
+import { HiLockClosed, HiShare, HiLink } from "react-icons/hi";
+import AlbumCardEditMode from "./AlbumCardEditMode";
 
 type AlbumCardProps = {
   id: string;
@@ -14,6 +15,9 @@ type AlbumCardProps = {
   imageUrl?: string | null;
   href?: string;
   createdAt?: string;
+  isEditMode?: boolean;
+  onDelete?: (id: string) => void;
+  onEdit?: (id: string) => void;
 };
 
 export default function AlbumCard({
@@ -25,15 +29,18 @@ export default function AlbumCard({
   imageUrl,
   href,
   createdAt,
+  isEditMode = false,
+  onDelete,
+  onEdit,
 }: AlbumCardProps) {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // PC: 280x280, 모바일: 화면에 2개가 나오도록 (약 170px)
-  const coverSizePC = 280;
+  // PC: 240x240, 모바일: 화면에 2개가 나오도록 (약 170px)
+  const coverSizePC = 240;
   const coverSizeMobile = 170;
-  const lpSizePC = coverSizePC * 0.8; // 224
+  const lpSizePC = coverSizePC * 0.8; // 192
   const lpSizeMobile = coverSizeMobile * 0.8; // 136
 
   // 클라이언트에서만 마운트 확인
@@ -65,10 +72,19 @@ export default function AlbumCard({
   };
 
   return (
-    <Link href={href || `/album/${id}`} className="block group">
+    <Link 
+      href={href || `/album/${id}`} 
+      className="block group"
+      onClick={(e) => {
+        // 편집 모드일 때 링크 클릭 비활성화
+        if (isEditMode) {
+          e.preventDefault();
+        }
+      }}
+    >
       <div className="flex flex-col items-center gap-3">
         {/* 앨범 커버 - 모바일과 PC에서 다른 크기 */}
-        <div className="w-[170px] h-[170px] md:w-[280px] md:h-[280px] relative">
+        <div className="w-[170px] h-[170px] md:w-[240px] md:h-[240px] relative">
           {/* 모바일 버전 */}
           <div className="md:hidden">
             <AlbumCover
@@ -90,6 +106,16 @@ export default function AlbumCard({
             />
           </div>
 
+          {/* 편집 모드 */}
+          {isEditMode && (
+            <AlbumCardEditMode
+              id={id}
+              albumName={albumName}
+              onDelete={onDelete}
+              onEdit={onEdit}
+            />
+          )}
+
           {/* 오른쪽 위 자물쇠 아이콘 + 곡 개수 */}
           <div className="absolute top-2 right-2 flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
             {!isPublic && (
@@ -100,7 +126,7 @@ export default function AlbumCard({
         </div>
 
         {/* 앨범 정보 */}
-        <div className="text-left w-[170px] md:w-[280px]">
+        <div className="text-left w-[170px] md:w-[240px]">
           {/* 등록 날짜 */}
           {createdAt && (
             <p className="text-xs text-gray-500 mb-1">{createdAt}</p>
