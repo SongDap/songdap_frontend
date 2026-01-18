@@ -11,6 +11,12 @@ export const ROUTES = {
   OAUTH: {
     KAKAO_CALLBACK: "/oauth/callback/kakao",
   },
+
+  // 앨범
+  ALBUM: {
+    LIST: "/album/list",
+    CREATE: "/album/create",
+  },
 } as const;
 
 /**

@@ -10,12 +10,13 @@ type NavItem = {
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { user, isAuthenticated } = useOauthStore();
+  const { user } = useOauthStore();
 
   const navItems: NavItem[] = [
     { label: "서비스 소개", href: "#" },
-    ...(isAuthenticated ? [{ label: "내 앨범", href: "#" }] : []),
+    { label: "내 앨범", href: "/album/list" },
   ];
 
   const isActive = (href: string) => {
@@ -23,8 +24,13 @@ export default function Header() {
     return pathname === href || pathname?.startsWith(href);
   };
 
+  // 메뉴 외부 클릭 시 닫기
+  const handleClickOutside = () => {
+    setProfileMenuOpen(false);
+  };
+
   return (
-    <header className="w-full bg-white border-b border-gray-200">
+    <header className="w-full bg-white border-b border-gray-200" onClick={handleClickOutside}>
       {/* top bar */}
       <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto">
         {/* Logo */}
@@ -57,26 +63,46 @@ export default function Header() {
         </nav>
 
         {/* PC user */}
-        {user && (
-          <div className="hidden md:flex items-center gap-2 ml-4">
+        <div className="hidden md:flex items-center gap-2 ml-4 relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setProfileMenuOpen(!profileMenuOpen);
+            }}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
             <img
-              src={user.profileImage || "https://placehold.co/36x36"}
-              alt={user.nickname}
+              src={user?.profileImage || "https://placehold.co/36x36"}
+              alt={user?.nickname || "프로필"}
               className="w-9 h-9 rounded-full"
             />
-            <span className="text-base text-gray-900">{user.nickname}</span>
-          </div>
-        )}
+            <span className="text-base text-gray-900 max-w-[200px] truncate" title={user?.nickname || "사용자"}>
+              {user?.nickname?.slice(0, 16) || "사용자"}
+              {user?.nickname && user.nickname.length > 16 && "..."}
+            </span>
+          </button>
+          
+          {/* PC Profile Dropdown */}
+          {profileMenuOpen && (
+            <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <div className="py-2">
+                <a
+                  href="#"
+                  className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProfileMenuOpen(false);
+                  }}
+                >
+                  프로필 편집
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Mobile right */}
         <div className="flex items-center gap-2 md:hidden">
-          {user && (
-            <img
-              src={user.profileImage || "https://placehold.co/36x36"}
-              alt={user.nickname}
-              className="w-8 h-8 rounded-full"
-            />
-          )}
           <button
             onClick={() => setOpen(!open)}
             className="p-2 rounded-lg hover:bg-gray-100"
@@ -102,26 +128,50 @@ export default function Header() {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden border-t border-gray-200 bg-white">
-          <nav className="flex flex-col px-4 py-3 gap-1">
-            {navItems.map((item, idx) => {
-              const active = isActive(item.href);
-              return (
-                <a
-                  key={idx}
-                  href={item.href}
-                  className={`px-3 py-2 rounded-lg text-base
-                    ${
-                      active
-                        ? "text-white font-medium"
-                        : "text-gray-800 hover:bg-gray-100"
-                    }`}
-                  style={active ? { backgroundColor: "#006FFF" } : undefined}
-                >
-                  {item.label}
-                </a>
-              );
-            })}
-          </nav>
+          <div className="flex flex-col px-4 py-3 gap-1">
+            {/* Mobile profile */}
+            <div className="flex flex-col gap-2 px-3 py-2 mb-2 border-b border-gray-200 pb-2">
+              <div className="flex items-center gap-2">
+                <img
+                  src={user?.profileImage || "https://placehold.co/36x36"}
+                  alt={user?.nickname || "프로필"}
+                  className="w-8 h-8 rounded-full"
+                />
+                <span className="text-base text-gray-900 truncate" title={user?.nickname || "사용자"}>
+                  {user?.nickname?.slice(0, 16) || "사용자"}
+                  {user?.nickname && user.nickname.length > 16 && "..."}
+                </span>
+              </div>
+              <a
+                href="#"
+                className="px-3 py-2 rounded-lg text-base text-gray-800 hover:bg-gray-100"
+              >
+                프로필 편집
+              </a>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex flex-col gap-1">
+              {navItems.map((item, idx) => {
+                const active = isActive(item.href);
+                return (
+                  <a
+                    key={idx}
+                    href={item.href}
+                    className={`px-3 py-2 rounded-lg text-base
+                      ${
+                        active
+                          ? "text-white font-medium"
+                          : "text-gray-800 hover:bg-gray-100"
+                      }`}
+                    style={active ? { backgroundColor: "#006FFF" } : undefined}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+            </nav>
+          </div>
         </div>
       )}
     </header>
