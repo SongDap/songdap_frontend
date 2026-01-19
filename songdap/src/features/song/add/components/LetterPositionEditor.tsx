@@ -197,9 +197,10 @@ export default function LetterPositionEditor({
       <div className="w-full mb-6">
           <div
             ref={setContainerRef}
-            className="relative w-full border-2 border-gray-300 bg-gray-50"
+            className="relative w-full rounded-lg"
             style={{
               aspectRatio: '16 / 9',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
             }}
           >
           {/* 편지 */}
