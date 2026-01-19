@@ -74,7 +74,7 @@ export default function AlbumCard({
   return (
     <Link 
       href={href || `/album/${id}`} 
-      className="block group"
+      className="block group album-card-item"
       onClick={(e) => {
         // 편집 모드일 때 링크 클릭 비활성화
         if (isEditMode) {

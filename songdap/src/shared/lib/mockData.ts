@@ -109,6 +109,59 @@ export const SAMPLE_ALBUMS: SampleAlbum[] = [
   },
 ];
 
+// 노래 샘플 데이터 타입
+export type SampleSong = {
+  id: number;
+  title: string;
+  artist: string;
+  imageUrl?: string | null;
+  message?: string; // 메시지 (가사처럼 표시)
+  nickname?: string; // 메시지를 보낸 사람의 닉네임
+};
+
+// 임시 샘플 노래 데이터
+export const SAMPLE_SONGS: SampleSong[] = [
+  { 
+    id: 1, 
+    title: "노래 제목 1", 
+    artist: "아티스트 1", 
+    imageUrl: "https://placehold.co/56x56", 
+    nickname: "친구1",
+    message: "이 노래를 들으며 당신을 생각해요.\n언제나 함께 있는 것처럼 느껴져요.\n\n오늘도 고마웠어요.\n당신의 하루가 행복하기를 바라요." 
+  },
+  { 
+    id: 2, 
+    title: "매우 긴 노래 제목을 가진 아름다운 음악의 멜로디가 흐르는 특별한 순간", 
+    artist: "아티스트 2", 
+    imageUrl: "https://placehold.co/56x56", 
+    nickname: "친구2",
+    message: "오늘도 고마웠어요.\n당신의 하루가 행복하기를 바라요.\n\n이 멜로디가 당신에게 전해지길.\n특별한 하루가 되길 바라요." 
+  },
+  { 
+    id: 3, 
+    title: "이것은 정말로 매우 긴 노래 제목입니다 화면을 넘어서는 긴 제목 테스트용", 
+    artist: "아티스트 3", 
+    imageUrl: "https://placehold.co/56x56",
+    nickname: "친구3"
+  },
+  { 
+    id: 4, 
+    title: "노래 제목 4", 
+    artist: "아티스트 4", 
+    imageUrl: "https://placehold.co/56x56", 
+    nickname: "친구4",
+    message: "함께 듣고 싶었던 노래예요.\n언제나 응원할게요.\n\n이 순간이 오래 기억되길.\n당신의 모든 순간이 아름답기를." 
+  },
+  { 
+    id: 5, 
+    title: "노래 제목 5", 
+    artist: "아티스트 5", 
+    imageUrl: "https://placehold.co/56x56", 
+    nickname: "친구5",
+    message: "이 순간이 오래 기억되길.\n당신의 모든 순간이 아름답기를.\n\n언제나 당신 곁에 있을게요.\n사랑해요." 
+  },
+];
+
 // OAuth Mock 데이터 (oauthApi.ts에서 사용)
 // AuthResponse 타입과 호환되도록 작성됨
 export const MOCK_AUTH_DATA = {
