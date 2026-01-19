@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed } from "react-icons/hi";
@@ -9,6 +10,7 @@ import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
 
 export default function AddSongPage() {
+  const router = useRouter();
   const { user } = useOauthStore();
   const [album, setAlbum] = useState(SAMPLE_ALBUMS[0]); // TODO: URL 파라미터나 세션에서 앨범 데이터 가져오기
   const [songData, setSongData] = useState({
@@ -21,6 +23,26 @@ export default function AddSongPage() {
     message: "",
   });
   const [showSongCard, setShowSongCard] = useState(false);
+
+  // 취소 버튼으로 돌아왔을 때 메시지 입력 화면 표시
+  useEffect(() => {
+    const showMessageForm = sessionStorage.getItem("showMessageForm");
+    if (showMessageForm === "true") {
+      // sessionStorage에서 노래 데이터 복원
+      const storedSongData = sessionStorage.getItem("songAddData");
+      const storedMessageData = sessionStorage.getItem("songMessageData");
+      
+      if (storedSongData) {
+        setSongData(JSON.parse(storedSongData));
+      }
+      if (storedMessageData) {
+        setMessageData(JSON.parse(storedMessageData));
+      }
+      
+      setShowSongCard(true);
+      sessionStorage.removeItem("showMessageForm");
+    }
+  }, []);
 
   // PC: 180x180, 모바일: 140x140
   const coverSizePC = 180;
@@ -244,6 +266,13 @@ export default function AddSongPage() {
                 <div className="mt-6">
                   <button
                     type="button"
+                    onClick={() => {
+                      // sessionStorage에 데이터 저장
+                      sessionStorage.setItem("songAddData", JSON.stringify(songData));
+                      sessionStorage.setItem("songMessageData", JSON.stringify(messageData));
+                      // 위치 조정 페이지로 이동
+                      router.push(`/song/add/position?albumId=${album.uuid}`);
+                    }}
                     className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors"
                   >
                     다음
