@@ -54,34 +54,25 @@ export default function LandingMain() {
 
   return (
     <div className="w-full px-6 lg:px-12">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-7xl mx-auto py-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-0 items-center max-w-7xl mx-auto py-12">
         {/* 왼쪽: 텍스트 및 로그인 버튼 */}
         <div className="flex flex-col justify-center space-y-8">
           {/* 텍스트 섹션 */}
           <div className="space-y-4">
             <p className="text-sm text-gray-600 font-medium" style={{ fontFamily: "KOTRA_HOPE" }}>그날을 추억하는 방법</p>
-            <h1
-              className="
-    text-[150px]
-    leading-[1.05]
-    tracking-[-0.02em]
-    flex items-end gap-2
-  "
-              style={{ fontFamily: "KOTRA_HOPE" }}
-            >
-              <div>
-                {/* 아래 className="shrink-0" 추가 및 mb(마진)으로 높이 미세 조정 */}
-                <Link href="/">
-                  <Image
-                    src="/images/logo.png"
-                    alt="paper airplane"
-                    width={450}
-                    height={200}
-                    className="shrink-0 mb-8"
-                  />
-                </Link>
-              </div>
-            </h1>
+
+            <div>
+              {/* 아래 className="shrink-0" 추가 및 mb(마진)으로 높이 미세 조정 */}
+              <Link href="/">
+                <Image
+                  src="/images/logo.png"
+                  alt="paper airplane"
+                  width={450}
+                  height={200}
+                  className="shrink-0 mb-8"
+                />
+              </Link>
+            </div>
 
             <p className="text-gray-700 text-lg mt-6 leading-relaxed max-w-md" style={{ fontFamily: "KOTRA_HOPE" }}>
               전교 1등은 무슨 노래를 듣는지 궁금할 때
@@ -96,7 +87,7 @@ export default function LandingMain() {
           <button
             type="button"
             onClick={handleLogin}
-className="
+            className="
   w-full sm:w-auto
   flex items-center justify-center gap-2
   px-8 py-3
@@ -119,23 +110,18 @@ className="
         </div>
 
         {/* 오른쪽: 앨범 그리드 */}
-        <div className="grid grid-cols-3 gap-4 h-fit">
-          {/*
-{mockAlbums.map((album) => (
-  <div
-    key={album.id}
-    className={`${album.color} aspect-square rounded-lg shadow-lg flex items-center justify-center overflow-hidden hover:shadow-xl transition-shadow`}
-  >
-    <div className="w-4/5 h-4/5 bg-gradient-to-b from-pink-100 to-pink-300 rounded-full flex items-center justify-center relative shadow-inner">
-      <div className="w-3/5 h-3/5 bg-black rounded-full flex items-center justify-center">
-        <div className="w-1/3 h-1/3 bg-pink-300 rounded-full"></div>
-      </div>
-    </div>
-  </div>
-))}
-*/}
-
+        {/* 오른쪽: 앨범 */}
+        <div className="flex justify-center lg:justify-end">
+          <Image
+            src="/images/rightAlbum.png"
+            alt="right album"
+            width={800}
+            height={70}
+            priority
+            className="w-[110%] max-w-none"
+          />
         </div>
+
       </div>
     </div>
   );
