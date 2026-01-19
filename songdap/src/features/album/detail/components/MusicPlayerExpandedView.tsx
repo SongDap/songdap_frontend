@@ -249,7 +249,7 @@ export default function MusicPlayerExpandedView({
         {/* 메시지 (스크롤 가능) */}
         {message && (
           <div 
-            className="flex-1 w-full max-w-lg overflow-y-auto min-h-0 px-4 scrollbar-hide"
+            className="flex-1 w-full max-w-2xl overflow-y-auto min-h-0 px-4 scrollbar-hide mx-auto"
             style={{ 
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
