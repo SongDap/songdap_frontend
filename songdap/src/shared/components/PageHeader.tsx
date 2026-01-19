@@ -73,7 +73,7 @@ export default function PageHeader({ title, backButtonText = "내 앨범", backg
         <div 
           className="w-full"
           style={backgroundColor ? {
-            background: 'rgba(255, 255, 255, 0.9)',
+            background: 'rgba(255, 255, 255, 0.8)',
           } : undefined}
         >
         <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto relative">

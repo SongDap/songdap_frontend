@@ -156,7 +156,7 @@ export default function AlbumDetailContent() {
           <div 
             className="flex-1 overflow-hidden flex flex-col"
             style={{
-              background: 'rgba(255, 255, 255, 0.9)',
+              background: 'rgba(255, 255, 255, 0.8)',
             }}
           >
             {/* 모바일 버전 */}
@@ -204,7 +204,7 @@ export default function AlbumDetailContent() {
           <div 
             className="min-h-screen"
             style={{
-              background: 'rgba(255, 255, 255, 0.9)',
+              background: 'rgba(255, 255, 255, 0.8)',
             }}
           >
             <div className="w-full px-4 md:px-8 pt-8 pb-20">
@@ -241,9 +241,10 @@ export default function AlbumDetailContent() {
               {/* 노래 편지 목록 - 롤링페이퍼 스타일 */}
               {/* 편지 영역: 반응형 가로 길이, 세로는 동적 */}
               <div 
-                className="relative letter-container w-full border border-gray-300" 
+                className="relative letter-container w-full rounded-lg" 
                 style={{ 
                   aspectRatio: '16 / 9',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
                 }}
               >
                 {letterPositions.length > 0 && songs.map((song, index) => {
