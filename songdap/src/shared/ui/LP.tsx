@@ -7,8 +7,8 @@ type LPProps = {
 };
 
 export default function LP({ size = 120, className = "", imageUrl }: LPProps) {
-  // 중앙 이미지 영역 크기 (가장 안쪽 고리 안쪽)
-  const centerSize = size * 0.35;
+  // 중앙 이미지 영역 크기 (투명 영역이 0% ~ 35%까지이므로, 이미지를 확대하여 완전히 채움)
+  const centerSize = size * 0.5;
 
   return (
     <div
@@ -18,13 +18,11 @@ export default function LP({ size = 120, className = "", imageUrl }: LPProps) {
         height: `${size}px`,
         background: `
           radial-gradient(circle at center,
-            ${imageUrl ? 'transparent' : 'transparent'} 0%,
-            ${imageUrl ? 'transparent' : 'transparent'} ${(centerSize / size) * 100}%,
-            hsl(0 0% 20%) ${(centerSize / size) * 100}%,
-            hsl(0 0% 15%) 15%,
-            hsl(0 0% 10%) 25%,
-            hsl(0 0% 8%) 35%,
-            hsl(0 0% 12%) 40%,
+            transparent 0%,
+            transparent 35%,
+            hsl(0 0% 20%) 35%,
+            hsl(0 0% 15%) 25%,
+            hsl(0 0% 10%) 35%,
             hsl(0 0% 8%) 45%,
             hsl(0 0% 12%) 50%,
             hsl(0 0% 8%) 55%,
@@ -38,7 +36,7 @@ export default function LP({ size = 120, className = "", imageUrl }: LPProps) {
       {/* 중앙 이미지 영역 */}
       {imageUrl ? (
         <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden"
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden z-10"
           style={{ width: `${centerSize}px`, height: `${centerSize}px` }}
         >
           <Image
@@ -53,7 +51,7 @@ export default function LP({ size = 120, className = "", imageUrl }: LPProps) {
 
       {/* 중앙 구멍 */}
       <div
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray-900"
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray-900 z-20"
         style={{ width: `${size * 0.08}px`, height: `${size * 0.08}px` }}
       ></div>
     </div>
