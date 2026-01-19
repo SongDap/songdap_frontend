@@ -7,15 +7,7 @@ export default function Footer() {
     <footer className="w-full px-6 py-10 bg-white border-t border-gray-200">
       <div className="mx-auto flex max-w-[1440px] flex-col items-center gap-6 text-center text-gray-700">
 
-        <Image
-          src="/images/logo.png"
-          alt="logo"
-          width={120}
-          height={85}
-          className="h-10 md:h-16 w-auto object-contain"
-        />
 
-        <hr className="w-full border-gray-300" />
 
         <Link
           href="https://www.instagram.com/songdap_official/"
