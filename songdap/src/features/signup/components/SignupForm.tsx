@@ -115,8 +115,29 @@ export function SignupForm() {
                                 className="h-4 w-4 rounded border-gray-400 text-[#006FFF] focus:ring-[#006FFF]"
                             />
                             <label htmlFor="agreeTerms" className="text-sm text-gray-700">
-                                (필수) 이용약관 및 개인정보수집이용 동의
+                                (필수)&nbsp;
+                                <a
+                                    href="https://www.notion.so/2ef32226841780ba99efce8bf7d31596?source=copy_link"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline hover:text-blue-600"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    이용약관
+                                </a>
+                                &nbsp;및&nbsp;
+                                <a
+                                    href="https://www.notion.so/2ef322268417804387d7c3f192ed88a7?source=copy_link"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline hover:text-blue-600"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    개인정보수집·이용
+                                </a>
+                                &nbsp;동의
                             </label>
+
                         </div>
                     </div>
                 </div>
