@@ -7,6 +7,7 @@ import axios from 'axios';
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || '',
   timeout: 10000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,6 +41,7 @@ apiClient.interceptors.response.use(
       // 로그아웃 처리
       if (typeof window !== 'undefined') {
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
       }
     }
     return Promise.reject(error);

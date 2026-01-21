@@ -1,19 +1,27 @@
-// 모킹만 함 -> 실제 백엔드 API통신 안됨 되면 할 예정
-import { AuthResponse } from '../model/types';
-import { MOCK_AUTH_DATA } from '@/shared/lib/mockData';
+import { apiClient } from "@/shared/api";
+import type { AuthResponse } from "../model/types";
 
-// 백엔드 통신 함수 (가짜 버전)
+type KakaoLoginRequest = {
+  authorizationCode: string;
+  redirectUri?: string;
+};
+
+/**
+ * 카카오 OAuth 인가코드(code)를 백엔드로 전달해 로그인 처리합니다.
+ *
+ * - 엔드포인트: POST /api/v1/auth/login/kakao
+ * - Body: { authorizationCode: string }
+ * - 백엔드가 쿠키로 토큰을 설정하므로 withCredentials 필수
+ */
 export async function loginWithKakao(code: string) {
-  console.log('[API] 카카오 인가 코드를 받았습니다:', code);
+  const exchangePath =
+    process.env.NEXT_PUBLIC_OAUTH_KAKAO_EXCHANGE_PATH ||
+    "/api/v1/auth/login/kakao";
+  const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+  const payload: KakaoLoginRequest = { authorizationCode: code, redirectUri };
 
-  // 1. 실제 서버처럼 1초 동안 기다리기 (로딩 흉내)
-  await new Promise(function(resolve) {
-    setTimeout(resolve, 1000);
+  const res = await apiClient.post<AuthResponse>(exchangePath, payload, {
+    withCredentials: true,
   });
-
-  // 2. 가짜 데이터 반환 (백엔드가 보낼 데이터 모양을 흉내 냄)
-  // 이 데이터가 나중에 'useOauthStore'의 login 함수로 전달됩니다.
-  const mockData: AuthResponse = MOCK_AUTH_DATA;
-
-  return mockData;
+  return res.data;
 }

@@ -12,18 +12,20 @@ interface Album {
 
 export default function LandingMain() {
   // 환경변수 가져오기
-  const REST_API_KEY = process.env.NEXT_PUBLIC_KAKAO_API_KEY;
+  const JAVASCRIPT_KEY =
+    process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY ||
+    process.env.NEXT_PUBLIC_KAKAO_API_KEY; // 기존 키명 fallback
   const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
 
   // 카카오 로그인 주소 조합하기
-  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
 
   // 클릭하면 실행될 함수
   function handleLogin() {
     // 1. 환경변수 미설정 체크
-    if (!REST_API_KEY || !REDIRECT_URI) {
+    if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
       console.error("환경변수가 설정되지 않았습니다", {
-        REST_API_KEY,
+        JAVASCRIPT_KEY,
         REDIRECT_URI
       });
       alert("로그인 설정 누락")
