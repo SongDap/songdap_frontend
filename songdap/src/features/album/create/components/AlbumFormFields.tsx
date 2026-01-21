@@ -58,12 +58,12 @@ export default function AlbumFormFields({
   const handleSongCountChange = (value: string) => {
     onSongCountInputChange(value);
     if (value === "") {
-      onFormDataChange("musicCountLimit", 0);
+      // 빈 값이면 일단 입력창만 업데이트 (onBlur에서 처리)
       return;
     }
     if (/^\d+$/.test(value)) {
       const numValue = parseInt(value, 10);
-      if (!isNaN(numValue)) {
+      if (!isNaN(numValue) && numValue > 0) {
         onFormDataChange("musicCountLimit", numValue);
       }
     }
@@ -177,9 +177,11 @@ export default function AlbumFormFields({
               value={songCountInput}
               onChange={(e) => handleSongCountChange(e.target.value)}
               onBlur={(e) => {
-                if (e.target.value === "") {
-                  onSongCountInputChange("0");
-                  onFormDataChange("musicCountLimit", 0);
+                const value = e.target.value.trim();
+                if (value === "" || value === "0") {
+                  // 빈 값이거나 0이면 기본값 15로 설정
+                  onSongCountInputChange("15");
+                  onFormDataChange("musicCountLimit", 15);
                 }
               }}
               className="w-20 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF] text-center"

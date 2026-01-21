@@ -17,6 +17,7 @@ export const ROUTES = {
     LIST: "/album/list",
     CREATE: "/album/create",
     SHARE: "/album/share",
+    DETAIL: (id: number | string) => `/album/${id}`,
   },
 
   // 노래
