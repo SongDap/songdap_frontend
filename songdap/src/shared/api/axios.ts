@@ -13,14 +13,25 @@ const getBaseURL = () => {
     
     // localhost에서 실행 중이면 강제로 localhost:8080 사용
     if (isLocalhost) {
-      const localhostURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      console.log('[API] localhost 환경 감지, baseURL:', localhostURL);
+      // 환경변수가 없으면 기본값 사용
+      const envURL = process.env.NEXT_PUBLIC_API_URL;
+      const localhostURL = envURL || 'http://localhost:8080';
+      
+      if (!envURL) {
+        console.warn('[API] NEXT_PUBLIC_API_URL이 설정되지 않았습니다. 기본값 http://localhost:8080 사용');
+      } else {
+        console.log('[API] localhost 환경 감지, baseURL:', localhostURL);
+      }
       return localhostURL;
     }
   }
   
   // 프로덕션 또는 다른 환경
-  return process.env.NEXT_PUBLIC_API_URL || '';
+  const apiURL = process.env.NEXT_PUBLIC_API_URL || '';
+  if (!apiURL && typeof window === 'undefined') {
+    console.warn('[API] NEXT_PUBLIC_API_URL이 설정되지 않았습니다.');
+  }
+  return apiURL;
 };
 
 export const apiClient = axios.create({
