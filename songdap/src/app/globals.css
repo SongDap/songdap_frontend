@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "KOTRA_HOPE";
+  src: url("/fonts/KOTRA_HOPE.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* 앨범 커버 LP 기본 위치 (모든 곳에서 정가운데) */
+.album-cover-lp {
+  transform: translate(-50%, -50%);
+}
+
+/* 앨범 카드 LP 슬라이드 애니메이션 (앨범 리스트에만 적용) */
+.album-card-item.group:hover .album-cover-lp {
+  transform: translate(calc(var(--slide-distance)), -50%) !important;
+}
+
+/* 스크롤바 숨기기 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* 마퀴 애니메이션 */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-100% - 80px));
+  }
+}
+
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 25s) linear infinite;
+}
+
+/* 익스팬드뷰 슬라이드 다운 애니메이션 */
+@keyframes slide-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out forwards;
+}
+
+/* 익스팬드뷰 콘텐츠 슬라이드 애니메이션 */
+@keyframes slide-content-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-content-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.animate-slide-content-up {
+  animation: slide-content-up 0.3s ease-out;
+}
+
+.animate-slide-content-down {
+  animation: slide-content-down 0.3s ease-out forwards;
+}
+
+/* LP 회전 애니메이션 */
+@keyframes lp-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-lp-rotate {
+  animation: lp-rotate 25s linear infinite;
+}
+

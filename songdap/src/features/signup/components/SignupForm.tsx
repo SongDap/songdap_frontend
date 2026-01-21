@@ -1,0 +1,158 @@
+"use client";
+
+import Link from "next/link";
+import { useSignupForm } from "../hooks/useSignupForm";
+import Image from "next/image";
+
+export function SignupForm() {
+    const {
+        nickname,
+        email,
+        agreeAll,
+        agreeAge,
+        agreeTerms,
+        setNickname,
+        setEmail,
+        toggleAll,
+        toggleAge,
+        toggleTerms,
+        isValid,
+    } = useSignupForm();
+
+    return (
+        <div className="mx-auto flex flex-col items-center">
+            {/* 로고 영역 */}
+            <div className="flex flex-col items-center gap-3 mb-8">
+                <Link href="/">
+                    <Image src="/images/logo.png" alt="logo" width={300} height={200} />
+                </Link>
+            </div>
+
+            {/* 타이틀 */}
+            <div className="text-center mb-10">
+                <p className="text-[28px] font-semibold text-gray-900 leading-snug">
+                    회원가입하고
+                    <br />
+                    추억을 기록해보세요!
+                </p>
+            </div>
+
+            <div className="w-full bg-white">
+                {/* 닉네임 */}
+                <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                        닉네임(필수)
+                    </label>
+                    <div className="relative">
+                        <input
+                            value={nickname}
+                            onChange={(e) => setNickname(e.target.value)}
+                            maxLength={16}
+                            placeholder="프로듀서님의 이름을 알려주세요"
+                            className="w-full h-14 rounded-lg border border-gray-300 px-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                            {nickname.length} / 16
+                        </span>
+                    </div>
+                </div>
+
+                {/* 이메일 */}
+                <div className="mb-8">
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                        이메일(선택)
+                    </label>
+                    <input
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="이메일을 입력해주세요"
+                        className="w-full h-14 rounded-lg border border-gray-300 px-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
+                    />
+                </div>
+
+                {/* 동의 박스 */}
+                <div className="bg-[#F8F8F8] rounded-2xl border border-[#EDEDED] px-4 py-5 mb-8 mt-30">
+                    <div className="flex items-center gap-3 border-b border-gray-200 pb-4">
+                        <input
+                            id="agreeAll"
+                            type="checkbox"
+                            checked={agreeAll}
+                            onChange={toggleAll}
+                            className="h-5 w-5 rounded border-gray-400 text-[#006FFF] focus:ring-[#006FFF]"
+                        />
+                        <label htmlFor="agreeAll" className="text-sm font-semibold text-gray-900">
+                            (필수) 모두 동의합니다
+                        </label>
+                    </div>
+
+                    <div className="flex flex-col gap-3 pt-4">
+                        <div className="flex items-start gap-3">
+                            <p className="text-sm text-gray-700">
+                                회원 가입 및 회원 관리 등의 목적으로 이메일, 닉네임 등의 정보를 수집하고 있습니다.
+                            </p>
+
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <input
+                                id="agreeAge"
+                                type="checkbox"
+                                checked={agreeAge}
+                                onChange={toggleAge}
+                                className="h-4 w-4 rounded border-gray-400 text-[#006FFF] focus:ring-[#006FFF]"
+                            />
+                            <label htmlFor="agreeAge" className="text-sm text-gray-700">
+                                (필수) 만 14세 이상이에요
+                            </label>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <input
+                                id="agreeTerms"
+                                type="checkbox"
+                                checked={agreeTerms}
+                                onChange={toggleTerms}
+                                className="h-4 w-4 rounded border-gray-400 text-[#006FFF] focus:ring-[#006FFF]"
+                            />
+                            <label htmlFor="agreeTerms" className="text-sm text-gray-700">
+                                (필수)&nbsp;
+                                <a
+                                    href="https://www.notion.so/2ef32226841780ba99efce8bf7d31596?source=copy_link"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline hover:text-blue-600"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    이용약관
+                                </a>
+                                &nbsp;및&nbsp;
+                                <a
+                                    href="https://www.notion.so/2ef322268417804387d7c3f192ed88a7?source=copy_link"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="underline hover:text-blue-600"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    개인정보수집·이용
+                                </a>
+                                &nbsp;동의
+                            </label>
+
+                        </div>
+                    </div>
+                </div>
+
+                {/* 가입 버튼 */}
+                <button
+                    type="button"
+                    disabled={!isValid}
+                    className={`w-full h-12 rounded-md text-base font-semibold shadow-sm active:scale-[0.99] ${isValid ? "bg-[#006FFF] text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
+                >
+                    회원가입하기
+                </button>
+            </div>
+        </div>
+    );
+}
+

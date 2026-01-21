@@ -1,0 +1,176 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+
+type SongLetterProps = {
+  nickname?: string;
+  message?: string;
+  title?: string;
+  artist?: string;
+  imageUrl?: string | null;
+  date?: string;
+  className?: string;
+  tapeColor?: string; // 테이프 색상 (앨범 커버 색상)
+};
+
+export default function SongLetter({
+  nickname,
+  message,
+  title,
+  artist,
+  imageUrl,
+  date,
+  className = "",
+  tapeColor,
+}: SongLetterProps) {
+  const [isTitleExpanded, setIsTitleExpanded] = useState(false);
+  const [isArtistExpanded, setIsArtistExpanded] = useState(false);
+
+  const MAX_LENGTH = 20; // 말줄임표 표시 기준 길이
+
+  // 테두리 색상 (앨범 커버 색상, 30% 투명도)
+  const getBorderColor = () => {
+    if (tapeColor) {
+      let hex = tapeColor.replace('#', '');
+      
+      if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+      }
+      
+      if (hex.length === 6) {
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        
+        return `rgba(${r}, ${g}, ${b}, 0.3)`;
+      }
+    }
+    return 'rgba(229, 231, 235, 1)'; // border-gray-200
+  };
+
+  return (
+    <div 
+      className={`rounded-lg shadow-lg p-6 w-full relative ${className}`}
+      style={{
+        backgroundColor: 'white',
+        border: `1px solid ${getBorderColor()}`,
+        backgroundImage: `
+          repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.01) 0px,
+            transparent 1px,
+            transparent 3px,
+            rgba(0, 0, 0, 0.01) 4px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0.008) 0px,
+            transparent 1px,
+            transparent 3px,
+            rgba(0, 0, 0, 0.008) 4px
+          )
+        `,
+        backgroundSize: '8px 8px, 8px 8px',
+      }}
+    >
+      {/* 둥근 테이프 */}
+      {tapeColor && (
+        <div 
+          className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-16 h-6 rounded-full"
+          style={{
+            backgroundColor: tapeColor,
+          }}
+        />
+      )}
+      {/* 노래 이미지와 정보 */}
+      {(imageUrl || title || artist) && (
+        <div className="mb-4 flex items-center gap-4">
+          {/* 노래 이미지 */}
+          {imageUrl && (
+            <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+              <Image
+                src={imageUrl}
+                alt={title || "노래 이미지"}
+                width={96}
+                height={96}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          
+          {/* 노래 제목과 아티스트 */}
+          <div className="flex-1 min-w-0">
+            {/* 노래 제목 */}
+            {title && (
+              <div className="mb-1">
+                {title.length > MAX_LENGTH ? (
+                  <h3 
+                    onClick={() => setIsTitleExpanded(!isTitleExpanded)}
+                    className={`text-xl font-bold text-gray-900 cursor-pointer hover:opacity-80 transition-opacity ${
+                      !isTitleExpanded ? 'truncate' : ''
+                    }`}
+                  >
+                    {isTitleExpanded ? title : `${title.substring(0, MAX_LENGTH)}...`}
+                  </h3>
+                ) : (
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {title}
+                  </h3>
+                )}
+              </div>
+            )}
+
+            {/* 아티스트 */}
+            {artist && (
+              <div>
+                {artist.length > MAX_LENGTH ? (
+                  <p 
+                    onClick={() => setIsArtistExpanded(!isArtistExpanded)}
+                    className={`text-base text-gray-600 cursor-pointer hover:opacity-80 transition-opacity ${
+                      !isArtistExpanded ? 'truncate' : ''
+                    }`}
+                  >
+                    {isArtistExpanded ? artist : `${artist.substring(0, MAX_LENGTH)}...`}
+                  </p>
+                ) : (
+                  <p className="text-base text-gray-600">
+                    {artist}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 메시지 */}
+      {message && (
+        <div className="mb-4 max-w-2xl mx-auto">
+          <p className="text-base text-gray-700 leading-relaxed whitespace-pre-line text-center">
+            {message}
+          </p>
+        </div>
+      )}
+
+      {/* 닉네임과 날짜 */}
+      <div 
+        className="flex items-center justify-between pt-4 border-t"
+        style={{
+          borderColor: getBorderColor(),
+        }}
+      >
+        {nickname && (
+          <p className="text-sm text-gray-600">
+            From. {nickname}
+          </p>
+        )}
+        {date && (
+          <p className="text-sm text-gray-500">
+            {date}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
