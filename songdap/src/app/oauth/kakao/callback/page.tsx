@@ -21,7 +21,7 @@ function KakaoCallbackContent() {
     const errorDesc = searchParams.get("error_description");
 
     if (DEBUG_OAUTH) {
-      console.groupCollapsed("[OAUTH][KAKAO][03] 콜백 진입");
+      console.log("[OAUTH][KAKAO][03] 콜백 진입");
       console.log("현재 URL:", typeof window !== "undefined" ? window.location.href : "(server)");
       console.log("code 존재:", Boolean(code));
       console.log("error:", errorParam);
@@ -59,25 +59,14 @@ function KakaoCallbackContent() {
               });
             }
             
-            // newMember 플래그로 신규 유저 판단 (백엔드 응답 형식에 맞춤)
-            const isNewMember = (data as any).newMember === true;
-            
-            if (isNewMember || !data?.user?.nickname) {
-              if (DEBUG_OAUTH) {
-                console.log("[OAUTH][KAKAO][06] 신규/미온보딩 유저 → /signup 이동", {
-                  newMember: isNewMember,
-                  hasNickname: Boolean(data?.user?.nickname),
-                });
-              }
-              router.replace('/signup');
-              return;
-            }
-
+            // 로그인 성공 시 유저 정보 저장
             loginFunction(data);
+            
+            // 무조건 signup 페이지로 이동
             if (DEBUG_OAUTH) {
-              console.log("[OAUTH][KAKAO][07] 로그인 상태 저장 완료 → / 이동");
+              console.log("[OAUTH][KAKAO][06] 로그인 성공 → /signup 이동");
             }
-            router.replace('/');
+            router.replace('/signup');
           })
           .catch((error) => {
             // 에러 타입 안전하게 파싱
@@ -108,8 +97,25 @@ function KakaoCallbackContent() {
               console.error('전체 요청 URL:', axiosError.config.baseURL 
                 ? `${axiosError.config.baseURL}${axiosError.config.url}` 
                 : axiosError.config.url || '(없음)');
+              console.error('요청 Body:', axiosError.config.data || '(없음)');
             }
             console.error('환경변수 NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL || '(설정 안 됨)');
+            
+            // 401 에러일 때 추가 정보
+            if (status === 401) {
+              console.error('[OAUTH][KAKAO][ERR][401] 인증 실패 상세 정보:');
+              console.error('- 백엔드가 카카오 인가 코드를 검증하지 못했을 수 있습니다');
+              console.error('- 카카오 앱 키 또는 Redirect URI가 백엔드 설정과 일치하는지 확인하세요');
+              console.error('- 백엔드 응답:', JSON.stringify(errorData, null, 2));
+              
+              // 백엔드가 카카오 API 에러를 전달한 경우 파싱
+              const errorDataObj = errorData as any;
+              if (errorDataObj?.error === 'invalid_client' || errorDataObj?.error_code === 'KOE101') {
+                console.error('[OAUTH][KAKAO][ERR] 백엔드 카카오 앱 키 설정 문제 감지!');
+                console.error('- 백엔드 서버의 카카오 REST API 키가 설정되지 않았거나 잘못되었습니다');
+                console.error('- 백엔드 설정 파일에서 카카오 REST API 키를 확인하세요');
+              }
+            }
             
             if (DEBUG_OAUTH) {
               console.groupCollapsed("[OAUTH][KAKAO][ERR] 상세 에러 정보");
