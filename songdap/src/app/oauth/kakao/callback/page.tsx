@@ -4,37 +4,150 @@ import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loginWithKakao } from '@/features/oauth/api/oauthApi';
 import { useOauthStore } from '@/features/oauth/model/useOauthStore';
+import type { AxiosError } from 'axios';
 
 function KakaoCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const loginFunction = useOauthStore((s) => s.login);
+  const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
 
   const isRequesting = useRef(false);
   const hasHandledError = useRef(false);
 
   useEffect(() => {
     const code = searchParams.get('code');
+    const errorParam = searchParams.get("error");
+    const errorDesc = searchParams.get("error_description");
+
+    if (DEBUG_OAUTH) {
+      console.groupCollapsed("[OAUTH][KAKAO][03] 콜백 진입");
+      console.log("현재 URL:", typeof window !== "undefined" ? window.location.href : "(server)");
+      console.log("code 존재:", Boolean(code));
+      console.log("error:", errorParam);
+      console.log("error_description:", errorDesc);
+      console.groupEnd();
+    }
+
+    // 카카오에서 에러 파라미터가 온 경우 (사용자가 동의 거부 등)
+    if (errorParam) {
+      console.error("[OAUTH][KAKAO][ERR] 카카오 인증 에러:", {
+        error: errorParam,
+        description: errorDesc,
+      });
+      if (!hasHandledError.current) {
+        hasHandledError.current = true;
+        alert(`카카오 로그인이 취소되었습니다.\n에러: ${errorParam}${errorDesc ? `\n${errorDesc}` : ""}`);
+        router.replace('/');
+      }
+      return;
+    }
 
     if (code) {
       if (!isRequesting.current) {
         isRequesting.current = true;
+        if (DEBUG_OAUTH) {
+          console.log("[OAUTH][KAKAO][04] 백엔드 교환 API 호출 시작");
+        }
         loginWithKakao(code)
           .then((data) => {
+            if (DEBUG_OAUTH) {
+              console.log("[OAUTH][KAKAO][05] 백엔드 응답 수신", {
+                hasUser: Boolean(data?.user),
+                nickname: data?.user?.nickname,
+                newMember: (data as any).newMember,
+              });
+            }
+            
+            // newMember 플래그로 신규 유저 판단 (백엔드 응답 형식에 맞춤)
+            const isNewMember = (data as any).newMember === true;
+            
+            if (isNewMember || !data?.user?.nickname) {
+              if (DEBUG_OAUTH) {
+                console.log("[OAUTH][KAKAO][06] 신규/미온보딩 유저 → /signup 이동", {
+                  newMember: isNewMember,
+                  hasNickname: Boolean(data?.user?.nickname),
+                });
+              }
+              router.replace('/signup');
+              return;
+            }
+
             loginFunction(data);
+            if (DEBUG_OAUTH) {
+              console.log("[OAUTH][KAKAO][07] 로그인 상태 저장 완료 → / 이동");
+            }
             router.replace('/');
           })
           .catch((error) => {
-            console.error('카카오 로그인 실패:', error);
+            // 에러 타입 안전하게 파싱
+            const isAxiosError = error && typeof error === 'object' && 'isAxiosError' in error;
+            const axiosError = isAxiosError ? (error as AxiosError) : null;
+            
+            // 에러 정보 추출 (안전하게)
+            const errorMessage = 
+              axiosError?.message || 
+              (error instanceof Error ? error.message : String(error));
+            const status = axiosError?.response?.status;
+            const statusText = axiosError?.response?.statusText;
+            const errorData = axiosError?.response?.data;
+            const requestUrl = axiosError?.config?.url || axiosError?.config?.baseURL;
+            const requestMethod = axiosError?.config?.method;
+            
+            // 상세 에러 정보 로깅
+            console.error('[OAUTH][KAKAO][ERR] 카카오 로그인 실패');
+            console.error('에러 타입:', isAxiosError ? 'AxiosError' : typeof error);
+            console.error('에러 메시지:', errorMessage);
+            console.error('HTTP 상태:', status || '(없음)');
+            console.error('상태 텍스트:', statusText || '(없음)');
+            console.error('응답 데이터:', errorData || '(없음)');
+            console.error('요청 URL:', requestUrl || '(없음)');
+            console.error('요청 메서드:', requestMethod || '(없음)');
+            if (axiosError?.config) {
+              console.error('baseURL:', axiosError.config.baseURL || '(없음)');
+              console.error('전체 요청 URL:', axiosError.config.baseURL 
+                ? `${axiosError.config.baseURL}${axiosError.config.url}` 
+                : axiosError.config.url || '(없음)');
+            }
+            console.error('환경변수 NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL || '(설정 안 됨)');
+            
+            if (DEBUG_OAUTH) {
+              console.groupCollapsed("[OAUTH][KAKAO][ERR] 상세 에러 정보");
+              console.error("원본 에러 객체:", error);
+              console.error("에러 스택:", error instanceof Error ? error.stack : '(없음)');
+              if (axiosError) {
+                console.error("Axios config:", axiosError.config);
+                console.error("Axios response:", axiosError.response);
+              }
+              console.groupEnd();
+            }
+            
             isRequesting.current = false;
             if (!hasHandledError.current) {
               hasHandledError.current = true;
-              alert('로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
+              
+              // 에러 타입별 메시지
+              let userMessage = '로그인에 실패했습니다. 잠시 후 다시 시도해주세요.';
+              if (status === 401) {
+                userMessage = '인증에 실패했습니다. 카카오 로그인을 다시 시도해주세요.';
+              } else if (status === 404) {
+                userMessage = '로그인 API를 찾을 수 없습니다. 관리자에게 문의해주세요.';
+              } else if (status === 500) {
+                userMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+              } else if (errorMessage && (errorMessage.includes('Network Error') || errorMessage.includes('timeout') || errorMessage.includes('ERR_NETWORK'))) {
+                userMessage = '네트워크 연결을 확인해주세요. 백엔드 서버가 실행 중인지 확인해주세요.';
+              } else if (!status && !errorMessage) {
+                userMessage = '알 수 없는 오류가 발생했습니다. 콘솔을 확인해주세요.';
+              }
+              
+              alert(userMessage);
               router.replace('/');
             }
           });
       }
     } else {
+      // code가 없는 경우 (카카오에서 리다이렉트만 하고 code를 안 준 경우)
+      console.warn("[OAUTH][KAKAO][WARN] code 파라미터가 없습니다.");
       if (!hasHandledError.current) {
         hasHandledError.current = true;
         router.replace('/');

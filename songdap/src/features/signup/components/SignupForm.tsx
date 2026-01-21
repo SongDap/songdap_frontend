@@ -3,21 +3,46 @@
 import Link from "next/link";
 import { useSignupForm } from "../hooks/useSignupForm";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { updateMe } from "@/shared/api";
+import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import { useState } from "react";
 
 export function SignupForm() {
     const {
         nickname,
-        email,
         agreeAll,
         agreeAge,
         agreeTerms,
         setNickname,
-        setEmail,
         toggleAll,
         toggleAge,
         toggleTerms,
         isValid,
     } = useSignupForm();
+    const router = useRouter();
+    const loginFunction = useOauthStore((s) => s.login);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    async function handleSubmit() {
+        if (!isValid || isSubmitting) return;
+        setIsSubmitting(true);
+        try {
+            const me = await updateMe({
+                nickname,
+                agreeAge,
+                agreeTerms,
+            });
+            // 쿠키 기반이라 accessToken은 비워도 됨
+            loginFunction({ accessToken: "", user: me });
+            router.replace("/");
+        } catch (e) {
+            console.error("회원가입(온보딩) 실패:", e);
+            alert("회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
 
     return (
         <div className="mx-auto flex flex-col items-center">
@@ -55,19 +80,6 @@ export function SignupForm() {
                             {nickname.length} / 16
                         </span>
                     </div>
-                </div>
-
-                {/* 이메일 */}
-                <div className="mb-8">
-                    <label className="block text-sm font-semibold text-gray-800 mb-2">
-                        이메일(선택)
-                    </label>
-                    <input
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="이메일을 입력해주세요"
-                        className="w-full h-14 rounded-lg border border-gray-300 px-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
-                    />
                 </div>
 
                 {/* 동의 박스 */}
@@ -145,11 +157,12 @@ export function SignupForm() {
                 {/* 가입 버튼 */}
                 <button
                     type="button"
-                    disabled={!isValid}
-                    className={`w-full h-12 rounded-md text-base font-semibold shadow-sm active:scale-[0.99] ${isValid ? "bg-[#006FFF] text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    onClick={handleSubmit}
+                    disabled={!isValid || isSubmitting}
+                    className={`w-full h-12 rounded-md text-base font-semibold shadow-sm active:scale-[0.99] ${isValid && !isSubmitting ? "bg-[#006FFF] text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"
                         }`}
                 >
-                    회원가입하기
+                    {isSubmitting ? "처리 중..." : "회원가입하기"}
                 </button>
             </div>
         </div>
