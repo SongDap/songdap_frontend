@@ -5,7 +5,6 @@ import { isSignupValid } from "../utils/signupValidator";
 
 export function useSignupForm() {
   const [nickname, setNickname] = useState("");
-  const [email, setEmail] = useState("");
   const [agreeAll, setAgreeAll] = useState(false);
   const [agreeAge, setAgreeAge] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -36,12 +35,10 @@ export function useSignupForm() {
 
   return {
     nickname,
-    email,
     agreeAll,
     agreeAge,
     agreeTerms,
     setNickname,
-    setEmail,
     toggleAll,
     toggleAge,
     toggleTerms,
