@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import kotraFont from "next/font/local";
 import "./globals.css";
+import { AuthHydrator } from "@/shared";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${kotraHope.variable} antialiased`}
       >
+        <AuthHydrator />
         {children}
       </body>
     </html>

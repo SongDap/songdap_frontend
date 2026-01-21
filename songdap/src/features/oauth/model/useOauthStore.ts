@@ -9,6 +9,7 @@ interface OauthState {
   isAuthenticated: boolean;
   login: (data: AuthResponse) => void;
   logout: () => void;
+  hydrate: () => void;
 }
 
 export const useOauthStore = create<OauthState>(function(set){
@@ -21,8 +22,11 @@ export const useOauthStore = create<OauthState>(function(set){
         login : function(data : AuthResponse) {
             if(typeof window !== 'undefined'){
                 // 1. 일단 로컬스토리지에 저장 -> 백엔드 나오면 업데이트 예정
-                localStorage.setItem('accessToken', data.accessToken);
-                console.log('token is saved to localStorage');
+                if (data.accessToken) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    console.log('token is saved to localStorage');
+                }
+                localStorage.setItem('user', JSON.stringify(data.user));
             }
 
             // 2. 메모리에 유저정보 저장
@@ -39,6 +43,7 @@ export const useOauthStore = create<OauthState>(function(set){
             // 1. 브라우저 설정단계에서 토큰 빼버리기
             if(typeof window !== 'undefined'){
                 localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
                 console.log('token is removed from localStorage');
             }
 
@@ -47,7 +52,28 @@ export const useOauthStore = create<OauthState>(function(set){
                 user:null,
                 isAuthenticated : false
             });
-        }
+        },
+
+        hydrate: function () {
+            if (typeof window === 'undefined') return;
+
+            const userRaw = localStorage.getItem('user');
+            const token = localStorage.getItem('accessToken');
+            if (!userRaw) return;
+
+            try {
+                const user = JSON.parse(userRaw) as UserInfo;
+                set({
+                    user,
+                    isAuthenticated: true,
+                });
+            } catch (e) {
+                // 파싱 실패 시 깨끗하게 정리
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
+                set({ user: null, isAuthenticated: false });
+            }
+        },
 
     };
 });

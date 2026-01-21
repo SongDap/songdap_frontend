@@ -12,18 +12,20 @@ interface Album {
 
 export default function LandingMain() {
   // 환경변수 가져오기
-  const REST_API_KEY = process.env.NEXT_PUBLIC_KAKAO_API_KEY;
+  const JAVASCRIPT_KEY =
+    process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY ||
+    process.env.NEXT_PUBLIC_KAKAO_API_KEY; // 기존 키명 fallback
   const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
 
   // 카카오 로그인 주소 조합하기
-  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
 
   // 클릭하면 실행될 함수
   function handleLogin() {
     // 1. 환경변수 미설정 체크
-    if (!REST_API_KEY || !REDIRECT_URI) {
+    if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
       console.error("환경변수가 설정되지 않았습니다", {
-        REST_API_KEY,
+        JAVASCRIPT_KEY,
         REDIRECT_URI
       });
       alert("로그인 설정 누락")
@@ -53,76 +55,67 @@ export default function LandingMain() {
   }
 
   return (
-    <div className="w-full px-6 lg:px-12">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-0 items-center max-w-7xl mx-auto py-12">
-        {/* 왼쪽: 텍스트 및 로그인 버튼 */}
-        <div className="flex flex-col justify-center space-y-8">
-          {/* 텍스트 섹션 */}
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600 font-medium" style={{ fontFamily: "KOTRA_HOPE" }}>그날을 추억하는 방법</p>
+<div className="w-full px-6 lg:px-16">
+  <div className="grid grid-cols-1 lg:grid-cols-2 items-center max-w-[1440px] mx-auto py-12 gap-12 lg:gap-8">
+    {/* 왼쪽 */}
+    <div className="flex flex-col justify-center space-y-6">
+      <div className="space-y-3">
+        <p className="text-base lg:text-lg text-gray-600 font-medium" style={{ fontFamily: "KOTRA_HOPE" }}>
+          그날을 추억하는 방법
+        </p>
 
-            <div>
-              {/* 아래 className="shrink-0" 추가 및 mb(마진)으로 높이 미세 조정 */}
-              <Link href="/">
-                <Image
-                  src="/images/logo.png"
-                  alt="paper airplane"
-                  width={450}
-                  height={200}
-                  className="shrink-0 mb-8"
-                />
-              </Link>
-            </div>
-
-            <p className="text-gray-700 text-lg mt-6 leading-relaxed max-w-md" style={{ fontFamily: "KOTRA_HOPE" }}>
-              전교 1등은 무슨 노래를 듣는지 궁금할 때
-              <br />
-              음악으로 졸업식 같은 기념일을 추억하고 싶을 때
-              <br />
-              공감해주는 말한마디를 건낼 때, 노래로 답해줘
-            </p>
-          </div>
-
-          {/* 카카오 로그인 버튼 */}
-          <button
-            type="button"
-            onClick={handleLogin}
-            className="
-  w-full sm:w-auto
-  flex items-center justify-center gap-2
-  px-8 py-3
-  bg-[#FEE500] hover:bg-[#FEE500]
-  text-gray-900 font-semibold
-  rounded-lg
-  transition-colors
-  active:scale-95
-  shadow-lg
-"
-          >
-            <Image
-              src="/images/kakaoButton.png"
-              alt="kakao Login"
-              width={200}
-              height={48}
-              priority
-            />
-          </button>
-        </div>
-
-        {/* 오른쪽: 앨범 그리드 */}
-        {/* 오른쪽: 앨범 */}
-        <div className="flex justify-center lg:justify-end">
+        <Link href="/">
           <Image
-            src="/images/rightAlbum.png"
-            alt="right album"
-            width={800}
-            height={70}
+            src="/images/logo.png"
+            alt="paper airplane"
+            width={500}
+            height={260}
             priority
-            className="w-[110%] max-w-none"
+            className="w-[280px] sm:w-[360px] lg:w-[460px] h-auto mb-6"
           />
-        </div>
+        </Link>
 
+        <p className="text-lg lg:text-xl text-gray-700 leading-relaxed max-w-xl" style={{ fontFamily: "KOTRA_HOPE" }}>
+          전교 1등은 무슨 노래를 듣는지 궁금할 때
+          <br />
+          음악으로 졸업식 같은 기념일을 추억하고 싶을 때
+          <br />
+          공감해주는 말한마디를 건낼 때, 노래로 답해줘
+        </p>
       </div>
+
+      <button
+        type="button"
+        onClick={handleLogin}
+        className="
+          w-full sm:w-auto
+          flex items-center justify-center gap-2
+          px-10 py-4
+          bg-[#FEE500] hover:bg-[#FEE500]
+          text-gray-900 font-semibold
+          rounded-xl
+          transition-colors
+          active:scale-95
+          shadow-lg
+        "
+      >
+        <Image src="/images/kakaoButton.png" alt="kakao Login" width={220} height={52} priority className="h-auto" />
+      </button>
     </div>
+
+    {/* 오른쪽 */}
+    <div className="flex justify-center lg:justify-end">
+      <Image
+        src="/images/rightAlbum.png"
+        alt="right album"
+        width={900}
+        height={500}
+        priority
+        className="w-[95%] sm:w-[90%] lg:w-[120%] 2xl:w-[135%] max-w-none h-auto"
+      />
+    </div>
+  </div>
+</div>
+
   );
 }

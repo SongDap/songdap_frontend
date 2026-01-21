@@ -9,7 +9,7 @@ export const ROUTES = {
 
   // OAuth
   OAUTH: {
-    KAKAO_CALLBACK: "/oauth/callback/kakao",
+    KAKAO_CALLBACK: "/oauth/kakao/callback",
   },
 
   // 앨범

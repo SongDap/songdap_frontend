@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import Link from "next/link";
 
 type NavItem = {
   label: string;
@@ -34,11 +35,13 @@ export default function Header() {
       {/* top bar */}
       <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto relative">
         {/* Logo */}
-        <img
-          src="/images/logo.png"
-          alt="logo"
-          className="h-10 md:h-16 w-auto object-contain"
-        />
+        <Link href = "/">
+          <img
+            src="/images/logo.png"
+            alt="logo"
+            className="h-10 md:h-16 w-auto object-contain"
+          />
+        </Link>
 
         {/* 모바일에서만 가운데 타이틀 표시 */}
         {pathname === "/album/list" && (
