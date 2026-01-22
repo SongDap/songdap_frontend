@@ -1,9 +1,9 @@
 import { apiClient } from "@/shared/api";
-import { API_ENDPOINTS } from "@/shared/api/endpoints";
 import type { AuthResponse } from "../model/types";
 
 type KakaoLoginRequest = {
   authorizationCode: string;
+  redirectUri?: string;
 };
 
 /**
@@ -20,18 +20,17 @@ export async function loginWithKakao(code: string): Promise<AuthResponse & { new
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
   const exchangePath =
     process.env.NEXT_PUBLIC_OAUTH_KAKAO_EXCHANGE_PATH ||
-    API_ENDPOINTS.AUTH.KAKAO_LOGIN;
-  
-  const payload: KakaoLoginRequest = { authorizationCode: code };
+    "/api/v1/auth/login/kakao";
+  const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+  const payload: KakaoLoginRequest = { authorizationCode: code, redirectUri };
 
   if (DEBUG_OAUTH) {
     console.groupCollapsed("[OAUTH][KAKAO][API] POST 교환 요청");
     console.log("exchangePath:", exchangePath);
+    console.log("redirectUri:", redirectUri);
     console.log("authorizationCode(head):", code.slice(0, 8) + "...");
-    console.log("요청 Body:", payload);
-    console.log("현재 호스트:", typeof window !== 'undefined' ? window.location.hostname : '(server)');
-    console.log("baseURL:", apiClient.defaults.baseURL || '(설정 안 됨)');
-    console.log("예상 전체 URL:", `${apiClient.defaults.baseURL || ''}${exchangePath}`);
+    console.log("baseURL:", process.env.NEXT_PUBLIC_API_URL || '(설정 안 됨)');
+    console.log("예상 전체 URL:", `${process.env.NEXT_PUBLIC_API_URL || ''}${exchangePath}`);
     console.groupEnd();
   }
 

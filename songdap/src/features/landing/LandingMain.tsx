@@ -57,7 +57,7 @@ export default function LandingMain() {
     // 3. Redirect 실패 처리
     try {
       if (DEBUG_OAUTH) {
-        console.log("[OAUTH][KAKAO][02] 카카오 authorize로 이동합니다");
+        console.info("[OAUTH][KAKAO][02] 카카오 authorize로 이동합니다");
       }
       window.location.assign(kakaoURL); // 현재 페이지를 kakaoURL에 담긴 주소로 이동시켜라
     } catch (error) {

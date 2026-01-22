@@ -1,12 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { CreateAlbumForm, EditAlbumForm } from "@/features/album/create/components";
 import { getRandomColorFromPalette } from "@/shared/lib/mockData";
 
-export default function CreateAlbumPage() {
+function CreateAlbumContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode");
   const isEditMode = mode === "edit";
@@ -51,8 +51,23 @@ export default function CreateAlbumPage() {
               />
             )}
           </div>
-            </div>
-          </div>
+        </div>
+      </div>
     </>
+  );
+}
+
+export default function CreateAlbumPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
+          <p className="text-sm text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <CreateAlbumContent />
+    </Suspense>
   );
 }
