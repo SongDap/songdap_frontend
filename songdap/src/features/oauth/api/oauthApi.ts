@@ -1,4 +1,5 @@
 import { apiClient } from "@/shared/api";
+import { API_ENDPOINTS } from "@/shared/api/endpoints";
 import type { AuthResponse } from "../model/types";
 
 type KakaoLoginRequest = {
@@ -19,7 +20,7 @@ export async function loginWithKakao(code: string): Promise<AuthResponse & { new
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
   const exchangePath =
     process.env.NEXT_PUBLIC_OAUTH_KAKAO_EXCHANGE_PATH ||
-    "/api/v1/auth/login/kakao";
+    API_ENDPOINTS.AUTH.KAKAO_LOGIN;
   
   const payload: KakaoLoginRequest = { authorizationCode: code };
 

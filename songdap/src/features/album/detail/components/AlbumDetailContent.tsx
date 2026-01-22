@@ -4,37 +4,54 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/shared";
 import { YouTubeModal } from "@/shared/ui";
-import { SAMPLE_ALBUMS, SAMPLE_SONGS } from "@/shared/lib/mockData";
+import { SAMPLE_SONGS } from "@/shared/lib/mockData";
 import { SongCard } from "@/features/song/add/components";
 import { SongLetter } from "@/features/song/components";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import MusicPlayer from "./MusicPlayer";
+import { getAlbum } from "@/features/album/api";
+import type { AlbumResponse } from "@/features/album/api";
 
 export default function AlbumDetailContent() {
   const params = useParams();
-  const albumId = params?.id as string;
+  const albumUuid = params?.id as string;
+  const [album, setAlbum] = useState<AlbumResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentSong, setCurrentSong] = useState<{ title: string; artist: string; imageUrl?: string | null; message?: string; nickname?: string } | null>(null);
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
   const [expandTrigger, setExpandTrigger] = useState(0);
   const [currentPage, setCurrentPage] = useState(1); // 현재 페이지 번호
   const [letterPositions, setLetterPositions] = useState<Array<{ x: number; y: number; height?: number }>>([]); // x, y, height는 모두 백분율(%)
 
-  // TODO: API에서 앨범 데이터 가져오기
-  const album = SAMPLE_ALBUMS.find((a) => a.uuid === albumId);
+  // API에서 앨범 데이터 가져오기
+  useEffect(() => {
+    if (!albumUuid) {
+      setError("앨범 UUID가 없습니다.");
+      setIsLoading(false);
+      return;
+    }
 
-  if (!album) {
-    return (
-      <>
-        <PageHeader title="앨범을 찾을 수 없습니다" />
-        <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-700">앨범을 찾을 수 없습니다.</p>
-        </div>
-      </>
-    );
-  }
+    getAlbum(albumUuid)
+      .then((albumData) => {
+        setAlbum(albumData);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error("[Album Detail] 앨범 조회 실패:", err);
+        setError("앨범을 불러오는데 실패했습니다.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [albumUuid]);
 
   // TODO: API에서 노래 목록 가져오기
-  const allSongs = useMemo(() => SAMPLE_SONGS.slice(0, album.musicCount), [album.musicCount]);
+  // Hook은 항상 같은 순서로 호출되어야 하므로 조건문 이전에 배치
+  const allSongs = useMemo(() => {
+    if (!album) return [];
+    return SAMPLE_SONGS.slice(0, album.musicCount);
+  }, [album?.musicCount]);
   
   // 현재 페이지의 노래만 필터링
   const songs = useMemo(() => 
@@ -78,6 +95,28 @@ export default function AlbumDetailContent() {
     }
   }, [songs]);
 
+  // 조건부 렌더링 (Hook 호출 이후에 배치)
+  if (isLoading) {
+    return (
+      <>
+        <PageHeader title="로딩 중..." />
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-gray-700">앨범 정보를 불러오는 중...</p>
+        </div>
+      </>
+    );
+  }
+
+  if (error || !album) {
+    return (
+      <>
+        <PageHeader title="앨범을 찾을 수 없습니다" />
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-gray-700">{error || "앨범을 찾을 수 없습니다."}</p>
+        </div>
+      </>
+    );
+  }
 
   const handlePlay = (song: { title: string; artist: string; imageUrl?: string | null; message?: string; nickname?: string }) => {
     // 항상 새로운 객체를 생성하여 리렌더링 트리거 (같은 곡을 클릭해도 익스팬드뷰 열기)

@@ -89,13 +89,48 @@ export default function CreateAlbumForm({
 
       const createdAlbum = await createAlbum(albumData);
       
-      // 생성된 앨범 ID를 포함하여 앨범 상세 페이지로 이동
-      router.push(ROUTES.ALBUM.DETAIL(createdAlbum.id));
+      console.log("[Album Form] 생성된 앨범 응답:", createdAlbum);
+      
+      // UUID는 optional - 있으면 사용하고 없어도 공유 페이지로 이동 가능
+      const albumUuid = createdAlbum?.uuid || createdAlbum?.id;
+      console.log("[Album Form] 앨범 UUID:", albumUuid || "(없음)");
+      
+      // 공유 페이지로 이동
+      // UUID가 있으면 API로 조회, 없으면 임시 데이터 저장소 사용
+      const { useTempDataStore } = await import("@/shared/store/tempDataStore");
+      const setAlbumShareData = useTempDataStore.getState().setAlbumShareData;
+      
+      if (albumUuid) {
+        // UUID가 있으면 API로 조회 가능하므로 임시 데이터 불필요
+        setAlbumShareData(null);
+        router.push(`${ROUTES.ALBUM.SHARE}?albumId=${albumUuid}`);
+      } else {
+        // UUID가 없을 때만 임시 데이터 저장
+        const albumShareData = {
+          title: createdAlbum?.title || trimmedTitle,
+          description: createdAlbum?.description || trimmedDescription,
+          isPublic: createdAlbum?.isPublic ?? formData.isPublic,
+          musicCount: createdAlbum?.musicCount ?? 0,
+          musicCountLimit: createdAlbum?.musicCountLimit || musicCountLimit,
+          color: createdAlbum?.color || formData.color,
+        };
+        setAlbumShareData(albumShareData);
+        router.push(ROUTES.ALBUM.SHARE);
+      }
     } catch (error) {
       console.error("[Album] 앨범 생성 실패:", error);
       
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // 앨범 생성은 성공했지만 UUID를 받을 수 없는 경우
+      if (errorMessage.includes("앨범 생성은 성공했지만") || errorMessage.includes("앨범 UUID가 없습니다")) {
+        alert("앨범이 생성되었습니다. 앨범 목록에서 확인해주세요.");
+        router.push(ROUTES.ALBUM.LIST);
+        return;
+      }
+      
       const axiosError = error as AxiosError;
-      let errorMessage = "앨범 생성에 실패했습니다. 잠시 후 다시 시도해주세요.";
+      let userErrorMessage = "앨범 생성에 실패했습니다. 잠시 후 다시 시도해주세요.";
       
       if (axiosError.response) {
         // HTTP 에러 응답이 있는 경우
@@ -103,19 +138,19 @@ export default function CreateAlbumForm({
         const data = axiosError.response.data as any;
         
         if (status === 401) {
-          errorMessage = "로그인이 필요합니다. 로그인 후 다시 시도해주세요.";
+          userErrorMessage = "로그인이 필요합니다. 로그인 후 다시 시도해주세요.";
         } else if (status === 400) {
-          errorMessage = data?.message || "입력한 정보를 확인해주세요.";
+          userErrorMessage = data?.message || "입력한 정보를 확인해주세요.";
         } else if (status === 500) {
-          errorMessage = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+          userErrorMessage = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
         } else {
-          errorMessage = data?.message || errorMessage;
+          userErrorMessage = data?.message || userErrorMessage;
         }
       } else if (axiosError.code === 'ERR_NETWORK' || axiosError.message?.includes('Network Error')) {
-        errorMessage = "네트워크 연결을 확인해주세요. 백엔드 서버가 실행 중인지 확인해주세요.";
+        userErrorMessage = "네트워크 연결을 확인해주세요. 백엔드 서버가 실행 중인지 확인해주세요.";
       }
       
-      alert(errorMessage);
+      alert(userErrorMessage);
     } finally {
       setIsSubmitting(false);
     }
