@@ -315,7 +315,7 @@ export async function deleteAlbum(albumUuid: string): Promise<void> {
     // 응답 구조: { code, message, data: {} }
     const responseData = extractDataFromResponse<{}>(response.data);
     
-    console.log("[Album API] ✅ 앨범 삭제 성공:", {
+    console.log("[Album API] 앨범 삭제 성공:", {
       albumUuid,
       code: response.data?.code,
       message: response.data?.message,
@@ -323,7 +323,7 @@ export async function deleteAlbum(albumUuid: string): Promise<void> {
     
     // 삭제는 void를 반환하므로 데이터는 사용하지 않음
   } catch (error: any) {
-    console.error("[Album API] ❌ 앨범 삭제 실패:", {
+    console.error("[Album API] 앨범 삭제 실패:", {
       albumUuid,
       url: endpoint,
       status: error.response?.status,
