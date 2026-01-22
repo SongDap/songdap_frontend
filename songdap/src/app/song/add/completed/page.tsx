@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
@@ -21,7 +21,7 @@ type MessageData = {
   message: string;
 };
 
-export default function SongAddCompletedPage() {
+function SongAddCompletedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const albumId = searchParams.get("albumId");
@@ -167,5 +167,23 @@ export default function SongAddCompletedPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function SongAddCompletedPage() {
+  return (
+    <Suspense fallback={
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
+            <p className="text-sm text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      </>
+    }>
+      <SongAddCompletedContent />
+    </Suspense>
   );
 }
