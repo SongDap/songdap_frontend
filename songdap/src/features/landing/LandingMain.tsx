@@ -15,13 +15,21 @@ export default function LandingMain() {
   const JAVASCRIPT_KEY =
     process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY ||
     process.env.NEXT_PUBLIC_KAKAO_API_KEY; // 기존 키명 fallback
-  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI; // 여기 나중에 서버 URI로 바꿔야함
+  const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
 
   // 카카오 로그인 주소 조합하기
   const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
 
   // 클릭하면 실행될 함수
   function handleLogin() {
+    if (DEBUG_OAUTH) {
+      console.groupCollapsed("[OAUTH][KAKAO][01] 로그인 버튼 클릭");
+      console.log("JAVASCRIPT_KEY 존재:", Boolean(JAVASCRIPT_KEY));
+      console.log("REDIRECT_URI:", REDIRECT_URI);
+      console.log("authorize URL:", kakaoURL);
+      console.groupEnd();
+    }
     // 1. 환경변수 미설정 체크
     if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
       console.error("환경변수가 설정되지 않았습니다", {
@@ -48,6 +56,9 @@ export default function LandingMain() {
 
     // 3. Redirect 실패 처리
     try {
+      if (DEBUG_OAUTH) {
+        console.info("[OAUTH][KAKAO][02] 카카오 authorize로 이동합니다");
+      }
       window.location.assign(kakaoURL); // 현재 페이지를 kakaoURL에 담긴 주소로 이동시켜라
     } catch (error) {
       console.error("Login Redirect 오류", error)

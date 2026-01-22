@@ -6,6 +6,7 @@ import { Header } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed } from "react-icons/hi";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import { useTempDataStore } from "@/shared/store/tempDataStore";
 import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
 
@@ -24,25 +25,26 @@ export default function AddSongPage() {
   });
   const [showSongCard, setShowSongCard] = useState(false);
 
+  const showMessageForm = useTempDataStore((state) => state.showMessageForm);
+  const songAddData = useTempDataStore((state) => state.songAddData);
+  const songMessageData = useTempDataStore((state) => state.songMessageData);
+  const setShowMessageForm = useTempDataStore((state) => state.setShowMessageForm);
+  
   // 취소 버튼으로 돌아왔을 때 메시지 입력 화면 표시
   useEffect(() => {
-    const showMessageForm = sessionStorage.getItem("showMessageForm");
-    if (showMessageForm === "true") {
-      // sessionStorage에서 노래 데이터 복원
-      const storedSongData = sessionStorage.getItem("songAddData");
-      const storedMessageData = sessionStorage.getItem("songMessageData");
-      
-      if (storedSongData) {
-        setSongData(JSON.parse(storedSongData));
+    if (showMessageForm) {
+      // 임시 데이터 저장소에서 노래 데이터 복원
+      if (songAddData) {
+        setSongData(songAddData);
       }
-      if (storedMessageData) {
-        setMessageData(JSON.parse(storedMessageData));
+      if (songMessageData) {
+        setMessageData(songMessageData);
       }
       
       setShowSongCard(true);
-      sessionStorage.removeItem("showMessageForm");
+      setShowMessageForm(false);
     }
-  }, []);
+  }, [showMessageForm, songAddData, songMessageData, setShowMessageForm]);
 
   // PC: 180x180, 모바일: 140x140
   const coverSizePC = 180;
@@ -267,9 +269,10 @@ export default function AddSongPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      // sessionStorage에 데이터 저장
-                      sessionStorage.setItem("songAddData", JSON.stringify(songData));
-                      sessionStorage.setItem("songMessageData", JSON.stringify(messageData));
+                      // 임시 데이터 저장소에 데이터 저장
+                      const { useTempDataStore } = require("@/shared/store/tempDataStore");
+                      useTempDataStore.getState().setSongAddData(songData);
+                      useTempDataStore.getState().setSongMessageData(messageData);
                       // 위치 조정 페이지로 이동
                       router.push(`/song/add/position?albumId=${album.uuid}`);
                     }}

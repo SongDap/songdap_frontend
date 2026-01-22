@@ -1,15 +1,24 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { AlbumData } from "./AlbumInfoDisplay";
+import { useTempDataStore } from "@/shared/store/tempDataStore";
+import { getAlbum } from "@/features/album/api";
 
 type UseAlbumDataOptions = {
   shouldRemoveAfterLoad?: boolean;
 };
 
 export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseAlbumDataOptions) {
-  const [albumColor, setAlbumColor] = useState<string>("#929292"); // color 필드를 albumColor로 관리 (UI 호환성)
+  const searchParams = useSearchParams();
+  const albumId = searchParams.get("albumId");
+  const tempAlbumData = useTempDataStore((state) => state.albumShareData);
+  const clearAlbumShareData = useTempDataStore((state) => state.clearAlbumShareData);
+  
+  const [albumColor, setAlbumColor] = useState<string>("#929292");
   const [todayDate, setTodayDate] = useState<string>("");
   const [albumData, setAlbumData] = useState<AlbumData | null>(initialAlbumData || null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 클라이언트에서만 앨범 데이터 로드 및 오늘 날짜 설정
   useEffect(() => {
@@ -17,22 +26,46 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
     if (initialAlbumData) {
       setAlbumData(initialAlbumData);
       setAlbumColor(initialAlbumData.color);
-    } else {
-      // sessionStorage에서 앨범 데이터 가져오기
-      const savedData = sessionStorage.getItem("albumCreateData");
-      if (savedData) {
-        try {
-          const data = JSON.parse(savedData);
+    } 
+    // URL에 albumId가 있으면 API로 조회
+    else if (albumId) {
+      setIsLoading(true);
+      getAlbum(albumId)
+        .then((album) => {
+          const data: AlbumData = {
+            title: album.title,
+            description: album.description,
+            isPublic: album.isPublic,
+            musicCount: album.musicCount,
+            musicCountLimit: album.musicCountLimit,
+            color: album.color,
+          };
           setAlbumData(data);
-          setAlbumColor(data.color || data.albumColor); // 호환성을 위해 albumColor도 체크
-          
-          // 사용 후 삭제 옵션이 활성화되어 있으면 삭제
-          if (options?.shouldRemoveAfterLoad) {
-            sessionStorage.removeItem("albumCreateData");
-          }
-        } catch (error) {
-          console.error("Failed to parse album data:", error);
-        }
+          setAlbumColor(album.color);
+        })
+        .catch((error) => {
+          console.error("앨범 조회 실패:", error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+    // 임시 데이터 저장소에서 가져오기 (UUID가 없을 때만)
+    else if (tempAlbumData) {
+      const data: AlbumData = {
+        title: tempAlbumData.title || "",
+        description: tempAlbumData.description || "",
+        isPublic: tempAlbumData.isPublic ?? true,
+        musicCount: tempAlbumData.musicCount ?? 0,
+        musicCountLimit: tempAlbumData.musicCountLimit || 15,
+        color: tempAlbumData.color || "#929292",
+      };
+      setAlbumData(data);
+      setAlbumColor(data.color);
+      
+      // 사용 후 삭제 옵션이 활성화되어 있으면 삭제
+      if (options?.shouldRemoveAfterLoad) {
+        clearAlbumShareData();
       }
     }
 
@@ -42,7 +75,7 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
     setTodayDate(`${year}.${month}.${day}`);
-  }, [initialAlbumData, options]);
+  }, [initialAlbumData, albumId, tempAlbumData, options, clearAlbumShareData]);
 
-  return { albumData, albumColor, todayDate };
+  return { albumData, albumColor, todayDate, isLoading };
 }

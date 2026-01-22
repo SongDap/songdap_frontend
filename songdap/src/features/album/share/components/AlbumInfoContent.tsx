@@ -13,7 +13,7 @@ type AlbumInfoContentProps = {
 
 export default function AlbumInfoContent({ albumData: initialAlbumData, onComplete }: AlbumInfoContentProps) {
   const router = useRouter();
-  const { albumData, albumColor, todayDate } = useAlbumData(initialAlbumData);
+  const { albumData, albumColor, todayDate, isLoading } = useAlbumData(initialAlbumData);
   const [isLinkCopied, setIsLinkCopied] = useState<boolean>(false);
 
   const handleLinkCopy = () => {
@@ -34,8 +34,22 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
     window.open(kakaoShareUrl, "_blank", "width=400,height=600");
   };
 
+  // 로딩 중일 때
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto text-center">
+        <p className="text-gray-700">앨범 정보를 불러오는 중...</p>
+      </div>
+    );
+  }
+
+  // 데이터가 없을 때
   if (!albumData) {
-    return null;
+    return (
+      <div className="max-w-2xl mx-auto text-center">
+        <p className="text-gray-700">앨범 정보를 불러올 수 없습니다.</p>
+      </div>
+    );
   }
 
   return (

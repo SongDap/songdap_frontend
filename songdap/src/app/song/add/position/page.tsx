@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/shared";
+import { useTempDataStore } from "@/shared/store/tempDataStore";
 import { LetterPositionEditor, SaveConfirmPopup } from "@/features/song/add/components";
 import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
 
@@ -23,7 +24,7 @@ type LetterPosition = {
   pageNumber: number;
 };
 
-export default function SongPositionPage() {
+function SongPositionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const albumId = searchParams.get("albumId");
@@ -34,23 +35,23 @@ export default function SongPositionPage() {
   const [showPopup, setShowPopup] = useState(false);
   const [savedPageNumber, setSavedPageNumber] = useState<number | null>(null);
 
+  const songAddData = useTempDataStore((state) => state.songAddData);
+  const songMessageData = useTempDataStore((state) => state.songMessageData);
+  
   useEffect(() => {
-    // sessionStorage에서 노래 데이터 가져오기
-    const storedSongData = sessionStorage.getItem("songAddData");
-    const storedMessageData = sessionStorage.getItem("songMessageData");
-    
-    if (storedSongData) {
-      setSongData(JSON.parse(storedSongData));
+    // 임시 데이터 저장소에서 노래 데이터 가져오기
+    if (songAddData) {
+      setSongData(songAddData);
     }
-    if (storedMessageData) {
-      setMessageData(JSON.parse(storedMessageData));
+    if (songMessageData) {
+      setMessageData(songMessageData);
     }
 
     // 데이터가 없으면 이전 페이지로 돌아가기
-    if (!storedSongData || !storedMessageData) {
+    if (!songAddData || !songMessageData) {
       router.push("/song/add");
     }
-  }, [router]);
+  }, [router, songAddData, songMessageData]);
 
   if (!songData || !messageData) {
     return (
@@ -87,9 +88,11 @@ export default function SongPositionPage() {
     setShowPopup(false);
   };
 
+  const setShowMessageForm = useTempDataStore((state) => state.setShowMessageForm);
+  
   const handleEditorCancel = () => {
     // 메시지 입력 화면으로 돌아가기 위해 플래그 설정
-    sessionStorage.setItem("showMessageForm", "true");
+    setShowMessageForm(true);
     router.push("/song/add");
   };
 
@@ -127,5 +130,23 @@ export default function SongPositionPage() {
         />
       )}
     </>
+  );
+}
+
+export default function SongPositionPage() {
+  return (
+    <Suspense fallback={
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
+            <p className="text-sm text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      </>
+    }>
+      <SongPositionContent />
+    </Suspense>
   );
 }

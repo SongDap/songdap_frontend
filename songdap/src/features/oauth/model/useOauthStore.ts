@@ -21,33 +21,28 @@ export const useOauthStore = create<OauthState>(function(set){
         // 로그인 기능들
         login : function(data : AuthResponse) {
             if(typeof window !== 'undefined'){
-                // 1. 일단 로컬스토리지에 저장 -> 백엔드 나오면 업데이트 예정
-                if (data.accessToken) {
-                    localStorage.setItem('accessToken', data.accessToken);
-                    console.log('token is saved to localStorage');
-                }
+                // 쿠키 기반 인증을 사용하므로 토큰은 localStorage에 저장하지 않음
+                // 백엔드가 httpOnly 쿠키로 인증을 처리함
+                // 사용자 정보만 localStorage에 저장
                 localStorage.setItem('user', JSON.stringify(data.user));
             }
 
-            // 2. 메모리에 유저정보 저장
-            // 서버 응답을 받으면 그 변경정보가 프론트에 저장되도록
+            // 메모리에 유저정보 저장
             set({
                 user:data.user,
                 isAuthenticated:true
             });
-            console.log('user status is updated to window memory');
         },
 
         // 로그아웃
         logout  : function() {
-            // 1. 브라우저 설정단계에서 토큰 빼버리기
+            // 쿠키 기반 인증이므로 쿠키는 백엔드에서 처리
+            // 프론트엔드에서는 사용자 정보만 제거
             if(typeof window !== 'undefined'){
-                localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
-                console.log('token is removed from localStorage');
             }
 
-            // 2. 메모리 비우기
+            // 메모리 비우기
             set({
                 user:null,
                 isAuthenticated : false
@@ -58,7 +53,6 @@ export const useOauthStore = create<OauthState>(function(set){
             if (typeof window === 'undefined') return;
 
             const userRaw = localStorage.getItem('user');
-            const token = localStorage.getItem('accessToken');
             if (!userRaw) return;
 
             try {
@@ -69,7 +63,6 @@ export const useOauthStore = create<OauthState>(function(set){
                 });
             } catch (e) {
                 // 파싱 실패 시 깨끗하게 정리
-                localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
                 set({ user: null, isAuthenticated: false });
             }

@@ -23,6 +23,21 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    
+    // 디버그 모드에서 요청 정보 로깅
+    const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
+    if (DEBUG_OAUTH && typeof window !== 'undefined') {
+      const fullUrl = config.baseURL 
+        ? `${config.baseURL}${config.url}` 
+        : config.url;
+      console.log(`[API][REQUEST] ${config.method?.toUpperCase()} ${fullUrl}`, {
+        baseURL: config.baseURL || '(없음)',
+        url: config.url,
+        fullURL: fullUrl,
+        withCredentials: config.withCredentials,
+      });
+    }
+    
     return config;
   },
   (error) => {
