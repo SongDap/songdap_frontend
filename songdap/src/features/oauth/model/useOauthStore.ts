@@ -21,8 +21,7 @@ export const useOauthStore = create<OauthState>(function(set){
         // 로그인 기능들
         login : function(data : AuthResponse) {
             if(typeof window !== 'undefined'){
-                // 쿠키 기반 인증을 사용하므로 토큰은 localStorage에 저장하지 않음
-                // 백엔드가 httpOnly 쿠키로 인증을 처리함
+                // Access Token과 Refresh Token은 HttpOnly Cookie로 자동 관리됨
                 // 사용자 정보만 localStorage에 저장
                 localStorage.setItem('user', JSON.stringify(data.user));
             }
@@ -36,7 +35,8 @@ export const useOauthStore = create<OauthState>(function(set){
 
         // 로그아웃
         logout  : function() {
-            // 쿠키 기반 인증이므로 쿠키는 백엔드에서 처리
+            // Access Token과 Refresh Token은 HttpOnly Cookie로 관리되므로
+            // 백엔드 로그아웃 API 호출 시 쿠키가 자동으로 삭제됨
             // 프론트엔드에서는 사용자 정보만 제거
             if(typeof window !== 'undefined'){
                 localStorage.removeItem('user');
