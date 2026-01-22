@@ -1,4 +1,5 @@
 import { apiClient } from "./axios";
+import { API_ENDPOINTS } from "./endpoints";
 import type { UserInfo } from "@/features/oauth/model/types";
 import type { AxiosError } from "axios";
 
@@ -9,9 +10,9 @@ import type { AxiosError } from "axios";
 export async function getMe() {
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
   if (DEBUG_OAUTH) {
-    console.log("[OAUTH][USER][API] GET /api/v1/users/me");
+    console.log("[OAUTH][USER][API] GET", API_ENDPOINTS.USER.ME);
   }
-  const res = await apiClient.get<UserInfo>("/api/v1/users/me", {
+  const res = await apiClient.get<UserInfo>(API_ENDPOINTS.USER.ME, {
     withCredentials: true,
   });
   return res.data;
@@ -30,13 +31,13 @@ export type UpdateMeRequest = {
 export async function updateMe(payload: UpdateMeRequest) {
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
   if (DEBUG_OAUTH) {
-    console.log("[OAUTH][USER][API] PATCH /api/v1/users/me", {
+    console.log("[OAUTH][USER][API] PATCH", API_ENDPOINTS.USER.ME, {
       nicknameLength: payload.nickname?.length ?? 0,
       agreeAge: payload.agreeAge,
       agreeTerms: payload.agreeTerms,
     });
   }
-  const res = await apiClient.patch<UserInfo>("/api/v1/users/me", payload, {
+  const res = await apiClient.patch<UserInfo>(API_ENDPOINTS.USER.ME, payload, {
     withCredentials: true,
   });
   return res.data;

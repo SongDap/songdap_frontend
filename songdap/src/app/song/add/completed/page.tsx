@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { SongLetter } from "@/features/song/components";
+import { useTempDataStore } from "@/shared/store/tempDataStore";
 import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { HiLockClosed } from "react-icons/hi";
@@ -26,24 +27,22 @@ export default function SongAddCompletedPage() {
   const albumId = searchParams.get("albumId");
   const { user } = useOauthStore();
 
+  const songAddData = useTempDataStore((state) => state.songAddData);
+  const songMessageData = useTempDataStore((state) => state.songMessageData);
+  
   const [songData, setSongData] = useState<SongData | null>(null);
   const [messageData, setMessageData] = useState<MessageData | null>(null);
   const [album, setAlbum] = useState(SAMPLE_ALBUMS.find(a => a.uuid === albumId) || SAMPLE_ALBUMS[0]);
 
   useEffect(() => {
-    // sessionStorage에서 노래 데이터 가져오기
-    const storedSongData = sessionStorage.getItem("songAddData");
-    const storedMessageData = sessionStorage.getItem("songMessageData");
-    
-    if (storedSongData) {
-      setSongData(JSON.parse(storedSongData));
+    // 임시 데이터 저장소에서 노래 데이터 가져오기
+    if (songAddData) {
+      setSongData(songAddData);
     }
-    if (storedMessageData) {
-      setMessageData(JSON.parse(storedMessageData));
+    if (songMessageData) {
+      setMessageData(songMessageData);
     }
-
-    // 데이터 저장 (초기화는 하지 않음 - 사용자가 볼 수 있도록)
-  }, []);
+  }, [songAddData, songMessageData]);
 
   // PC: 180x180, 모바일: 140x140
   const coverSizePC = 180;

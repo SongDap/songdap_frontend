@@ -49,12 +49,19 @@ export default function EditAlbumForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: 앨범 수정 API 호출
     
-    // 앨범 데이터를 sessionStorage에 저장
-    sessionStorage.setItem("albumCreateData", JSON.stringify(formData));
+    // 앨범 데이터를 임시 데이터 저장소에 저장
+    const { useTempDataStore } = await import("@/shared/store/tempDataStore");
+    useTempDataStore.getState().setAlbumShareData({
+      title: formData.title,
+      description: formData.description,
+      isPublic: formData.isPublic,
+      musicCountLimit: formData.musicCountLimit,
+      color: formData.color,
+    });
     
     // 앨범 정보 페이지로 이동
     router.push(`${ROUTES.ALBUM.SHARE}?mode=info`);
