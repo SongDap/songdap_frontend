@@ -23,6 +23,13 @@ echo "> 권한 설정 중..."
 chown -R www-data:www-data $WEB_ROOT
 chmod -R 755 $WEB_ROOT
 
+# 2-1. Nginx 설정 파일 업데이트 (있는 경우)
+if [ -f "$WEB_ROOT/nginx/songdap.conf" ]; then
+    echo "> Nginx 설정 파일 업데이트 중..."
+    sudo cp $WEB_ROOT/nginx/songdap.conf /etc/nginx/sites-available/songdap
+    echo "✅ Nginx 설정 파일 업데이트 완료"
+fi
+
 # 3. Nginx 설정 테스트
 echo "> Nginx 설정 테스트..."
 nginx -t
