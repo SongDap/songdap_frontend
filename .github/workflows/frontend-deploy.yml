@@ -35,6 +35,7 @@ jobs:
           cd songdap/out 
           cp ../appspec.yml .
           cp -r ../scripts .
+          cp -r ../nginx .
           zip -r ../../frontend.zip .
         shell: bash
 
