@@ -17,17 +17,46 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
   const [isLinkCopied, setIsLinkCopied] = useState<boolean>(false);
 
   const handleLinkCopy = () => {
-    const currentUrl = window.location.href;
-    navigator.clipboard.writeText(currentUrl).then(() => {
+    if (!albumData?.uuid) return;
+    
+    // 앨범 정보를 JSON으로 만들고 Base64로 인코딩 (UTF-8 지원)
+    const albumInfo = {
+      id: albumData.uuid,
+      title: albumData.title,
+      color: albumColor,
+      description: albumData.description || "",
+    };
+    // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
+    const jsonString = JSON.stringify(albumInfo);
+    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
+    
+    // 노래 추가 페이지 URL 생성 (앨범 정보 포함)
+    const baseUrl = window.location.origin;
+    const songAddUrl = `${baseUrl}/song/add?albumId=${albumData.uuid}&albumData=${encodeURIComponent(encodedData)}`;
+    
+    navigator.clipboard.writeText(songAddUrl).then(() => {
       setIsLinkCopied(true);
       setTimeout(() => setIsLinkCopied(false), 2000);
     });
   };
 
   const handleKakaoShare = () => {
-    if (!albumData) return;
+    if (!albumData?.uuid) return;
+    
+    // 앨범 정보를 JSON으로 만들고 Base64로 인코딩 (UTF-8 지원)
+    const albumInfo = {
+      id: albumData.uuid,
+      title: albumData.title,
+      color: albumColor,
+      description: albumData.description || "",
+    };
+    // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
+    const jsonString = JSON.stringify(albumInfo);
+    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
+    
     // TODO: 카카오톡 공유 API 연동
-    const shareUrl = window.location.href;
+    const baseUrl = window.location.origin;
+    const shareUrl = `${baseUrl}/song/add?albumId=${albumData.uuid}&albumData=${encodeURIComponent(encodedData)}`;
     const shareText = albumData.title;
     // 카카오톡 공유 URL 생성 (웹 링크 공유)
     const kakaoShareUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_id=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;

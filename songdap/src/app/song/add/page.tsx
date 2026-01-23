@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed } from "react-icons/hi";
@@ -9,11 +9,28 @@ import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { useTempDataStore } from "@/shared/store/tempDataStore";
 import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
+import { getAlbum, addMusicToAlbum } from "@/features/album/api";
+import type { AlbumResponse } from "@/features/album/api";
 
-export default function AddSongPage() {
+type AlbumInfoFromUrl = {
+  id: string;
+  title: string;
+  color: string;
+  description?: string;
+  musicCount?: number;
+  musicCountLimit?: number;
+  createdAt?: string;
+  isPublic?: boolean;
+};
+
+function AddSongContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const albumId = searchParams.get("albumId");
+  const albumDataParam = searchParams.get("albumData");
   const { user } = useOauthStore();
-  const [album, setAlbum] = useState(SAMPLE_ALBUMS[0]); // TODO: URL 파라미터나 세션에서 앨범 데이터 가져오기
+  const [album, setAlbum] = useState<AlbumResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [songData, setSongData] = useState({
     title: "",
     artist: "",
@@ -24,11 +41,76 @@ export default function AddSongPage() {
     message: "",
   });
   const [showSongCard, setShowSongCard] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showMessageForm = useTempDataStore((state) => state.showMessageForm);
   const songAddData = useTempDataStore((state) => state.songAddData);
   const songMessageData = useTempDataStore((state) => state.songMessageData);
   const setShowMessageForm = useTempDataStore((state) => state.setShowMessageForm);
+  
+  // URL에서 앨범 정보 가져오기
+  useEffect(() => {
+    // albumId가 있으면 항상 API로 최신 정보 조회 (URL의 albumData는 초기 로딩용으로만 사용)
+    if (albumId) {
+      setIsLoading(true);
+      
+      // URL에 albumData가 있으면 먼저 표시 (빠른 로딩)
+      if (albumDataParam) {
+        try {
+          const decodedData = decodeURIComponent(escape(atob(decodeURIComponent(albumDataParam))));
+          const albumInfo: AlbumInfoFromUrl = JSON.parse(decodedData);
+          
+          setAlbum({
+            uuid: albumInfo.id,
+            title: albumInfo.title,
+            description: albumInfo.description || "",
+            isPublic: albumInfo.isPublic !== undefined ? albumInfo.isPublic : true,
+            musicCount: albumInfo.musicCount !== undefined ? albumInfo.musicCount : 0,
+            musicCountLimit: albumInfo.musicCountLimit !== undefined ? albumInfo.musicCountLimit : 10,
+            color: albumInfo.color,
+            createdAt: albumInfo.createdAt,
+          });
+        } catch (error) {
+          console.error("[Song Add] URL에서 앨범 정보 디코딩 실패:", error);
+        }
+      }
+      
+      // API로 최신 정보 조회
+      getAlbum(albumId)
+        .then((albumData) => {
+          setAlbum(albumData);
+        })
+        .catch((error) => {
+          console.error("[Song Add] 앨범 정보 조회 실패:", error);
+          // 에러 발생 시 URL 정보가 있으면 그대로 사용, 없으면 기본값
+          if (!albumDataParam) {
+            setAlbum({
+              uuid: albumId,
+              title: "앨범",
+              description: "",
+              isPublic: true,
+              musicCount: 0,
+              musicCountLimit: 10,
+              color: "#929292",
+            });
+          }
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      // albumId가 없으면 샘플 데이터 사용
+      setAlbum({
+        uuid: "",
+        title: SAMPLE_ALBUMS[0].title,
+        description: SAMPLE_ALBUMS[0].description || "",
+        isPublic: SAMPLE_ALBUMS[0].isPublic,
+        musicCount: SAMPLE_ALBUMS[0].musicCount,
+        musicCountLimit: SAMPLE_ALBUMS[0].musicCountLimit,
+        color: SAMPLE_ALBUMS[0].color,
+      });
+    }
+  }, [albumId, albumDataParam]);
   
   // 취소 버튼으로 돌아왔을 때 메시지 입력 화면 표시
   useEffect(() => {
@@ -72,6 +154,21 @@ export default function AddSongPage() {
     }
   };
 
+  // 로딩 중이거나 앨범 정보가 없으면 로딩 표시
+  if (isLoading || !album) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
+            <p className="text-sm text-gray-600">앨범 정보를 불러오는 중...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Header />
@@ -92,7 +189,7 @@ export default function AddSongPage() {
                     <AlbumCover
                       size={coverSizeMobile}
                       backgroundColorHex={album.color}
-                      imageUrl={album.imageUrl}
+                      imageUrl={undefined}
                       lpSize={lpSizeMobile}
                       className="w-full h-full"
                     />
@@ -102,7 +199,7 @@ export default function AddSongPage() {
                     <AlbumCover
                       size={coverSizePC}
                       backgroundColorHex={album.color}
-                      imageUrl={album.imageUrl}
+                      imageUrl={undefined}
                       lpSize={lpSizePC}
                       className="w-full h-full"
                     />
@@ -113,7 +210,10 @@ export default function AddSongPage() {
                     {!album.isPublic && (
                       <HiLockClosed className="w-4 h-4 text-gray-700" />
                     )}
-                    <span className="text-sm text-gray-700">{album.musicCount}곡</span>
+                    <span className="text-sm text-gray-700">
+                      {album.musicCount !== undefined ? album.musicCount : 0}곡
+                      {album.musicCountLimit !== undefined && ` / ${album.musicCountLimit}곡`}
+                    </span>
                   </div>
                 </div>
 
@@ -127,6 +227,17 @@ export default function AddSongPage() {
                     <p className="text-base text-gray-700">&ldquo;{album.description}&rdquo;</p>
                   ) : (
                     <p className="text-base text-gray-500">&nbsp;</p>
+                  )}
+                  
+                  {/* 생성일 */}
+                  {album.createdAt && (
+                    <p className="text-sm text-gray-500">
+                      {new Date(album.createdAt).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
                   )}
                   
                   {/* 만든 사람 닉네임 */}
@@ -268,17 +379,53 @@ export default function AddSongPage() {
                 <div className="mt-6">
                   <button
                     type="button"
-                    onClick={() => {
-                      // 임시 데이터 저장소에 데이터 저장
-                      const { useTempDataStore } = require("@/shared/store/tempDataStore");
-                      useTempDataStore.getState().setSongAddData(songData);
-                      useTempDataStore.getState().setSongMessageData(messageData);
-                      // 위치 조정 페이지로 이동
-                      router.push(`/song/add/position?albumId=${album.uuid}`);
+                    onClick={async () => {
+                      if (!album?.uuid && !albumId) {
+                        alert("앨범 정보를 불러올 수 없습니다.");
+                        return;
+                      }
+
+                      // 필수 입력 검증
+                      if (!songData.title.trim() || !songData.artist.trim()) {
+                        alert("노래 제목과 아티스트를 입력해주세요.");
+                        return;
+                      }
+
+                      if (!messageData.nickname.trim() || !messageData.message.trim()) {
+                        alert("닉네임과 메시지를 입력해주세요.");
+                        return;
+                      }
+
+                      setIsSubmitting(true);
+                      const targetAlbumId = album?.uuid || albumId || "";
+
+                      try {
+                        // 노래 추가 API 호출
+                        await addMusicToAlbum(targetAlbumId, {
+                          title: songData.title,
+                          artist: songData.artist,
+                          imageUrl: songData.imageUrl || undefined,
+                          message: messageData.message,
+                          nickname: messageData.nickname,
+                        });
+
+                        // 임시 데이터 저장소에 데이터 저장 (완료 페이지에서 사용)
+                        const { useTempDataStore } = require("@/shared/store/tempDataStore");
+                        useTempDataStore.getState().setSongAddData(songData);
+                        useTempDataStore.getState().setSongMessageData(messageData);
+
+                        // 완료 페이지로 이동
+                        router.push(`/song/add/completed?albumId=${targetAlbumId}`);
+                      } catch (error: any) {
+                        console.error("[Song Add] 노래 추가 실패:", error);
+                        alert("노래 추가에 실패했습니다. 다시 시도해주세요.");
+                        setIsSubmitting(false);
+                      }
                     }}
-                    className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors"
+                    disabled={isSubmitting}
+                    className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    다음
+                    {isSubmitting ? "저장 중..." : "완료"}
                   </button>
                 </div>
               </div>
@@ -287,5 +434,23 @@ export default function AddSongPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function AddSongPage() {
+  return (
+    <Suspense fallback={
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
+            <p className="text-sm text-gray-600">로딩 중...</p>
+          </div>
+        </div>
+      </>
+    }>
+      <AddSongContent />
+    </Suspense>
   );
 }

@@ -15,6 +15,8 @@ type AlbumCardProps = {
   imageUrl?: string | null;
   href?: string;
   createdAt?: string;
+  musicCountLimit?: number;
+  description?: string;
   isEditMode?: boolean;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
@@ -29,6 +31,8 @@ export default function AlbumCard({
   imageUrl,
   href,
   createdAt,
+  musicCountLimit,
+  description,
   isEditMode = false,
   onDelete,
   onEdit,
@@ -51,8 +55,20 @@ export default function AlbumCard({
   const handleLinkCopy = (e: React.MouseEvent) => {
     e.preventDefault();
     if (typeof window === "undefined") return;
-    const currentUrl = window.location.origin + (href || `/album/${id}`);
-    navigator.clipboard.writeText(currentUrl).then(() => {
+    
+    // 앨범 기본 정보를 JSON으로 만들고 Base64로 인코딩 (UTF-8 지원)
+    const albumInfo = {
+      id,
+      title: albumName,
+      color: albumColor,
+    };
+    // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
+    const jsonString = JSON.stringify(albumInfo);
+    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
+    
+    // 노래 추가 페이지 URL로 복사 (앨범 정보 포함)
+    const songAddUrl = `${window.location.origin}/song/add?albumId=${id}&albumData=${encodeURIComponent(encodedData)}`;
+    navigator.clipboard.writeText(songAddUrl).then(() => {
       setIsLinkCopied(true);
       setTimeout(() => {
         setIsLinkCopied(false);
@@ -64,7 +80,24 @@ export default function AlbumCard({
   const handleKakaoShare = (e: React.MouseEvent) => {
     e.preventDefault();
     if (typeof window === "undefined") return;
-    const shareUrl = window.location.origin + (href || `/album/${id}`);
+    
+    // 앨범 기본 정보를 JSON으로 만들고 Base64로 인코딩 (UTF-8 지원)
+    const albumInfo = {
+      id,
+      title: albumName,
+      color: albumColor,
+      description: description || "",
+      musicCount: songCount,
+      musicCountLimit: musicCountLimit || 10,
+      createdAt: createdAt || "",
+      isPublic,
+    };
+    // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
+    const jsonString = JSON.stringify(albumInfo);
+    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
+    
+    // 노래 추가 페이지 URL로 공유 (앨범 정보 포함)
+    const shareUrl = `${window.location.origin}/song/add?albumId=${id}&albumData=${encodeURIComponent(encodedData)}`;
     const shareText = albumName;
     const kakaoShareUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_id=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
     window.open(kakaoShareUrl, "_blank", "width=400,height=600");

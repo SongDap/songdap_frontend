@@ -6,6 +6,8 @@ import { Header } from "@/shared";
 import { useTempDataStore } from "@/shared/store/tempDataStore";
 import { LetterPositionEditor, SaveConfirmPopup } from "@/features/song/add/components";
 import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
+import { getAlbum, addMusicToAlbum } from "@/features/album/api";
+import type { AlbumResponse } from "@/features/album/api";
 
 type SongData = {
   title: string;
@@ -31,13 +33,52 @@ function SongPositionContent() {
   
   const [songData, setSongData] = useState<SongData | null>(null);
   const [messageData, setMessageData] = useState<MessageData | null>(null);
-  const [album, setAlbum] = useState(SAMPLE_ALBUMS.find(a => a.uuid === albumId) || SAMPLE_ALBUMS[0]);
+  const [album, setAlbum] = useState<AlbumResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [savedPageNumber, setSavedPageNumber] = useState<number | null>(null);
 
   const songAddData = useTempDataStore((state) => state.songAddData);
   const songMessageData = useTempDataStore((state) => state.songMessageData);
   
+  // albumId가 있으면 앨범 정보 조회
+  useEffect(() => {
+    if (albumId) {
+      setIsLoading(true);
+      getAlbum(albumId)
+        .then((albumData) => {
+          setAlbum(albumData);
+        })
+        .catch((error) => {
+          console.error("[Song Position] 앨범 정보 조회 실패:", error);
+          // 에러 발생 시 기본값 사용
+          setAlbum({
+            uuid: albumId,
+            title: "앨범",
+            description: "",
+            isPublic: true,
+            musicCount: 0,
+            musicCountLimit: 10,
+            color: "#929292",
+          });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      // albumId가 없으면 샘플 데이터 사용
+      setAlbum({
+        uuid: "",
+        title: SAMPLE_ALBUMS[0].title,
+        description: SAMPLE_ALBUMS[0].description || "",
+        isPublic: SAMPLE_ALBUMS[0].isPublic,
+        musicCount: SAMPLE_ALBUMS[0].musicCount,
+        musicCountLimit: SAMPLE_ALBUMS[0].musicCountLimit,
+        color: SAMPLE_ALBUMS[0].color,
+      });
+    }
+  }, [albumId]);
+
   useEffect(() => {
     // 임시 데이터 저장소에서 노래 데이터 가져오기
     if (songAddData) {
@@ -49,33 +90,56 @@ function SongPositionContent() {
 
     // 데이터가 없으면 이전 페이지로 돌아가기
     if (!songAddData || !songMessageData) {
-      router.push("/song/add");
+      router.push(`/song/add${albumId ? `?albumId=${albumId}` : ""}`);
     }
-  }, [router, songAddData, songMessageData]);
+  }, [router, songAddData, songMessageData, albumId]);
 
-  if (!songData || !messageData) {
+  if (isLoading || !album || !songData || !messageData) {
     return (
       <>
         <Header />
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-700">데이터를 불러오는 중...</p>
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
+            <p className="text-sm text-gray-600">로딩 중...</p>
+          </div>
         </div>
       </>
     );
   }
 
-  const handleSave = (position: LetterPosition) => {
-    // TODO: API에 노래 데이터와 위치 정보 저장
-    console.log("저장할 데이터:", {
-      albumId: albumId,
-      song: songData,
-      message: messageData,
-      position: position,
-    });
+  const handleSave = async (position: LetterPosition) => {
+    if (!albumId || !songData || !messageData) {
+      console.error("[Song Position] 저장 실패: 필수 데이터가 없습니다.");
+      return;
+    }
 
-    // 팝업 표시
-    setSavedPageNumber(position.pageNumber);
-    setShowPopup(true);
+    try {
+      // 노래 추가 API 호출
+      await addMusicToAlbum(albumId, {
+        title: songData.title,
+        artist: songData.artist,
+        imageUrl: songData.imageUrl || undefined,
+        message: messageData.message,
+        nickname: messageData.nickname,
+        positionX: position.x,
+        positionY: position.y,
+        pageNumber: position.pageNumber,
+      });
+
+      console.log("[Song Position] 노래 추가 성공:", {
+        albumId,
+        title: songData.title,
+        position,
+      });
+
+      // 팝업 표시
+      setSavedPageNumber(position.pageNumber);
+      setShowPopup(true);
+    } catch (error: any) {
+      console.error("[Song Position] 노래 추가 실패:", error);
+      alert("노래 추가에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   const handleConfirm = () => {

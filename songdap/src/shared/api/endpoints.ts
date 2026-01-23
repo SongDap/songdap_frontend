@@ -18,5 +18,6 @@ export const API_ENDPOINTS = {
   ALBUM: {
     BASE: "/api/v1/albums",
     DETAIL: (albumUuid: string) => `/api/v1/albums/${albumUuid}`,
+    ADD_MUSIC: (albumUuid: string) => `/api/v1/albums/${albumUuid}/musics`,
   },
 } as const;
