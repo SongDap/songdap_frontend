@@ -7,8 +7,18 @@ import axios from 'axios';
  * Access Token과 Refresh Token은 모두 HttpOnly Cookie로 관리됨
  * withCredentials: true 설정으로 쿠키가 자동으로 전송됨
  */
+// baseURL 정규화: 빈 문자열, undefined, 또는 따옴표만 있는 경우 빈 문자열로 처리
+// 서버에서는 빈 문자열일 때도 절대 경로로 동작하도록 보장
+const normalizeBaseURL = (url: string | undefined): string => {
+  if (!url) return '';
+  // 따옴표 제거 (환경 변수에 따옴표가 포함된 경우)
+  const cleaned = url.trim().replace(/^["']|["']$/g, '');
+  return cleaned || '';
+};
+
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '',
+  // baseURL이 빈 문자열이면 undefined로 설정하여 axios가 절대 경로를 올바르게 처리하도록 함
+  baseURL: normalizeBaseURL(process.env.NEXT_PUBLIC_API_URL) || undefined,
   timeout: 10000,
   // Access Token과 Refresh Token이 HttpOnly Cookie로 설정되므로 필수
   withCredentials: true,
@@ -38,6 +48,12 @@ apiClient.interceptors.request.use(
   (config) => {
     // 쿠키 기반 인증을 사용하므로 Authorization 헤더는 필요 없음
     // 백엔드가 HttpOnly 쿠키로 인증을 처리함
+    
+    // baseURL이 없거나 빈 문자열일 때, URL이 절대 경로(/로 시작)인지 확인
+    // 상대 경로면 절대 경로로 변환 (현재 페이지 경로가 붙는 문제 방지)
+    if ((!config.baseURL || config.baseURL === '') && config.url && !config.url.startsWith('/')) {
+      config.url = '/' + config.url;
+    }
     
     // 디버그 모드에서 요청 정보 로깅
     const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
