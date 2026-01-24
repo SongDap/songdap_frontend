@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import Link from "next/link";
 
@@ -13,10 +13,11 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { user } = useOauthStore();
+  const router = useRouter();
+  const { user, logout } = useOauthStore();
 
   const navItems: NavItem[] = [
-    { label: "서비스 소개", href: "#" },
+    { label: "서비스 소개", href: "/introduceService" },
     { label: "내 앨범", href: "/album/list" },
   ];
 
@@ -98,8 +99,8 @@ export default function Header() {
             <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               <div className="py-2">
                 <a
-                  href="#"
-                  className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors"
+                  href="/profile/edit"
+                  className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors hover:text-gray-900"
                   onClick={(e) => {
                     e.stopPropagation();
                     setProfileMenuOpen(false);
@@ -107,6 +108,18 @@ export default function Header() {
                 >
                   프로필 편집
                 </a>
+                <button
+                  type="button"
+                  className="w-full text-left px-4 py-2 text-base text-red-600 hover:bg-red-50 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProfileMenuOpen(false);
+                    logout();
+                    router.replace("/");
+                  }}
+                >
+                  로그아웃
+                </button>
               </div>
             </div>
           )}
@@ -154,11 +167,23 @@ export default function Header() {
                 </span>
               </div>
               <a
-                href="#"
+                href="/profile/edit"
                 className="px-3 py-2 rounded-lg text-base text-gray-800 hover:bg-gray-100"
+                onClick={() => setOpen(false)}
               >
                 프로필 편집
               </a>
+              <button
+                type="button"
+                className="px-3 py-2 rounded-lg text-base !text-red-600 hover:bg-red-50 text-left"
+                onClick={() => {
+                  setOpen(false);
+                  logout();
+                  router.replace("/");
+                }}
+              >
+                로그아웃
+              </button>
             </div>
 
             {/* Navigation */}
