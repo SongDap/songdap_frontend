@@ -5,6 +5,9 @@ import Link from "next/link";
 import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed, HiShare, HiLink } from "react-icons/hi";
 import AlbumCardEditMode from "./AlbumCardEditMode";
+import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
+import { shareKakaoText } from "@/shared/lib/kakaoShare";
+import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 
 type AlbumCardProps = {
   id: string;
@@ -40,6 +43,7 @@ export default function AlbumCard({
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const user = useOauthStore((s) => s.user);
 
   // PC: 240x240, 모바일: 화면에 2개가 나오도록 (약 170px)
   const coverSizePC = 240;
@@ -56,18 +60,16 @@ export default function AlbumCard({
     e.preventDefault();
     if (typeof window === "undefined") return;
     
-    // 앨범 기본 정보를 JSON으로 만들고 Base64로 인코딩 (UTF-8 지원)
-    const albumInfo = {
+    const songAddUrl = buildSongAddUrlFromAlbumInfo({
       id,
       title: albumName,
       color: albumColor,
-    };
-    // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
-    const jsonString = JSON.stringify(albumInfo);
-    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
-    
-    // 노래 추가 페이지 URL로 복사 (앨범 정보 포함)
-    const songAddUrl = `${window.location.origin}/song/add?albumId=${id}&albumData=${encodeURIComponent(encodedData)}`;
+      description: description || "",
+      musicCount: songCount,
+      musicCountLimit: typeof musicCountLimit === "number" ? musicCountLimit : 10,
+      createdAt: createdAt || "",
+      isPublic,
+    });
     navigator.clipboard.writeText(songAddUrl).then(() => {
       setIsLinkCopied(true);
       setTimeout(() => {
@@ -77,31 +79,45 @@ export default function AlbumCard({
     });
   };
 
-  const handleKakaoShare = (e: React.MouseEvent) => {
+  const handleKakaoShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (typeof window === "undefined") return;
     
-    // 앨범 기본 정보를 JSON으로 만들고 Base64로 인코딩 (UTF-8 지원)
-    const albumInfo = {
+    const shareUrl = buildSongAddUrlFromAlbumInfo({
       id,
       title: albumName,
       color: albumColor,
       description: description || "",
       musicCount: songCount,
-      musicCountLimit: musicCountLimit || 10,
+      musicCountLimit: typeof musicCountLimit === "number" ? musicCountLimit : 10,
       createdAt: createdAt || "",
       isPublic,
-    };
-    // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
-    const jsonString = JSON.stringify(albumInfo);
-    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
-    
-    // 노래 추가 페이지 URL로 공유 (앨범 정보 포함)
-    const shareUrl = `${window.location.origin}/song/add?albumId=${id}&albumData=${encodeURIComponent(encodedData)}`;
-    const shareText = albumName;
-    const kakaoShareUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_id=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-    window.open(kakaoShareUrl, "_blank", "width=400,height=600");
-    setShowShareMenu(false);
+    });
+    try {
+      const nickname = user?.nickname ?? "누군가";
+      await shareKakaoText({
+        text: `【${albumName}】\n"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
+        url: shareUrl,
+        buttonTitle: "노래 추가하기",
+      });
+    } catch (err) {
+      console.error("카카오 공유 실패:", err);
+      // 최소 fallback: 링크 복사
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setIsLinkCopied(true);
+        setTimeout(() => {
+          setIsLinkCopied(false);
+          setShowShareMenu(false);
+        }, 2000);
+        return;
+      } catch {
+        // ignore
+      }
+      alert("카카오 공유에 실패했어요. 링크 복사로 다시 시도해 주세요.");
+    } finally {
+      setShowShareMenu(false);
+    }
   };
 
   return (
@@ -154,7 +170,9 @@ export default function AlbumCard({
             {!isPublic && (
               <HiLockClosed className="w-4 h-4 text-gray-700" />
             )}
-            <span className="text-sm text-gray-700">{songCount}곡</span>
+            <span className="text-sm text-gray-700">
+              {typeof musicCountLimit === "number" ? `${songCount}/${musicCountLimit}곡` : `${songCount}곡`}
+            </span>
           </div>
         </div>
 

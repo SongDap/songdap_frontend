@@ -4,6 +4,7 @@ import kotraFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
 import { AuthHydrator } from "@/shared";
+import ReactQueryProvider from "@/shared/providers/ReactQueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,8 +57,10 @@ export default function RootLayout({
           </>
         )}
 
-        <AuthHydrator />
-        {children}
+        <ReactQueryProvider>
+          <AuthHydrator />
+          {children}
+        </ReactQueryProvider>
       </body>
     </html>
   );

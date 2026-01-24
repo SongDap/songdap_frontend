@@ -2,7 +2,7 @@
 import { useRef, useEffect } from "react";
 import { HiLockOpen, HiLockClosed } from "react-icons/hi";
 import { HiMinus, HiPlus, HiChevronLeft, HiChevronRight } from "react-icons/hi";
-import { PRESET_COLORS } from "@/shared/lib/mockData";
+import { PRESET_COLORS } from "@/shared/lib/colors";
 
 export type AlbumFormData = {
   title: string;

@@ -1,57 +1,58 @@
 /**
- * 임시 데이터 저장소 (sessionStorage 대체)
- * 페이지 간 데이터 전달용으로 사용
- * 메모리에만 저장되므로 새로고침 시 사라짐
+ * 임시 데이터 저장소 (메모리-only)
+ *
+ * - "페이지 이동 중"에만 필요한 데이터를 잠깐 들고가는 용도
+ * - 브라우저 새로고침/탭 종료 시 100% 사라짐 (캐시/영구 저장 용도 X)
+ * - 새로고침 후에도 유지돼야 하는 값은 URL/query, localStorage, 또는 서버 조회로 처리
  */
 
 import { create } from 'zustand';
 
+// ============================================================================
+// 타입 (any 제거)
+// ============================================================================
+
+export type AlbumShareTempData = {
+  uuid?: string;
+  title?: string;
+  description?: string;
+  isPublic?: boolean;
+  musicCount?: number;
+  musicCountLimit?: number;
+  color?: string;
+  createdAt?: string;
+};
+
+export type SongAddTempData = {
+  title: string;
+  artist: string;
+  imageUrl: string;
+};
+
+export type SongMessageTempData = {
+  nickname: string;
+  message: string;
+};
+
 interface TempDataState {
   // 앨범 관련 임시 데이터
-  albumShareData: {
-    title?: string;
-    description?: string;
-    isPublic?: boolean;
-    musicCount?: number;
-    musicCountLimit?: number;
-    color?: string;
-    uuid?: string;
-  } | null;
-  
-  // 노래 추가 관련 임시 데이터
-  songAddData: any | null;
-  songMessageData: any | null;
-  showMessageForm: boolean;
+  albumShareData: AlbumShareTempData | null;
   
   // Setter 함수들
   setAlbumShareData: (data: TempDataState['albumShareData']) => void;
-  setSongAddData: (data: any) => void;
-  setSongMessageData: (data: any) => void;
-  setShowMessageForm: (show: boolean) => void;
   
   // Clear 함수들
   clearAlbumShareData: () => void;
-  clearSongData: () => void;
   clearAll: () => void;
 }
 
 export const useTempDataStore = create<TempDataState>((set) => ({
   albumShareData: null,
-  songAddData: null,
-  songMessageData: null,
-  showMessageForm: false,
   
   setAlbumShareData: (data) => set({ albumShareData: data }),
-  setSongAddData: (data) => set({ songAddData: data }),
-  setSongMessageData: (data) => set({ songMessageData: data }),
-  setShowMessageForm: (show) => set({ showMessageForm: show }),
   
   clearAlbumShareData: () => set({ albumShareData: null }),
-  clearSongData: () => set({ songAddData: null, songMessageData: null, showMessageForm: false }),
   clearAll: () => set({
     albumShareData: null,
-    songAddData: null,
-    songMessageData: null,
-    showMessageForm: false,
   }),
 }));

@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { CreateAlbumForm, EditAlbumForm } from "@/features/album/create/components";
-import { getRandomColorFromPalette } from "@/shared/lib/mockData";
+import { getRandomColorFromPalette } from "@/shared/lib/colors";
 
 function CreateAlbumContent() {
   const searchParams = useSearchParams();
