@@ -78,7 +78,6 @@ export default function MusicPlayerBar({
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 z-[60] rounded-t-[20px] md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2 md:rounded-t-[20px]"
-      onClick={onExpand}
       style={{
         background: backgroundColor || 'rgba(0, 0, 0, 0.8)',
         backdropFilter: 'blur(10px)',

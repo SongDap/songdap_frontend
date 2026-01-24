@@ -300,7 +300,7 @@ export default function MusicPlayerExpandedView({
 
       {/* 하단 컨트롤 버튼 (고정 위치, 뮤직플레이어바와 같은 위치) */}
       <div 
-        className="fixed bottom-0 left-0 right-0 w-full max-w-lg mx-auto px-6 flex items-center justify-between md:left-1/2 md:right-auto md:w-[672px] md:max-w-none md:-translate-x-1/2"
+        className="fixed bottom-0 left-0 right-0 w-full px-6 flex items-center justify-between md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2"
         style={{ 
           paddingTop: `${spacing.medium}px`, 
           paddingBottom: `${spacing.large}px`,

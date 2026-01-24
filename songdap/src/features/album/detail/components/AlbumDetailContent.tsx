@@ -1,103 +1,176 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { PageHeader } from "@/shared";
-import { YouTubeModal } from "@/shared/ui";
-import { SAMPLE_ALBUMS, SAMPLE_SONGS } from "@/shared/lib/mockData";
+import { HiMail, HiMusicNote } from "react-icons/hi";
+
+import { getAlbum } from "@/features/album/api";
+import type { AlbumResponse } from "@/features/album/api";
 import { SongCard } from "@/features/song/add/components";
 import { SongLetter } from "@/features/song/components";
-import { HiMusicNote, HiMail } from "react-icons/hi";
+import { PageHeader } from "@/shared";
+import { SAMPLE_SONGS } from "@/shared/lib/mockData";
+import { YouTubeModal } from "@/shared/ui";
+
 import MusicPlayer from "./MusicPlayer";
-import type { AlbumResponse } from "@/features/album/api";
+
+type ViewMode = "player" | "letter";
+
+type CurrentSong = {
+  id: number;
+  title: string;
+  artist: string;
+  imageUrl?: string | null;
+  message?: string;
+  nickname?: string;
+};
+
+const DESKTOP_FIXED_WIDTH_CLASS = "md:w-[672px] md:mx-auto";
+const DEFAULT_DUMMY_SONG_COUNT = 10;
 
 export default function AlbumDetailContent() {
   const params = useParams();
-  const albumUuid = params?.id as string;
+  const albumUuid = (params?.id as string | undefined) ?? "";
+
   const [album, setAlbum] = useState<AlbumResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentSong, setCurrentSong] = useState<{ id: number; title: string; artist: string; imageUrl?: string | null; message?: string; nickname?: string } | null>(null);
-  const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
-  const [expandTrigger, setExpandTrigger] = useState(0);
-  const [viewMode, setViewMode] = useState<"player" | "letter">("player"); // 뷰 모드: "player" 또는 "letter"
-  const playerScrollRef = useRef<HTMLDivElement | null>(null);
-  const activeSongRowRef = useRef<HTMLDivElement | null>(null);
 
-  // 일단 더미 데이터 사용 (앨범 + 노래)
+  const [viewMode, setViewMode] = useState<ViewMode>("player");
+  const [currentSong, setCurrentSong] = useState<CurrentSong | null>(null);
+  // 확장뷰 트리거: 기본은 undefined (초기 진입 시 확장뷰 자동 오픈 방지)
+  const [expandTrigger, setExpandTrigger] = useState<number | undefined>(undefined);
+  const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
+
+  const playerListRef = useRef<HTMLDivElement | null>(null);
+
+  // 앨범 데이터는 API로 가져오기 (노래 목록은 아직 미연결 → 더미 사용)
   useEffect(() => {
-    const dummy = SAMPLE_ALBUMS.find((a) => a.uuid === albumUuid) ?? SAMPLE_ALBUMS[0];
-    const albumData: AlbumResponse = {
-      uuid: dummy.uuid,
-      title: dummy.title,
-      description: dummy.description,
-      isPublic: dummy.isPublic,
-      musicCount: dummy.musicCount,
-      musicCountLimit: dummy.musicCountLimit,
-      color: dummy.color,
-      createdAt: dummy.createdAt,
-    };
-    setAlbum(albumData);
+    if (!albumUuid) {
+      setAlbum(null);
+      setError("앨범 UUID가 없습니다.");
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
     setError(null);
-    setIsLoading(false);
+
+    getAlbum(albumUuid)
+      .then((albumData) => {
+        setAlbum(albumData);
+      })
+      .catch((err) => {
+        console.error("[Album Detail] 앨범 조회 실패:", err);
+        setAlbum(null);
+        setError("앨범을 불러오는데 실패했습니다.");
+      })
+      .finally(() => setIsLoading(false));
   }, [albumUuid]);
 
-  // 더미 노래 데이터 (SAMPLE_SONGS)
-  const allSongs = useMemo(() => {
-    if (!album) return [];
-    return SAMPLE_SONGS.slice(0, Math.min(album.musicCount, SAMPLE_SONGS.length));
-  }, [album]);
+  // 더미 노래 개수 결정: 실제 musicCount가 0이어도 더미는 보여주기
+  const dummySongCount = useMemo(() => {
+    if (!album) return 0;
+
+    const fromAlbum =
+      typeof album.musicCount === "number" && album.musicCount > 0
+        ? album.musicCount
+        : album.musicCountLimit ?? DEFAULT_DUMMY_SONG_COUNT;
+
+    return Math.max(1, Math.min(fromAlbum, SAMPLE_SONGS.length));
+  }, [album?.musicCount, album?.musicCountLimit, album]);
+
+  const songs = useMemo(() => {
+    if (dummySongCount <= 0) return [];
+    return SAMPLE_SONGS.slice(0, dummySongCount);
+  }, [dummySongCount]);
+
+  const todayLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    []
+  );
+
+  const toCurrentSong = useCallback((song: (typeof SAMPLE_SONGS)[number]): CurrentSong => {
+    return {
+      id: song.id,
+      title: song.title,
+      artist: song.artist,
+      imageUrl: song.imageUrl,
+      message: song.message,
+      nickname: song.nickname,
+    };
+  }, []);
+
+  const handleSelectSong = useCallback(
+    (song: (typeof SAMPLE_SONGS)[number], openExpanded = true) => {
+      setCurrentSong(toCurrentSong(song));
+      if (openExpanded) setExpandTrigger((prev) => (prev ?? 0) + 1);
+    },
+    [toCurrentSong]
+  );
+
+  const handlePrevious = useCallback(() => {
+    if (!currentSong || songs.length === 0) return;
+    const idx = songs.findIndex((s) => s.id === currentSong.id);
+    if (idx < 0) return;
+    const prevIdx = (idx - 1 + songs.length) % songs.length;
+    handleSelectSong(songs[prevIdx], false);
+  }, [currentSong, songs, handleSelectSong]);
+
+  const handleNext = useCallback(() => {
+    if (!currentSong || songs.length === 0) return;
+    const idx = songs.findIndex((s) => s.id === currentSong.id);
+    if (idx < 0) return;
+    const nextIdx = (idx + 1) % songs.length;
+    handleSelectSong(songs[nextIdx], false);
+  }, [currentSong, songs, handleSelectSong]);
+
+  // 편지 탭에서는 하단 플레이어 바만 숨김 (선택 곡은 유지해서 다시 돌아왔을 때 그대로 활성화)
 
   // 첫 진입/새로고침 시 첫 번째 곡을 기본 선택 상태로
-  // (player 탭에서만, 이미 선택된 곡이 있으면 유지)
   useEffect(() => {
     if (viewMode !== "player") return;
     if (currentSong) return;
-    if (allSongs.length === 0) return;
-
-    const firstSong = allSongs[0];
-    setCurrentSong({
-      id: firstSong.id,
-      title: firstSong.title,
-      artist: firstSong.artist,
-      imageUrl: firstSong.imageUrl,
-      message: firstSong.message,
-      nickname: firstSong.nickname,
-    });
-  }, [viewMode, currentSong, allSongs]);
+    if (songs.length === 0) return;
+    handleSelectSong(songs[0], false);
+  }, [viewMode, currentSong, songs, handleSelectSong]);
 
   // 플레이어 모드에서 선택된 곡이 보이도록 자동 스크롤
-  // (조건부 return 위에서 호출되어 Hook 순서 고정)
   useEffect(() => {
     if (viewMode !== "player") return;
     if (!currentSong) return;
-    if (!playerScrollRef.current || !activeSongRowRef.current) return;
+    const container = playerListRef.current;
+    if (!container) return;
 
-    // requestAnimationFrame으로 렌더 후 스크롤 보장
     const raf = requestAnimationFrame(() => {
-      const container = playerScrollRef.current;
-      const row = activeSongRowRef.current;
-      if (!container || !row) return;
+      const row = container.querySelector<HTMLElement>(
+        `[data-song-id="${currentSong.id}"]`
+      );
+      if (!row) return;
 
-      // 선택된 곡이 컨테이너 중앙 근처로 오도록 스크롤
+      const containerRect = container.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      const currentTop = container.scrollTop;
+
       const targetTop =
-        row.offsetTop - container.clientHeight / 2 + row.clientHeight / 2;
+        currentTop +
+        (rowRect.top - containerRect.top) -
+        container.clientHeight / 2 +
+        rowRect.height / 2;
+
       const maxTop = container.scrollHeight - container.clientHeight;
       const nextTop = Math.max(0, Math.min(targetTop, maxTop));
-
       container.scrollTo({ top: nextTop, behavior: "smooth" });
     });
+
     return () => cancelAnimationFrame(raf);
   }, [viewMode, currentSong?.id]);
 
-  // 편지 탭에서는 하단 플레이어 바 숨김(열려있으면 닫기)
-  useEffect(() => {
-    if (viewMode === "letter") {
-      setCurrentSong(null);
-    }
-  }, [viewMode]);
-
-  // 조건부 렌더링 (Hook 호출 이후에 배치)
   if (isLoading) {
     return (
       <>
@@ -120,70 +193,6 @@ export default function AlbumDetailContent() {
     );
   }
 
-  const handlePlay = (song: { id: number; title: string; artist: string; imageUrl?: string | null; message?: string; nickname?: string }) => {
-    // 항상 새로운 객체를 생성하여 리렌더링 트리거 (같은 곡을 클릭해도 익스팬드뷰 열기)
-    setCurrentSong({ ...song });
-    setExpandTrigger(prev => prev + 1); // 익스팬드뷰 열기 트리거 증가
-  };
-
-  const handlePrevious = () => {
-    if (!currentSong) return;
-    const currentIndex = allSongs.findIndex((s) => s.id === currentSong.id);
-    if (currentIndex > 0) {
-      const previousSong = allSongs[currentIndex - 1];
-      setCurrentSong({
-        id: previousSong.id,
-        title: previousSong.title,
-        artist: previousSong.artist,
-        imageUrl: previousSong.imageUrl,
-        message: previousSong.message,
-        nickname: previousSong.nickname,
-      });
-      // expandTrigger는 증가시키지 않음 (내용만 변경)
-    } else {
-      // 첫 번째 곡이면 마지막 곡으로
-      const lastSong = allSongs[allSongs.length - 1];
-      setCurrentSong({
-        id: lastSong.id,
-        title: lastSong.title,
-        artist: lastSong.artist,
-        imageUrl: lastSong.imageUrl,
-        message: lastSong.message,
-        nickname: lastSong.nickname,
-      });
-      // expandTrigger는 증가시키지 않음 (내용만 변경)
-    }
-  };
-
-  const handleNext = () => {
-    if (!currentSong) return;
-    const currentIndex = allSongs.findIndex((s) => s.id === currentSong.id);
-    if (currentIndex < allSongs.length - 1) {
-      const nextSong = allSongs[currentIndex + 1];
-      setCurrentSong({
-        id: nextSong.id,
-        title: nextSong.title,
-        artist: nextSong.artist,
-        imageUrl: nextSong.imageUrl,
-        message: nextSong.message,
-        nickname: nextSong.nickname,
-      });
-      // expandTrigger는 증가시키지 않음 (내용만 변경)
-    } else {
-      // 마지막 곡이면 첫 번째 곡으로
-      const firstSong = allSongs[0];
-      setCurrentSong({
-        id: firstSong.id,
-        title: firstSong.title,
-        artist: firstSong.artist,
-        imageUrl: firstSong.imageUrl,
-        message: firstSong.message,
-        nickname: firstSong.nickname,
-      });
-      // expandTrigger는 증가시키지 않음 (내용만 변경)
-    }
-  };
-
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* 헤더 (고정 영역) */}
@@ -194,7 +203,7 @@ export default function AlbumDetailContent() {
           backgroundColor={album.color}
           hideTextOnMobile={true}
           isPublic={album.isPublic}
-          showBackButton={false}
+          showBackButton={true}
         />
       </div>
 
@@ -213,7 +222,9 @@ export default function AlbumDetailContent() {
             }}
           >
             {/* 콘텐츠 가로폭: 모바일=반응형, 데스크탑=고정 */}
-            <div className="w-full flex-1 min-h-0 overflow-hidden flex flex-col md:w-[672px] md:mx-auto">
+            <div
+              className={`w-full flex-1 min-h-0 overflow-hidden flex flex-col ${DESKTOP_FIXED_WIDTH_CLASS}`}
+            >
               {/* 뷰 모드 토글 (모바일/데스크탑 공통) */}
               <div className="flex items-center justify-center pt-4 pb-2 flex-shrink-0">
                 <div className="inline-flex p-1 rounded-full bg-gray-200">
@@ -242,39 +253,28 @@ export default function AlbumDetailContent() {
                 </div>
               </div>
 
-              {/* 뮤직플레이어 버전: 모바일 UI 그대로 (모바일/데스크탑 공통) */}
+              {/* 플레이어 버전 */}
               {viewMode === "player" && (
                 <div
-                  ref={playerScrollRef}
+                  ref={playerListRef}
                   className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-4 pt-4 pb-20"
                 >
                   <div className="flex flex-col -mx-4">
-                    {allSongs.map((song) => {
+                    {songs.map((song) => {
                       const isActive = currentSong?.id === song.id;
                       return (
-                        <div
-                          key={song.id}
-                          ref={isActive ? (el) => { activeSongRowRef.current = el; } : undefined}
-                        >
-                        <SongCard
-                          title={song.title}
-                          artist={song.artist}
-                          imageUrl={song.imageUrl}
-                          backgroundOpacity={0.4}
-                          fullWidth={true}
-                          showPlayButton={true}
-                          isActive={isActive}
-                          onPlay={() =>
-                            handlePlay({
-                              id: song.id,
-                              title: song.title,
-                              artist: song.artist,
-                              imageUrl: song.imageUrl,
-                              message: song.message,
-                              nickname: song.nickname,
-                            })
-                          }
-                        />
+                        <div key={song.id} data-song-id={song.id}>
+                          <SongCard
+                            title={song.title}
+                            artist={song.artist}
+                            imageUrl={song.imageUrl}
+                            backgroundOpacity={0.4}
+                            fullWidth={true}
+                            showPlayButton={true}
+                            isActive={isActive}
+                            onCardClick={() => handleSelectSong(song, false)}
+                            onPlay={() => handleSelectSong(song, true)}
+                          />
                         </div>
                       );
                     })}
@@ -282,11 +282,11 @@ export default function AlbumDetailContent() {
                 </div>
               )}
 
-              {/* 편지 버전: 데스크탑 편지 UI 그대로 (모바일/데스크탑 공통) */}
+              {/* 편지 버전 */}
               {viewMode === "letter" && (
-                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-0 pt-4 pb-20">
+                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-8 md:px-0 pt-4 pb-20">
                   <div className="flex flex-col gap-8">
-                    {allSongs.map((song) => (
+                    {songs.map((song) => (
                       <div key={song.id} className="w-full">
                         <SongLetter
                           title={song.title}
@@ -294,11 +294,7 @@ export default function AlbumDetailContent() {
                           imageUrl={song.imageUrl}
                           message={song.message}
                           nickname={song.nickname}
-                          date={new Date().toLocaleDateString("ko-KR", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
+                          date={todayLabel}
                           tapeColor={album.color}
                         />
                       </div>
@@ -311,7 +307,7 @@ export default function AlbumDetailContent() {
         </div>
       </div>
 
-      {/* 음악 플레이어 */}
+      {/* 하단 플레이어(편지 탭에서는 숨김) */}
       {viewMode === "player" && currentSong && (
         <MusicPlayer
           title={currentSong.title}
@@ -328,7 +324,6 @@ export default function AlbumDetailContent() {
         />
       )}
 
-      {/* 유튜브 모달 */}
       <YouTubeModal
         isOpen={isYouTubeModalOpen}
         onClose={() => setIsYouTubeModalOpen(false)}
