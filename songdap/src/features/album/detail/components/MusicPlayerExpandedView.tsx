@@ -176,7 +176,7 @@ export default function MusicPlayerExpandedView({
     <>
       {/* 위쪽 콘텐츠 부분 (슬라이드 애니메이션 적용) */}
       <div 
-        className={`fixed top-0 left-0 right-0 flex flex-col ${isClosing ? 'animate-slide-content-down' : 'animate-slide-content-up'} md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2`}
+        className={`fixed top-0 left-0 right-0 flex flex-col ${isClosing ? 'animate-slide-content-down' : 'animate-slide-content-up'} md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2 md:rounded-t-3xl md:overflow-hidden`}
         style={{
           background: backgroundColor || 'white',
           zIndex: 50,
@@ -323,7 +323,7 @@ export default function MusicPlayerExpandedView({
 
       {/* 하단 컨트롤 버튼 (고정 위치, 뮤직플레이어바와 같은 위치) */}
       <div 
-        className="fixed bottom-0 left-0 right-0 w-full px-6 flex items-center justify-between md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2"
+        className="fixed bottom-0 left-0 right-0 px-6 flex items-center justify-between md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2"
         style={{ 
           paddingTop: `${spacing.medium}px`, 
           paddingBottom: `${spacing.large}px`,

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { HiMail, HiMusicNote } from "react-icons/hi";
+import { HiInformationCircle, HiX, HiChevronDown } from "react-icons/hi";
 
 import { getAlbum, getAlbumMusics, getMusicDetail } from "@/features/album/api";
 import type { AlbumResponse, MusicListItem, MusicSortOption } from "@/features/album/api";
@@ -11,6 +12,7 @@ import { SongLetter } from "@/features/song/components";
 import { PageHeader } from "@/shared";
 import { makeAlbumListUrl, parseAlbumListQuery } from "@/features/album/list/lib/albumListQuery";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { AlbumCover } from "@/shared/ui";
 
 import MusicPlayer from "./MusicPlayer";
 
@@ -74,6 +76,7 @@ export default function AlbumDetailContent() {
   const [currentSong, setCurrentSong] = useState<CurrentSong | null>(null);
   // 확장뷰 트리거: 기본은 undefined (초기 진입 시 확장뷰 자동 오픈 방지)
   const [expandTrigger, setExpandTrigger] = useState<number | undefined>(undefined);
+  const [autoPlayTrigger, setAutoPlayTrigger] = useState<number | undefined>(undefined);
 
   const playerListRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -86,7 +89,23 @@ export default function AlbumDetailContent() {
   });
   const album = albumQuery.data ?? null;
 
-  const [musicSort] = useState<MusicSortOption>("LATEST");
+  const [musicSort, setMusicSort] = useState<MusicSortOption>("LATEST");
+  const MUSIC_SORT_OPTIONS: Array<{ label: string; value: MusicSortOption }> = useMemo(
+    () => [
+      { label: "최신순", value: "LATEST" },
+      { label: "오래된순", value: "OLDEST" },
+      { label: "제목순", value: "TITLE" },
+      { label: "아티스트순", value: "ARTIST" },
+    ],
+    []
+  );
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isAlbumInfoOpen, setIsAlbumInfoOpen] = useState(false);
+
+  const currentSortLabel = useMemo(() => {
+    return MUSIC_SORT_OPTIONS.find((o) => o.value === musicSort)?.label ?? "정렬";
+  }, [MUSIC_SORT_OPTIONS, musicSort]);
   const musicsQuery = useInfiniteQuery({
     queryKey: ["albumMusics", albumUuid, musicSort],
     enabled: Boolean(albumUuid),
@@ -132,6 +151,38 @@ export default function AlbumDetailContent() {
     io.observe(sentinel);
     return () => io.disconnect();
   }, [musicsQuery.hasNextPage, musicsQuery.isFetchingNextPage, musicsQuery.fetchNextPage]);
+
+  // 정렬 드롭다운: 외부 클릭/ESC로 닫기
+  useEffect(() => {
+    if (!isSortOpen) return;
+
+    const onPointerDownCapture = (e: PointerEvent) => {
+      const el = sortMenuRef.current;
+      if (!el) return;
+      if (el.contains(e.target as Node)) return;
+      setIsSortOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsSortOpen(false);
+    };
+
+    window.addEventListener("pointerdown", onPointerDownCapture, true);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDownCapture, true);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isSortOpen]);
+
+  // 앨범 정보 모달: ESC로 닫기
+  useEffect(() => {
+    if (!isAlbumInfoOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsAlbumInfoOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isAlbumInfoOpen]);
 
   const todayLabel = useMemo(
     () =>
@@ -189,7 +240,10 @@ export default function AlbumDetailContent() {
   const handleSelectSong = useCallback(
     (music: MusicListItem, openExpanded = true) => {
       setCurrentSong(toCurrentSong(music));
-      if (openExpanded) setExpandTrigger((prev) => (prev ?? 0) + 1);
+      if (openExpanded) {
+        setExpandTrigger((prev) => (prev ?? 0) + 1);
+        setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
+      }
     },
     [toCurrentSong]
   );
@@ -290,8 +344,106 @@ export default function AlbumDetailContent() {
           isPublic={album.isPublic}
           showBackButton={true}
           backHref={backHref}
+          rightAction={
+            <button
+              type="button"
+              onClick={() => {
+                setIsSortOpen(false);
+                setIsAlbumInfoOpen(true);
+              }}
+              className="p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label="앨범 정보"
+            >
+              <HiInformationCircle className="w-6 h-6 text-gray-800" />
+            </button>
+          }
         />
       </div>
+
+      {/* 앨범 정보 모달 (페이지 이동 없이, 재생 유지) */}
+      {isAlbumInfoOpen && (
+        <>
+          {/* 백드롭 */}
+          <div
+            className="fixed inset-0 bg-black/40 z-[120]"
+            onClick={() => setIsAlbumInfoOpen(false)}
+          />
+          {/* 모달 */}
+          <div className="fixed inset-0 z-[130] flex items-center justify-center p-4">
+            <div
+              className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative px-4 py-3 border-b border-gray-100">
+                <h2 className="text-base font-semibold text-gray-900 text-center">앨범 정보</h2>
+                <button
+                  type="button"
+                  onClick={() => setIsAlbumInfoOpen(false)}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+                  aria-label="닫기"
+                >
+                  <HiX className="w-5 h-5 text-gray-700" />
+                </button>
+              </div>
+
+              <div className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <AlbumCover
+                      size={92}
+                      backgroundColorHex={album.color}
+                      imageUrl={undefined}
+                      lpSize={92 * 0.8}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                          album.isPublic
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : "bg-gray-100 text-gray-700 border-gray-300"
+                        }`}
+                      >
+                        {album.isPublic ? "공개" : "비공개"}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {album.musicCount}/{album.musicCountLimit}곡
+                      </span>
+                    </div>
+
+                    <div className="mt-2 text-lg font-bold text-gray-900 break-words">
+                      {album.title}
+                    </div>
+
+                    {album.createdAt && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        {String(album.createdAt).slice(0, 10)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {album.description && (
+                  <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700 leading-relaxed max-h-40 overflow-y-auto scrollbar-hide">
+                    {album.description}
+                  </div>
+                )}
+
+                <div className="mt-5 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsAlbumInfoOpen(false)}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-[#006FFF] text-white text-sm font-semibold hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors"
+                  >
+                    닫기
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 앨범 상세: 탭 아래만 스크롤 */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
@@ -311,81 +463,161 @@ export default function AlbumDetailContent() {
             <div
               className={`w-full flex-1 min-h-0 overflow-hidden flex flex-col ${DESKTOP_FIXED_WIDTH_CLASS}`}
             >
-              {/* 뷰 모드 토글 (모바일/데스크탑 공통) */}
-              <div className="flex items-center justify-center pt-4 pb-2 flex-shrink-0">
-                <div className="inline-flex p-1 rounded-full bg-gray-200">
-                  <button
-                    onClick={() => setViewMode("player")}
-                    className={`p-2.5 rounded-full transition-colors ${
-                      viewMode === "player"
-                        ? "bg-[#006FFF] text-white shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                    aria-label="뮤직플레이어"
-                  >
-                    <HiMusicNote className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode("letter")}
-                    className={`p-2.5 rounded-full transition-colors ${
-                      viewMode === "letter"
-                        ? "bg-[#006FFF] text-white shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                    aria-label="편지"
-                  >
-                    <HiMail className="w-5 h-5" />
-                  </button>
+              {/* 보드(패널) - 편지/노래카드 공통 컨테이너 */}
+              <div className="flex-1 min-h-0 px-0 pb-4">
+                <div className="relative h-full rounded-3xl bg-white/90 backdrop-blur-md border border-white/60 overflow-hidden flex flex-col">
+                  {/* 상단 헤더: 탭(플레이어/편지) + 정렬 필터 (같은 Y축) */}
+                  <div className="flex items-center justify-center px-4 pt-3 pb-2 flex-shrink-0">
+                    <div className="w-full flex items-center justify-between gap-2">
+                      {/* 뷰 모드 토글 */}
+                      <div className="inline-flex p-1 rounded-full bg-gray-200 flex-shrink-0">
+                        <button
+                          onClick={() => setViewMode("player")}
+                          className={`p-2 md:p-2.5 rounded-full transition-colors ${
+                            viewMode === "player"
+                              ? "bg-[#006FFF] text-white shadow-sm"
+                              : "text-gray-500 hover:text-gray-700"
+                          }`}
+                          aria-label="뮤직플레이어"
+                        >
+                          <HiMusicNote className="w-4 h-4 md:w-5 md:h-5" />
+                        </button>
+                        <button
+                          onClick={() => setViewMode("letter")}
+                          className={`p-2 md:p-2.5 rounded-full transition-colors ${
+                            viewMode === "letter"
+                              ? "bg-[#006FFF] text-white shadow-sm"
+                              : "text-gray-500 hover:text-gray-700"
+                          }`}
+                          aria-label="편지"
+                        >
+                          <HiMail className="w-4 h-4 md:w-5 md:h-5" />
+                        </button>
+                      </div>
+
+                      {/* 노래 목록 정렬 드롭다운 */}
+                      <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
+                        <div
+                          ref={sortMenuRef}
+                          className="relative w-[130px] md:w-[170px] flex-shrink-0"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setIsSortOpen((v) => !v)}
+                            className="w-full px-3 py-1.5 md:py-2 text-xs md:text-sm rounded-full border border-gray-300 bg-white/90 text-gray-800 flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
+                            aria-label="노래 목록 정렬"
+                            aria-haspopup="listbox"
+                            aria-expanded={isSortOpen}
+                          >
+                            <span className="truncate">{currentSortLabel}</span>
+                            <HiChevronDown
+                              className={`w-4 h-4 flex-shrink-0 transition-transform ${
+                                isSortOpen ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {isSortOpen && (
+                            <div
+                              className="absolute right-0 top-full mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-lg z-30 overflow-hidden"
+                              role="listbox"
+                            >
+                              <div className="max-h-56 overflow-y-auto scrollbar-hide py-1">
+                                {MUSIC_SORT_OPTIONS.map((opt) => {
+                                  const active = opt.value === musicSort;
+                                  return (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      role="option"
+                                      aria-selected={active}
+                                      onClick={() => {
+                                        setMusicSort(opt.value);
+                                        setIsSortOpen(false);
+                                        playerListRef.current?.scrollTo({ top: 0, behavior: "auto" });
+                                      }}
+                                      className={`w-full px-3 py-2 text-left text-xs md:text-sm transition-colors ${
+                                        active
+                                          ? "bg-blue-50 text-[#006FFF]"
+                                          : "text-gray-800 hover:bg-gray-50"
+                                      }`}
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 플레이어 버전 */}
+                  {viewMode === "player" && (
+                    <div
+                      ref={playerListRef}
+                      className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-0 pt-0 pb-40 md:pb-44"
+                    >
+                      <div className="flex flex-col">
+                        {musics.map((music, idx) => {
+                          const isActive = currentSong?.uuid === music.uuid;
+                          const isFirst = idx === 0;
+                          const isLast = idx === musics.length - 1;
+                          const separatorPlacement =
+                            musics.length <= 1
+                              ? "bottom"
+                              : isFirst
+                                ? "none"
+                                : isLast
+                                  ? "topBottom"
+                                  : "top";
+                          return (
+                            <div key={music.uuid} data-music-uuid={music.uuid}>
+                              <SongCard
+                                title={music.title}
+                                artist={music.artist ?? ""}
+                                imageUrl={music.image ?? null}
+                                backgroundOpacity={0.4}
+                                fullWidth={true}
+                                showPlayButton={true}
+                                isActive={isActive}
+                                separatorPlacement={separatorPlacement}
+                                separatorColor={album.color}
+                                onCardClick={() => handleSelectSong(music, false)}
+                                onPlay={() => handleSelectSong(music, true)}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div ref={sentinelRef} className="h-10" />
+                    </div>
+                  )}
+
+                  {/* 편지 버전 */}
+                  {viewMode === "letter" && (
+                    <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-6 md:px-4 pt-4 pb-28">
+                      <div className="flex flex-col gap-8">
+                        {musics.map((music) => (
+                          <SongLetterItem
+                            key={music.uuid}
+                            music={music}
+                            todayLabel={todayLabel}
+                            tapeColor={album.color}
+                            enabled={viewMode === "letter"}
+                          />
+                        ))}
+                        <div ref={sentinelRef} className="h-10" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 하단 페이드: 플레이어바 위 빈 공간 완화 */}
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white/95 to-transparent" />
                 </div>
               </div>
-
-              {/* 플레이어 버전 */}
-              {viewMode === "player" && (
-                <div
-                  ref={playerListRef}
-                  className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-4 pt-4 pb-20"
-                >
-                  <div className="flex flex-col -mx-4">
-                    {musics.map((music) => {
-                      const isActive = currentSong?.uuid === music.uuid;
-                      return (
-                        <div key={music.uuid} data-music-uuid={music.uuid}>
-                          <SongCard
-                            title={music.title}
-                            artist={music.artist ?? ""}
-                            imageUrl={music.image ?? null}
-                            backgroundOpacity={0.4}
-                            fullWidth={true}
-                            showPlayButton={true}
-                            isActive={isActive}
-                            onCardClick={() => handleSelectSong(music, false)}
-                            onPlay={() => handleSelectSong(music, true)}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div ref={sentinelRef} className="h-10" />
-                </div>
-              )}
-
-              {/* 편지 버전 */}
-              {viewMode === "letter" && (
-                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-8 md:px-0 pt-4 pb-20">
-                  <div className="flex flex-col gap-8">
-                    {musics.map((music) => (
-                      <SongLetterItem
-                        key={music.uuid}
-                        music={music}
-                        todayLabel={todayLabel}
-                        tapeColor={album.color}
-                        enabled={viewMode === "letter"}
-                      />
-                    ))}
-                    <div ref={sentinelRef} className="h-10" />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -406,6 +638,7 @@ export default function AlbumDetailContent() {
           onPrevious={handlePrevious}
           onNext={handleNext}
           expandTrigger={expandTrigger}
+          autoPlayTrigger={autoPlayTrigger}
         />
       )}
     </div>
