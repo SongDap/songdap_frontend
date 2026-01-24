@@ -32,7 +32,7 @@ export default function MusicPlayer({
   expandTrigger,
 }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true); // 항상 익스팬드 상태로 시작
+  const [isExpanded, setIsExpanded] = useState(false); // 기본은 하단 바(확장뷰는 명시적으로 열 때만)
   const [isClosing, setIsClosing] = useState(false); // 애니메이션 중인지 여부
   const [isOpening, setIsOpening] = useState(false); // 열리는 애니메이션 중인지 여부
   const prevTitleRef = useRef<string>("");

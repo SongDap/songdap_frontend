@@ -8,6 +8,7 @@ type SongCardProps = {
   artist: string;
   imageUrl?: string | null;
   onEdit?: () => void;
+  onCardClick?: () => void; // 카드 전체 클릭
   onPlay?: () => void;
   backgroundOpacity?: number; // 배경 투명도 (기본값: 0.85)
   fullWidth?: boolean; // 전체 너비 사용 여부 (기본값: false)
@@ -15,7 +16,18 @@ type SongCardProps = {
   isActive?: boolean; // 선택된 노래인지 여부 (기본값: false)
 };
 
-export default function SongCard({ title, artist, imageUrl, onEdit, onPlay, backgroundOpacity = 0.85, fullWidth = false, showPlayButton = false, isActive = false }: SongCardProps) {
+export default function SongCard({
+  title,
+  artist,
+  imageUrl,
+  onEdit,
+  onCardClick,
+  onPlay,
+  backgroundOpacity = 0.85,
+  fullWidth = false,
+  showPlayButton = false,
+  isActive = false,
+}: SongCardProps) {
   const handleEdit = () => {
     if (onEdit) {
       onEdit();
@@ -29,10 +41,10 @@ export default function SongCard({ title, artist, imageUrl, onEdit, onPlay, back
   };
 
   const handleCardClick = () => {
-    // 노래 카드를 클릭하면 항상 익스팬드뷰 열기
-    if (onPlay) {
-      onPlay();
-    }
+    // 기본: 카드 클릭은 선택(하단 바 변경)만
+    // (onCardClick 미지정인 기존 사용처는 하위 호환으로 onPlay 실행)
+    if (onCardClick) return onCardClick();
+    if (onPlay) return onPlay();
   };
 
   const cardContent = (
