@@ -19,6 +19,7 @@ type MusicPlayerProps = {
   onPrevious?: () => void; // 이전곡
   onNext?: () => void; // 다음곡
   expandTrigger?: number; // 익스팬드뷰를 강제로 열기 위한 트리거
+  autoPlayTrigger?: number; // 특정 액션(카드 재생 버튼 등)으로 자동재생 트리거
 };
 
 export default function MusicPlayer({ 
@@ -35,6 +36,7 @@ export default function MusicPlayer({
   onPrevious,
   onNext,
   expandTrigger,
+  autoPlayTrigger,
 }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // 기본은 하단 바(확장뷰는 명시적으로 열 때만)
@@ -46,6 +48,7 @@ export default function MusicPlayer({
   const noticeTimerRef = useRef<number | null>(null);
   const prevSongKeyRef = useRef<string>("");
   const prevExpandTriggerRef = useRef<number | undefined>(undefined);
+  const prevAutoPlayTriggerRef = useRef<number | undefined>(undefined);
 
   // 곡이 변경되면 상태 리셋 (익스팬드뷰는 expandTrigger로만 제어)
   // NOTE: useEffect로 두면 "다음 곡 → 즉시 재생 클릭" 타이밍에서
@@ -65,6 +68,39 @@ export default function MusicPlayer({
     }
     prevSongKeyRef.current = songKey;
   }, [title, artist, videoId]);
+
+  // 카드의 "재생" 버튼 등에서 확장뷰를 열면서 자동 재생까지 이어주기 위한 트리거
+  // NOTE: songKey 리셋(useLayoutEffect) 이후에 동작해야 하므로, 같은 useLayoutEffect 체인에서 뒤에 둠.
+  useLayoutEffect(() => {
+    if (hideUI) {
+      prevAutoPlayTriggerRef.current = autoPlayTrigger;
+      return;
+    }
+
+    // 최초 마운트에서는 트리거를 소비하지 않음
+    if (prevAutoPlayTriggerRef.current === undefined) {
+      prevAutoPlayTriggerRef.current = autoPlayTrigger;
+      return;
+    }
+
+    if (
+      autoPlayTrigger !== undefined &&
+      autoPlayTrigger !== prevAutoPlayTriggerRef.current
+    ) {
+      // 유튜브 videoId가 없으면 자동 재생 불가 → 안내만 표시
+      if (!videoId || videoId.trim().length === 0) {
+        setPlaybackNotice("유튜브 링크가 없어요.");
+        if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
+        noticeTimerRef.current = window.setTimeout(() => setPlaybackNotice(null), 2500);
+      } else {
+        setIsPlaying(true);
+      }
+      prevAutoPlayTriggerRef.current = autoPlayTrigger;
+      return;
+    }
+
+    prevAutoPlayTriggerRef.current = autoPlayTrigger;
+  }, [autoPlayTrigger, videoId, hideUI]);
 
   useEffect(() => {
     return () => {

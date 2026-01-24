@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from "react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { HiLockClosed } from "react-icons/hi";
@@ -14,6 +15,7 @@ type PageHeaderProps = {
   isPublic?: boolean; // 비공개일 때 자물쇠 아이콘 표시
   showBackButton?: boolean; // 뒤로가기 버튼 표시 여부 (기본값: true)
   backHref?: string; // 뒤로가기 시 이동할 경로(정렬/페이지 유지용)
+  rightAction?: ReactNode; // 헤더 우측 액션(예: 앨범 정보 버튼)
 };
 
 export default function PageHeader({
@@ -24,6 +26,7 @@ export default function PageHeader({
   isPublic,
   showBackButton = true,
   backHref,
+  rightAction,
 }: PageHeaderProps) {
   const router = useRouter();
   const { user } = useOauthStore();
@@ -119,6 +122,13 @@ export default function PageHeader({
             )}
             <span className="truncate">{title}</span>
           </h1>
+
+          {/* 오른쪽 액션(상세 페이지 등에서 사용) */}
+          {rightAction && showBackButton && (
+            <div className="flex items-center gap-2 ml-auto">
+              {rightAction}
+            </div>
+          )}
 
           {/* 오른쪽 헤더 메뉴 (데스크탑용) */}
           {!showBackButton && (

@@ -14,6 +14,9 @@ type SongCardProps = {
   fullWidth?: boolean; // 전체 너비 사용 여부 (기본값: false)
   showPlayButton?: boolean; // 재생 버튼 표시 여부 (기본값: false)
   isActive?: boolean; // 선택된 노래인지 여부 (기본값: false)
+  showBorder?: boolean; // 테두리 표시 여부 (기본값: true)
+  separatorPlacement?: "none" | "all" | "top" | "bottom" | "topBottom"; // 구분선 위치 (기본값: "all")
+  separatorColor?: string; // 구분선 색상(예: 앨범 커버 색상)
 };
 
 export default function SongCard({
@@ -27,6 +30,9 @@ export default function SongCard({
   fullWidth = false,
   showPlayButton = false,
   isActive = false,
+  showBorder = true,
+  separatorPlacement = "all",
+  separatorColor,
 }: SongCardProps) {
   const handleEdit = () => {
     if (onEdit) {
@@ -47,6 +53,21 @@ export default function SongCard({
     if (onPlay) return onPlay();
   };
 
+  const toRgbaIfHex = (color: string, alpha: number) => {
+    // #RRGGBB만 처리
+    if (!/^#([0-9a-fA-F]{6})$/.test(color)) return color;
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  const effectivePlacement: "none" | "all" | "top" | "bottom" | "topBottom" =
+    showBorder ? separatorPlacement : "none";
+  const effectiveColor = separatorColor
+    ? toRgbaIfHex(separatorColor, 0.35)
+    : "rgba(0, 111, 255, 0.15)";
+
   const cardContent = (
     <div 
       className={`group relative min-h-[72px] px-4 py-3 flex items-center gap-4 transition-all duration-200 hover:shadow-md hover:bg-white/90 cursor-pointer ${
@@ -54,7 +75,18 @@ export default function SongCard({
       }`}
       style={{
         background: `rgba(255, 255, 255, ${backgroundOpacity})`,
-        border: '1px solid rgba(0, 111, 255, 0.15)',
+        border:
+          effectivePlacement === "all"
+            ? `1px solid ${effectiveColor}`
+            : "1px solid transparent",
+        borderTop:
+          effectivePlacement === "top" || effectivePlacement === "topBottom"
+            ? `1px solid ${effectiveColor}`
+            : "1px solid transparent",
+        borderBottom:
+          effectivePlacement === "bottom" || effectivePlacement === "topBottom"
+            ? `1px solid ${effectiveColor}`
+            : "1px solid transparent",
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
       }}
       onClick={handleCardClick}
