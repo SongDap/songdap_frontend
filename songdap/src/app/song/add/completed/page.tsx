@@ -9,6 +9,8 @@ import { useTempDataStore } from "@/shared/store/tempDataStore";
 import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { HiLockClosed } from "react-icons/hi";
+import { getAlbum } from "@/features/album/api";
+import type { AlbumResponse } from "@/features/album/api";
 
 type SongData = {
   title: string;
@@ -32,7 +34,46 @@ function SongAddCompletedContent() {
   
   const [songData, setSongData] = useState<SongData | null>(null);
   const [messageData, setMessageData] = useState<MessageData | null>(null);
-  const [album, setAlbum] = useState(SAMPLE_ALBUMS.find(a => a.uuid === albumId) || SAMPLE_ALBUMS[0]);
+  const [album, setAlbum] = useState<AlbumResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // albumId가 있으면 앨범 정보 조회
+  useEffect(() => {
+    if (albumId) {
+      setIsLoading(true);
+      getAlbum(albumId)
+        .then((albumData) => {
+          setAlbum(albumData);
+        })
+        .catch((error) => {
+          console.error("[Song Completed] 앨범 정보 조회 실패:", error);
+          // 에러 발생 시 기본값 사용
+          setAlbum({
+            uuid: albumId,
+            title: "앨범",
+            description: "",
+            isPublic: true,
+            musicCount: 0,
+            musicCountLimit: 10,
+            color: "#929292",
+          });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      // albumId가 없으면 샘플 데이터 사용
+      setAlbum({
+        uuid: "",
+        title: SAMPLE_ALBUMS[0].title,
+        description: SAMPLE_ALBUMS[0].description || "",
+        isPublic: SAMPLE_ALBUMS[0].isPublic,
+        musicCount: SAMPLE_ALBUMS[0].musicCount,
+        musicCountLimit: SAMPLE_ALBUMS[0].musicCountLimit,
+        color: SAMPLE_ALBUMS[0].color,
+      });
+    }
+  }, [albumId]);
 
   useEffect(() => {
     // 임시 데이터 저장소에서 노래 데이터 가져오기
@@ -60,12 +101,15 @@ function SongAddCompletedContent() {
     router.push("/album/create");
   };
 
-  if (!songData || !messageData) {
+  if (isLoading || !album || !songData || !messageData) {
     return (
       <>
         <Header />
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-700">데이터를 불러오는 중...</p>
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
+            <p className="text-sm text-gray-600">로딩 중...</p>
+          </div>
         </div>
       </>
     );
@@ -88,23 +132,23 @@ function SongAddCompletedContent() {
               <div className="w-[140px] h-[140px] md:w-[180px] md:h-[180px] relative flex-shrink-0">
                 {/* 모바일 버전 */}
                 <div className="md:hidden">
-                  <AlbumCover
-                    size={coverSizeMobile}
-                    backgroundColorHex={album.color}
-                    imageUrl={album.imageUrl}
-                    lpSize={lpSizeMobile}
-                    className="w-full h-full"
-                  />
+                    <AlbumCover
+                      size={coverSizeMobile}
+                      backgroundColorHex={album.color}
+                      imageUrl={undefined}
+                      lpSize={lpSizeMobile}
+                      className="w-full h-full"
+                    />
                 </div>
                 {/* PC 버전 */}
                 <div className="hidden md:block">
-                  <AlbumCover
-                    size={coverSizePC}
-                    backgroundColorHex={album.color}
-                    imageUrl={album.imageUrl}
-                    lpSize={lpSizePC}
-                    className="w-full h-full"
-                  />
+                    <AlbumCover
+                      size={coverSizePC}
+                      backgroundColorHex={album.color}
+                      imageUrl={undefined}
+                      lpSize={lpSizePC}
+                      className="w-full h-full"
+                    />
                 </div>
 
                 {/* 오른쪽 위 자물쇠 아이콘 + 곡 개수 */}

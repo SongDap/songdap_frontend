@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 type SongLetterProps = {
@@ -26,8 +26,46 @@ export default function SongLetter({
 }: SongLetterProps) {
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isArtistExpanded, setIsArtistExpanded] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // 편지 카드 가로폭 기준 반응형(모바일) 크기
+  const [uiScale, setUiScale] = useState(() => ({
+    imageSize: 96, // px
+    titleSize: 20, // px
+    artistSize: 16, // px
+    gap: 16, // px
+  }));
 
   const MAX_LENGTH = 20; // 말줄임표 표시 기준 길이
+
+  // 편지 카드의 실제 가로폭을 기준으로 이미지/텍스트 크기 계산
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof window === "undefined") return;
+
+    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(v, max));
+
+    const update = (width: number) => {
+      // width: padding 포함한 카드 폭
+      const imageSize = Math.round(clamp(width * 0.22, 56, 96));
+      const titleSize = clamp(width * 0.048, 18, 22);
+      const artistSize = clamp(width * 0.036, 13, 16);
+      const gap = Math.round(clamp(width * 0.04, 12, 16));
+      setUiScale({ imageSize, titleSize, artistSize, gap });
+    };
+
+    // 초기 1회
+    update(el.getBoundingClientRect().width);
+
+    const ro = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      update(entry.contentRect.width);
+    });
+    ro.observe(el);
+
+    return () => ro.disconnect();
+  }, []);
 
   // 테두리 색상 (앨범 커버 색상, 30% 투명도)
   const getBorderColor = () => {
@@ -51,6 +89,7 @@ export default function SongLetter({
 
   return (
     <div 
+      ref={containerRef}
       className={`rounded-lg shadow-lg p-6 w-full relative ${className}`}
       style={{
         backgroundColor: 'white',
@@ -85,15 +124,18 @@ export default function SongLetter({
       )}
       {/* 노래 이미지와 정보 */}
       {(imageUrl || title || artist) && (
-        <div className="mb-4 flex items-center gap-4">
+        <div className="mb-4 flex items-center" style={{ gap: `${uiScale.gap}px` }}>
           {/* 노래 이미지 */}
           {imageUrl && (
-            <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+            <div
+              className="relative rounded-lg overflow-hidden flex-shrink-0"
+              style={{ width: `${uiScale.imageSize}px`, height: `${uiScale.imageSize}px` }}
+            >
               <Image
                 src={imageUrl}
                 alt={title || "노래 이미지"}
-                width={96}
-                height={96}
+                width={uiScale.imageSize}
+                height={uiScale.imageSize}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -107,14 +149,15 @@ export default function SongLetter({
                 {title.length > MAX_LENGTH ? (
                   <h3 
                     onClick={() => setIsTitleExpanded(!isTitleExpanded)}
-                    className={`text-xl font-bold text-gray-900 cursor-pointer hover:opacity-80 transition-opacity ${
+                    className={`font-bold text-gray-900 cursor-pointer hover:opacity-80 transition-opacity ${
                       !isTitleExpanded ? 'truncate' : ''
                     }`}
+                    style={{ fontSize: `${uiScale.titleSize}px`, lineHeight: 1.2 }}
                   >
                     {isTitleExpanded ? title : `${title.substring(0, MAX_LENGTH)}...`}
                   </h3>
                 ) : (
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="font-bold text-gray-900" style={{ fontSize: `${uiScale.titleSize}px`, lineHeight: 1.2 }}>
                     {title}
                   </h3>
                 )}
@@ -127,14 +170,15 @@ export default function SongLetter({
                 {artist.length > MAX_LENGTH ? (
                   <p 
                     onClick={() => setIsArtistExpanded(!isArtistExpanded)}
-                    className={`text-base text-gray-600 cursor-pointer hover:opacity-80 transition-opacity ${
+                    className={`text-gray-600 cursor-pointer hover:opacity-80 transition-opacity ${
                       !isArtistExpanded ? 'truncate' : ''
                     }`}
+                    style={{ fontSize: `${uiScale.artistSize}px`, lineHeight: 1.3 }}
                   >
                     {isArtistExpanded ? artist : `${artist.substring(0, MAX_LENGTH)}...`}
                   </p>
                 ) : (
-                  <p className="text-base text-gray-600">
+                  <p className="text-gray-600" style={{ fontSize: `${uiScale.artistSize}px`, lineHeight: 1.3 }}>
                     {artist}
                   </p>
                 )}

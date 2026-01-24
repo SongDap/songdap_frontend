@@ -333,3 +333,78 @@ export async function deleteAlbum(albumUuid: string): Promise<void> {
     throw error;
   }
 }
+
+// ============================================================================
+// 노래(Music) 관련 타입 및 API
+// ============================================================================
+
+/**
+ * 노래 추가 요청 타입
+ */
+export interface AddMusicRequest {
+  title: string;
+  artist: string;
+  imageUrl?: string;
+  message?: string;
+  nickname?: string;
+}
+
+/**
+ * 노래 추가 응답 타입
+ */
+export interface MusicResponse {
+  uuid: string;
+  title: string;
+  artist: string;
+  imageUrl?: string;
+  message?: string;
+  nickname?: string;
+}
+
+/**
+ * 노래 추가 API
+ * 
+ * @param albumUuid 앨범 UUID
+ * @param data 노래 추가 데이터
+ * @returns 추가된 노래 정보
+ * 
+ * @throws {AxiosError} API 호출 실패 시
+ */
+export async function addMusicToAlbum(
+  albumUuid: string,
+  data: AddMusicRequest
+): Promise<MusicResponse> {
+  const endpoint = API_ENDPOINTS.ALBUM.ADD_MUSIC(albumUuid);
+
+  try {
+    const response = await apiClient.post<ApiResponse<MusicResponse>>(endpoint, data);
+    
+    // 응답 구조: { code, message, data: { uuid, title, ... } }
+    const musicData = extractDataFromResponse<MusicResponse>(response.data);
+    
+    if (!musicData || !('uuid' in musicData)) {
+      // 레거시 호환: 바로 노래 데이터 구조
+      if (response.data && typeof response.data === 'object' && 'uuid' in response.data) {
+        return response.data as MusicResponse;
+      }
+      throw new Error("노래 추가 응답 구조를 파싱할 수 없습니다.");
+    }
+    
+    console.log("[Album API] 노래 추가 성공:", {
+      albumUuid,
+      musicUuid: musicData.uuid,
+      title: musicData.title,
+    });
+    
+    return musicData;
+  } catch (error: any) {
+    console.error("[Album API] 노래 추가 실패:", {
+      albumUuid,
+      url: endpoint,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+    throw error;
+  }
+}

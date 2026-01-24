@@ -23,11 +23,11 @@ export default function BottomConfirmModal({
     <>
       {/* 백드롭 */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+        className="fixed inset-0 bg-black bg-opacity-50 z-[90] md:hidden"
         onClick={onCancel}
       />
       {/* 모달 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 z-50 md:hidden animate-slide-up">
+      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 z-[100] md:hidden animate-slide-up">
         <div className="mb-6">
           <p className="text-base text-gray-900 text-center">{message}</p>
         </div>

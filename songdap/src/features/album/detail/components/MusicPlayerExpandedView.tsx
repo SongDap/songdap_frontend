@@ -84,14 +84,20 @@ export default function MusicPlayerExpandedView({
       
       const screenHeight = window.innerHeight;
       const screenWidth = window.innerWidth;
+      const isDesktop = screenWidth >= 768;
+
+      const iconMax = isDesktop ? 52 : ICON_MAX_SIZE;
+      const smallMax = isDesktop ? 10 : SPACING_SMALL_MAX;
+      const mediumMax = isDesktop ? 16 : SPACING_MEDIUM_MAX;
+      const largeMax = isDesktop ? 28 : SPACING_LARGE_MAX;
       
       setLpSize(Math.min(screenWidth * LP_SIZE_RATIO, LP_MAX_SIZE));
-      setIconSize(Math.max(ICON_MIN_SIZE, Math.min(screenWidth * ICON_SIZE_RATIO, ICON_MAX_SIZE)));
+      setIconSize(Math.max(ICON_MIN_SIZE, Math.min(screenWidth * ICON_SIZE_RATIO, iconMax)));
       setTitleSize(Math.max(TITLE_MIN_SIZE, Math.min(screenHeight * TITLE_SIZE_RATIO, TITLE_MAX_SIZE)));
       setSpacing({
-        small: Math.max(SPACING_SMALL_MIN, Math.min(screenHeight * SPACING_SMALL_RATIO, SPACING_SMALL_MAX)),
-        medium: Math.max(SPACING_MEDIUM_MIN, Math.min(screenHeight * SPACING_MEDIUM_RATIO, SPACING_MEDIUM_MAX)),
-        large: Math.max(SPACING_LARGE_MIN, Math.min(screenHeight * SPACING_LARGE_RATIO, SPACING_LARGE_MAX)),
+        small: Math.max(SPACING_SMALL_MIN, Math.min(screenHeight * SPACING_SMALL_RATIO, smallMax)),
+        medium: Math.max(SPACING_MEDIUM_MIN, Math.min(screenHeight * SPACING_MEDIUM_RATIO, mediumMax)),
+        large: Math.max(SPACING_LARGE_MIN, Math.min(screenHeight * SPACING_LARGE_RATIO, largeMax)),
       });
     };
 
@@ -154,7 +160,7 @@ export default function MusicPlayerExpandedView({
     <>
       {/* 위쪽 콘텐츠 부분 (슬라이드 애니메이션 적용) */}
       <div 
-        className={`fixed top-0 left-0 right-0 md:hidden flex flex-col ${isClosing ? 'animate-slide-content-down' : 'animate-slide-content-up'}`}
+        className={`fixed top-0 left-0 right-0 flex flex-col ${isClosing ? 'animate-slide-content-down' : 'animate-slide-content-up'} md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2`}
         style={{
           background: backgroundColor || 'white',
           zIndex: 50,
@@ -174,39 +180,12 @@ export default function MusicPlayerExpandedView({
           <HiChevronDown className="w-6 h-6 text-gray-700" />
         </button>
 
-        <div 
-          className={`flex-1 flex flex-col items-center overflow-hidden ${!message ? 'justify-center' : ''}`}
+        <div
+          className="flex-1 min-h-0 flex flex-col items-center overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-        {/* LP 이미지, 제목, 아티스트 (고정) */}
+        {/* 제목/아티스트/LP (고정) */}
         <div className="flex-shrink-0 flex flex-col items-center w-full" style={{ paddingTop: `${spacing.large}px`, paddingBottom: `${spacing.medium}px` }}>
-          {/* 날짜 */}
-          <p 
-            className="text-white text-center font-bold" 
-            style={{ fontSize: DATE_FONT_SIZE, marginBottom: `${spacing.small}px` }}
-          >
-            {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-          
-          {/* 닉네임 */}
-          {nickname && (
-            <p 
-              className="text-white text-center font-bold" 
-              style={{ fontSize: NICKNAME_FONT_SIZE, marginBottom: `${spacing.medium}px` }}
-            >
-              From. {nickname}
-            </p>
-          )}
-          
-          {/* LP 이미지 */}
-          <div style={{ marginBottom: `${spacing.medium}px` }}>
-            <LP 
-              size={lpSize} 
-              imageUrl={imageUrl}
-              className={isPlaying ? 'animate-lp-rotate' : ''}
-            />
-          </div>
-
           {/* 노래 제목 */}
           <div 
             ref={titleContainerRef}
@@ -232,7 +211,7 @@ export default function MusicPlayerExpandedView({
             className="relative overflow-hidden"
             style={{ 
               width: TEXT_CONTAINER_WIDTH,
-              marginBottom: `${spacing.small}px`, 
+              marginBottom: `${spacing.medium}px`, 
             }}
           >
             <p 
@@ -244,43 +223,84 @@ export default function MusicPlayerExpandedView({
               {renderMarqueeText(artist, artistOverflow, "아티스트")}
             </p>
           </div>
+
+          {/* LP 이미지 */}
+          <div style={{ marginBottom: `${spacing.medium}px` }}>
+            <LP 
+              size={lpSize} 
+              imageUrl={imageUrl}
+              className={isPlaying ? 'animate-lp-rotate' : ''}
+            />
+          </div>
         </div>
 
-        {/* 메시지 (스크롤 가능) */}
-        {message && (
-          <div 
-            className="flex-1 w-full max-w-2xl overflow-y-auto min-h-0 px-4 scrollbar-hide mx-auto"
-            style={{ 
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              marginTop: `-${spacing.small}px`,
-            } as React.CSSProperties & { scrollbarWidth?: string; msOverflowStyle?: string }}
-          >
-            <div className="rounded-lg" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)', padding: `${spacing.medium}px ${spacing.large}px` }}>
-              {nickname && (
-                <p 
-                  className="text-gray-900 text-center flex items-center justify-center gap-1.5" 
-                  style={{ fontSize: MESSAGE_HEADER_FONT_SIZE, marginBottom: `${spacing.medium}px` }}
-                >
-                  <HiMail className="w-4 h-4" />
-                  <span>{nickname}님이 보낸 메시지</span>
-                </p>
-              )}
-              <p 
-                className="text-gray-700 leading-relaxed text-center whitespace-pre-line" 
-                style={{ fontSize: MESSAGE_BODY_FONT_SIZE }}
+        {/* 날짜/닉네임/메시지: 한 덩어리로 같이 스크롤 */}
+        <div
+          className="flex-1 w-full overflow-y-auto min-h-0 px-4 scrollbar-hide mx-auto"
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            marginTop: `-${spacing.small}px`,
+          } as React.CSSProperties & { scrollbarWidth?: string; msOverflowStyle?: string }}
+        >
+          <div className="w-full flex flex-col items-center">
+            {/* 날짜 */}
+            <p
+              className="text-white text-center font-bold"
+              style={{ fontSize: DATE_FONT_SIZE, marginBottom: `${spacing.small}px` }}
+            >
+              {new Date().toLocaleDateString("ko-KR", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+
+            {/* 닉네임 */}
+            {nickname && (
+              <p
+                className="text-white text-center font-bold"
+                style={{ fontSize: NICKNAME_FONT_SIZE, marginBottom: `${spacing.medium}px` }}
               >
-                {message}
+                From. {nickname}
               </p>
-            </div>
+            )}
+
+            {/* 메시지 */}
+            {message && (
+              <div
+                className="rounded-lg w-full"
+                style={{
+                  backgroundColor: "rgba(255, 255, 255, 0.5)",
+                  padding: `${spacing.medium}px ${spacing.large}px`,
+                  maxWidth: "42rem",
+                }}
+              >
+                {nickname && (
+                  <p
+                    className="text-gray-900 text-center flex items-center justify-center gap-1.5"
+                    style={{ fontSize: MESSAGE_HEADER_FONT_SIZE, marginBottom: `${spacing.medium}px` }}
+                  >
+                    <HiMail className="w-4 h-4" />
+                    <span>{nickname}님이 보낸 메시지</span>
+                  </p>
+                )}
+                <p
+                  className="text-gray-700 leading-relaxed text-center whitespace-pre-line"
+                  style={{ fontSize: MESSAGE_BODY_FONT_SIZE }}
+                >
+                  {message}
+                </p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
         </div>
       </div>
 
       {/* 하단 컨트롤 버튼 (고정 위치, 뮤직플레이어바와 같은 위치) */}
       <div 
-        className="fixed bottom-0 left-0 right-0 w-full max-w-lg mx-auto px-6 flex items-center justify-between md:hidden"
+        className="fixed bottom-0 left-0 right-0 w-full px-6 flex items-center justify-between md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2"
         style={{ 
           paddingTop: `${spacing.medium}px`, 
           paddingBottom: `${spacing.large}px`,
