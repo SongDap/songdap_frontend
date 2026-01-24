@@ -5,6 +5,9 @@ import { HiLink } from "react-icons/hi";
 import { ROUTES } from "@/shared/lib/routes";
 import { useAlbumData } from "./useAlbumData";
 import AlbumInfoDisplay, { type AlbumData } from "./AlbumInfoDisplay";
+import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
+import { shareKakaoText } from "@/shared/lib/kakaoShare";
+import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 
 type AlbumInfoContentProps = {
   albumData?: AlbumData | null;
@@ -15,23 +18,51 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
   const router = useRouter();
   const { albumData, albumColor, todayDate, isLoading } = useAlbumData(initialAlbumData);
   const [isLinkCopied, setIsLinkCopied] = useState<boolean>(false);
+  const user = useOauthStore((s) => s.user);
 
   const handleLinkCopy = () => {
-    const currentUrl = window.location.href;
-    navigator.clipboard.writeText(currentUrl).then(() => {
+    if (!albumData?.uuid) return;
+
+    const songAddUrl = buildSongAddUrlFromAlbumInfo({
+      id: albumData.uuid,
+      title: albumData.title,
+      color: albumColor,
+      description: albumData.description || "",
+      musicCount: albumData.musicCount ?? 0,
+      musicCountLimit: albumData.musicCountLimit,
+      createdAt: albumData.createdAt || "",
+      isPublic: albumData.isPublic,
+    });
+
+    navigator.clipboard.writeText(songAddUrl).then(() => {
       setIsLinkCopied(true);
       setTimeout(() => setIsLinkCopied(false), 2000);
     });
   };
 
-  const handleKakaoShare = () => {
-    if (!albumData) return;
-    // TODO: 카카오톡 공유 API 연동
-    const shareUrl = window.location.href;
-    const shareText = albumData.title;
-    // 카카오톡 공유 URL 생성 (웹 링크 공유)
-    const kakaoShareUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_id=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-    window.open(kakaoShareUrl, "_blank", "width=400,height=600");
+  const handleKakaoShare = async () => {
+    if (!albumData?.uuid) return;
+    const shareUrl = buildSongAddUrlFromAlbumInfo({
+      id: albumData.uuid,
+      title: albumData.title,
+      color: albumColor,
+      description: albumData.description || "",
+      musicCount: albumData.musicCount ?? 0,
+      musicCountLimit: albumData.musicCountLimit,
+      createdAt: albumData.createdAt || "",
+      isPublic: albumData.isPublic,
+    });
+    try {
+      const nickname = user?.nickname ?? "누군가";
+      await shareKakaoText({
+        text: `【${albumData.title}】\n"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
+        url: shareUrl,
+        buttonTitle: "노래 추가하기",
+      });
+    } catch (err) {
+      console.error("카카오 공유 실패:", err);
+      alert("카카오 공유에 실패했어요. 링크 복사로 다시 시도해 주세요.");
+    }
   };
 
   // 로딩 중일 때

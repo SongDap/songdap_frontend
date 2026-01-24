@@ -13,15 +13,25 @@ type PageHeaderProps = {
   hideTextOnMobile?: boolean; // 모바일에서 텍스트 숨김, 아이콘만 표시
   isPublic?: boolean; // 비공개일 때 자물쇠 아이콘 표시
   showBackButton?: boolean; // 뒤로가기 버튼 표시 여부 (기본값: true)
+  backHref?: string; // 뒤로가기 시 이동할 경로(정렬/페이지 유지용)
 };
 
-export default function PageHeader({ title, backButtonText = "내 앨범", backgroundColor, hideTextOnMobile, isPublic, showBackButton = true }: PageHeaderProps) {
+export default function PageHeader({
+  title,
+  backButtonText = "내 앨범",
+  backgroundColor,
+  hideTextOnMobile,
+  isPublic,
+  showBackButton = true,
+  backHref,
+}: PageHeaderProps) {
   const router = useRouter();
   const { user } = useOauthStore();
   const [showModal, setShowModal] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const resolvedBackHref = backHref || ROUTES.ALBUM.LIST;
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -46,14 +56,14 @@ export default function PageHeader({ title, backButtonText = "내 앨범", backg
       setShowModal(true);
     } else {
       if (window.confirm("모든 작업을 취소하고 내 앨범으로 돌아가겠습니까?")) {
-        router.push(ROUTES.ALBUM.LIST);
+        router.push(resolvedBackHref);
       }
     }
   };
 
   const handleConfirm = () => {
     setShowModal(false);
-    router.push(ROUTES.ALBUM.LIST);
+    router.push(resolvedBackHref);
   };
 
   const handleCancel = () => {

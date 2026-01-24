@@ -5,6 +5,9 @@ import { HiLink } from "react-icons/hi";
 import { ROUTES } from "@/shared/lib/routes";
 import { useAlbumData } from "./useAlbumData";
 import AlbumInfoDisplay, { type AlbumData } from "./AlbumInfoDisplay";
+import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
+import { shareKakaoText } from "@/shared/lib/kakaoShare";
+import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 
 type AlbumShareContentProps = {
   albumData?: AlbumData | null;
@@ -15,24 +18,21 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
   const router = useRouter();
   const { albumData, albumColor, todayDate } = useAlbumData(initialAlbumData, { shouldRemoveAfterLoad: true });
   const [isLinkCopied, setIsLinkCopied] = useState<boolean>(false);
+  const user = useOauthStore((s) => s.user);
 
   const handleLinkCopy = () => {
     if (!albumData?.uuid) return;
-    
-    // 앨범 정보를 JSON으로 만들고 Base64로 인코딩 (UTF-8 지원)
-    const albumInfo = {
+
+    const songAddUrl = buildSongAddUrlFromAlbumInfo({
       id: albumData.uuid,
       title: albumData.title,
       color: albumColor,
       description: albumData.description || "",
-    };
-    // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
-    const jsonString = JSON.stringify(albumInfo);
-    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
-    
-    // 노래 추가 페이지 URL 생성 (앨범 정보 포함)
-    const baseUrl = window.location.origin;
-    const songAddUrl = `${baseUrl}/song/add?albumId=${albumData.uuid}&albumData=${encodeURIComponent(encodedData)}`;
+      musicCount: albumData.musicCount ?? 0,
+      musicCountLimit: albumData.musicCountLimit,
+      createdAt: albumData.createdAt || "",
+      isPublic: albumData.isPublic,
+    });
     
     navigator.clipboard.writeText(songAddUrl).then(() => {
       setIsLinkCopied(true);
@@ -40,27 +40,30 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
     });
   };
 
-  const handleKakaoShare = () => {
+  const handleKakaoShare = async () => {
     if (!albumData?.uuid) return;
-    
-    // 앨범 정보를 JSON으로 만들고 Base64로 인코딩 (UTF-8 지원)
-    const albumInfo = {
+
+    const shareUrl = buildSongAddUrlFromAlbumInfo({
       id: albumData.uuid,
       title: albumData.title,
       color: albumColor,
       description: albumData.description || "",
-    };
-    // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
-    const jsonString = JSON.stringify(albumInfo);
-    const encodedData = btoa(unescape(encodeURIComponent(jsonString)));
-    
-    // TODO: 카카오톡 공유 API 연동
-    const baseUrl = window.location.origin;
-    const shareUrl = `${baseUrl}/song/add?albumId=${albumData.uuid}&albumData=${encodeURIComponent(encodedData)}`;
-    const shareText = albumData.title;
-    // 카카오톡 공유 URL 생성 (웹 링크 공유)
-    const kakaoShareUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_id=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-    window.open(kakaoShareUrl, "_blank", "width=400,height=600");
+      musicCount: albumData.musicCount ?? 0,
+      musicCountLimit: albumData.musicCountLimit,
+      createdAt: albumData.createdAt || "",
+      isPublic: albumData.isPublic,
+    });
+    try {
+      const nickname = user?.nickname ?? "누군가";
+      await shareKakaoText({
+        text: `【${albumData.title}】\n"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
+        url: shareUrl,
+        buttonTitle: "노래 추가하기",
+      });
+    } catch (err) {
+      console.error("카카오 공유 실패:", err);
+      alert("카카오 공유에 실패했어요. 링크 복사로 다시 시도해 주세요.");
+    }
   };
 
   if (!albumData) {

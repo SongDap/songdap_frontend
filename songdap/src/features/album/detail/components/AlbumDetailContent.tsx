@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { HiMail, HiMusicNote } from "react-icons/hi";
 
 import { getAlbum, getAlbumMusics, getMusicDetail } from "@/features/album/api";
-import type { AlbumMusicsData, AlbumResponse, MusicDetail, MusicListItem, MusicSortOption } from "@/features/album/api";
+import type { AlbumResponse, MusicListItem, MusicSortOption } from "@/features/album/api";
 import { SongCard } from "@/features/song/add/components";
 import { SongLetter } from "@/features/song/components";
 import { PageHeader } from "@/shared";
+import { makeAlbumListUrl, parseAlbumListQuery } from "@/features/album/list/lib/albumListQuery";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import MusicPlayer from "./MusicPlayer";
 
@@ -28,13 +30,45 @@ type CurrentSong = {
 const DESKTOP_FIXED_WIDTH_CLASS = "md:w-[672px] md:mx-auto";
 const DEFAULT_PAGE_SIZE = 10;
 
+function SongLetterItem({
+  music,
+  todayLabel,
+  tapeColor,
+  enabled,
+}: {
+  music: MusicListItem;
+  todayLabel: string;
+  tapeColor: string;
+  enabled: boolean;
+}) {
+  const detailQuery = useQuery({
+    queryKey: ["musicDetail", music.uuid],
+    queryFn: () => getMusicDetail(music.uuid),
+    enabled,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const detail = detailQuery.data;
+
+  return (
+    <div className="w-full">
+      <SongLetter
+        title={detail?.title ?? music.title}
+        artist={(detail?.artist ?? music.artist) ?? ""}
+        imageUrl={detail?.image ?? (music.image ?? null)}
+        message={detail?.message ?? music.message ?? undefined}
+        nickname={detail?.writer ?? music.writer}
+        date={todayLabel}
+        tapeColor={tapeColor}
+      />
+    </div>
+  );
+}
+
 export default function AlbumDetailContent() {
   const params = useParams();
   const albumUuid = (params?.id as string | undefined) ?? "";
-
-  const [album, setAlbum] = useState<AlbumResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   const [viewMode, setViewMode] = useState<ViewMode>("player");
   const [currentSong, setCurrentSong] = useState<CurrentSong | null>(null);
@@ -44,97 +78,60 @@ export default function AlbumDetailContent() {
   const playerListRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  // 앨범 데이터는 API로 가져오기 (노래 목록은 아직 미연결 → 더미 사용)
-  useEffect(() => {
-    if (!albumUuid) {
-      setAlbum(null);
-      setError("앨범 UUID가 없습니다.");
-      setIsLoading(false);
-      return;
-    }
+  const albumQuery = useQuery<AlbumResponse>({
+    queryKey: ["album", albumUuid],
+    queryFn: () => getAlbum(albumUuid),
+    enabled: Boolean(albumUuid),
+    staleTime: 1000 * 60 * 5,
+  });
+  const album = albumQuery.data ?? null;
 
-    setIsLoading(true);
-    setError(null);
-
-    getAlbum(albumUuid)
-      .then((albumData) => {
-        setAlbum(albumData);
-      })
-      .catch((err) => {
-        console.error("[Album Detail] 앨범 조회 실패:", err);
-        setAlbum(null);
-        setError("앨범을 불러오는데 실패했습니다.");
-      })
-      .finally(() => setIsLoading(false));
-  }, [albumUuid]);
-
-  // 노래 목록 API (페이지네이션 → 무한 스크롤)
   const [musicSort] = useState<MusicSortOption>("LATEST");
-  const [musics, setMusics] = useState<MusicListItem[]>([]);
-  const [musicPage, setMusicPage] = useState(0);
-  const [musicHasMore, setMusicHasMore] = useState(true);
-  const [isMusicLoading, setIsMusicLoading] = useState(false);
-
-  // 편지(상세) 캐시: musicUuid -> detail
-  const [musicDetails, setMusicDetails] = useState<Record<string, MusicDetail>>({});
-
-  const loadMusicPage = useCallback(
-    async (page: number) => {
-      if (!albumUuid) return;
-      if (isMusicLoading) return;
-      if (!musicHasMore && page !== 0) return;
-
-      setIsMusicLoading(true);
-      try {
-        const res: AlbumMusicsData = await getAlbumMusics(albumUuid, {
-          sort: musicSort,
-          page,
-          size: DEFAULT_PAGE_SIZE,
-        });
-
-        const content = res.items?.content ?? [];
-        setMusics((prev) => (page === 0 ? content : [...prev, ...content]));
-        setMusicPage(res.items?.number ?? page);
-        setMusicHasMore(!res.items?.last && content.length > 0);
-      } finally {
-        setIsMusicLoading(false);
-      }
+  const musicsQuery = useInfiniteQuery({
+    queryKey: ["albumMusics", albumUuid, musicSort],
+    enabled: Boolean(albumUuid),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      getAlbumMusics(albumUuid, {
+        sort: musicSort,
+        page: Number(pageParam) || 0,
+        size: DEFAULT_PAGE_SIZE,
+      }),
+    getNextPageParam: (lastPage) => {
+      const content = lastPage.items?.content ?? [];
+      if (!content.length) return undefined;
+      if (lastPage.items?.last) return undefined;
+      const next = (lastPage.items?.number ?? 0) + 1;
+      return next;
     },
-    [albumUuid, isMusicLoading, musicHasMore, musicSort]
-  );
+    staleTime: 1000 * 30,
+  });
 
-  // 앨범 변경 시 목록 초기화 + 첫 페이지 로드
-  useEffect(() => {
-    setMusics([]);
-    setMusicPage(0);
-    setMusicHasMore(true);
-    setMusicDetails({});
-    if (albumUuid) {
-      void loadMusicPage(0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [albumUuid, musicSort]);
+  const musics = useMemo(() => {
+    const pages = musicsQuery.data?.pages ?? [];
+    return pages.flatMap((p) => p.items?.content ?? []);
+  }, [musicsQuery.data]);
 
   // 무한 스크롤: 스크롤 컨테이너 안의 sentinel이 보이면 다음 페이지
   useEffect(() => {
     const container = playerListRef.current;
     const sentinel = sentinelRef.current;
     if (!container || !sentinel) return;
-    if (!musicHasMore) return;
+    if (!musicsQuery.hasNextPage) return;
 
     const io = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
         if (!first?.isIntersecting) return;
-        if (isMusicLoading) return;
-        void loadMusicPage(musicPage + 1);
+        if (musicsQuery.isFetchingNextPage) return;
+        void musicsQuery.fetchNextPage();
       },
       { root: container, rootMargin: "200px", threshold: 0 }
     );
 
     io.observe(sentinel);
     return () => io.disconnect();
-  }, [musicHasMore, isMusicLoading, loadMusicPage, musicPage]);
+  }, [musicsQuery.hasNextPage, musicsQuery.isFetchingNextPage, musicsQuery.fetchNextPage]);
 
   const todayLabel = useMemo(
     () =>
@@ -254,43 +251,7 @@ export default function AlbumDetailContent() {
     return () => cancelAnimationFrame(raf);
   }, [viewMode, currentSong?.uuid]);
 
-  // 편지 탭에서 노래 상세(메시지) 필요한 것만 추가 로드 (캐시)
-  useEffect(() => {
-    if (viewMode !== "letter") return;
-    if (musics.length === 0) return;
-
-    let cancelled = false;
-
-    const run = async () => {
-      const targets = musics
-        .map((m) => m.uuid)
-        .filter((uuid) => !musicDetails[uuid]);
-
-      // 너무 많이 한 번에 안 쏘도록 5개씩
-      const CHUNK = 5;
-      for (let i = 0; i < targets.length; i += CHUNK) {
-        if (cancelled) return;
-        const slice = targets.slice(i, i + CHUNK);
-        const results = await Promise.allSettled(slice.map((uuid) => getMusicDetail(uuid)));
-        if (cancelled) return;
-
-        setMusicDetails((prev) => {
-          const next = { ...prev };
-          results.forEach((r) => {
-            if (r.status === "fulfilled") next[r.value.uuid] = r.value;
-          });
-          return next;
-        });
-      }
-    };
-
-    void run();
-    return () => {
-      cancelled = true;
-    };
-  }, [viewMode, musics, musicDetails]);
-
-  if (isLoading) {
+  if (albumQuery.isLoading) {
     return (
       <>
         <PageHeader title="로딩 중..." />
@@ -306,11 +267,16 @@ export default function AlbumDetailContent() {
       <>
         <PageHeader title="앨범을 찾을 수 없습니다" />
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-700">{error || "앨범을 찾을 수 없습니다."}</p>
+          <p className="text-gray-700">
+            {albumQuery.isError ? "앨범을 불러오는데 실패했습니다." : "앨범을 찾을 수 없습니다."}
+          </p>
         </div>
       </>
     );
   }
+
+  // 리스트에서 넘어온 정렬/페이지를 유지해서 되돌아갈 수 있도록 backHref 구성
+  const backHref = makeAlbumListUrl(parseAlbumListQuery(searchParams));
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -323,6 +289,7 @@ export default function AlbumDetailContent() {
           hideTextOnMobile={true}
           isPublic={album.isPublic}
           showBackButton={true}
+          backHref={backHref}
         />
       </div>
 
@@ -406,22 +373,15 @@ export default function AlbumDetailContent() {
               {viewMode === "letter" && (
                 <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-8 md:px-0 pt-4 pb-20">
                   <div className="flex flex-col gap-8">
-                    {musics.map((music) => {
-                      const detail = musicDetails[music.uuid];
-                      return (
-                      <div key={music.uuid} className="w-full">
-                        <SongLetter
-                          title={detail?.title ?? music.title}
-                          artist={(detail?.artist ?? music.artist) ?? ""}
-                          imageUrl={detail?.image ?? (music.image ?? null)}
-                          message={detail?.message ?? music.message ?? undefined}
-                          nickname={detail?.writer ?? music.writer}
-                          date={todayLabel}
-                          tapeColor={album.color}
-                        />
-                      </div>
-                      );
-                    })}
+                    {musics.map((music) => (
+                      <SongLetterItem
+                        key={music.uuid}
+                        music={music}
+                        todayLabel={todayLabel}
+                        tapeColor={album.color}
+                        enabled={viewMode === "letter"}
+                      />
+                    ))}
                     <div ref={sentinelRef} className="h-10" />
                   </div>
                 </div>
