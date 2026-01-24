@@ -15,6 +15,10 @@ export default function YouTubeModal({
 }: YouTubeModalProps) {
   if (!isOpen) return null;
 
+  const embedUrl = videoId
+    ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`
+    : null;
+
   return (
     <>
       {/* 백드롭 */}
@@ -25,7 +29,7 @@ export default function YouTubeModal({
       {/* 모달 */}
       <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4">
         <div 
-          className="w-full h-1/2 md:h-1/2 md:max-w-lg bg-white md:rounded-lg overflow-hidden shadow-2xl"
+          className="w-full h-[70vh] md:h-[75vh] md:max-w-4xl bg-white md:rounded-lg overflow-hidden shadow-2xl flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}
@@ -41,9 +45,25 @@ export default function YouTubeModal({
             </button>
           </div>
 
-          {/* 빈 컨텐츠 영역 */}
-          <div className="p-8 min-h-[200px] flex items-center justify-center">
-            {/* 나중에 유튜브 영상이 여기에 들어갈 예정 */}
+          {/* 컨텐츠 */}
+          <div className="w-full flex-1">
+            {embedUrl ? (
+              <iframe
+                className="w-full h-full"
+                src={embedUrl}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            ) : (
+              <div className="p-8 min-h-[200px] flex items-center justify-center">
+                <p className="text-gray-700 text-center">
+                  유튜브 URL을 찾지 못했어요.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

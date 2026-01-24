@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 
 type SongLetterProps = {
   nickname?: string;
@@ -37,6 +36,10 @@ export default function SongLetter({
   }));
 
   const MAX_LENGTH = 20; // 말줄임표 표시 기준 길이
+  const resolvedImageUrl =
+    typeof imageUrl === "string" && imageUrl.trim().length > 0
+      ? imageUrl.trim()
+      : "https://placehold.co/256x256";
 
   // 편지 카드의 실제 가로폭을 기준으로 이미지/텍스트 크기 계산
   useEffect(() => {
@@ -126,20 +129,17 @@ export default function SongLetter({
       {(imageUrl || title || artist) && (
         <div className="mb-4 flex items-center" style={{ gap: `${uiScale.gap}px` }}>
           {/* 노래 이미지 */}
-          {imageUrl && (
-            <div
-              className="relative rounded-lg overflow-hidden flex-shrink-0"
+          <div
+            className="relative rounded-lg overflow-hidden flex-shrink-0"
+            style={{ width: `${uiScale.imageSize}px`, height: `${uiScale.imageSize}px` }}
+          >
+            <img
+              src={resolvedImageUrl}
+              alt={title || "노래 이미지"}
+              className="w-full h-full object-cover"
               style={{ width: `${uiScale.imageSize}px`, height: `${uiScale.imageSize}px` }}
-            >
-              <Image
-                src={imageUrl}
-                alt={title || "노래 이미지"}
-                width={uiScale.imageSize}
-                height={uiScale.imageSize}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
+            />
+          </div>
           
           {/* 노래 제목과 아티스트 */}
           <div className="flex-1 min-w-0">
