@@ -6,34 +6,70 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { updateMe } from "@/shared/api";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import * as gtag from "@/lib/gtag";
 
 export function SignupForm() {
     const {
         nickname,
+        email,
+        profileImageDataUrl,
+        setProfileImage,
         agreeAll,
         agreeAge,
         agreeTerms,
         setNickname,
+        setEmail,
         toggleAll,
         toggleAge,
         toggleTerms,
         isValid,
+        isEmailOk,
     } = useSignupForm();
     const router = useRouter();
     const loginFunction = useOauthStore((s) => s.login);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const handleProfileUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleProfileFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            alert("이미지 파일만 업로드할 수 있습니다.");
+            e.target.value = "";
+            setProfileImage(null);
+            return;
+        }
+
+        const maxSizeMb = 10;
+        if (file.size > maxSizeMb * 1024 * 1024) {
+            alert(`이미지 용량은 ${maxSizeMb}MB 이하만 가능합니다.`);
+            e.target.value = "";
+            setProfileImage(null);
+            return;
+        }
+
+        setProfileImage(file);
+    };
 
     async function handleSubmit() {
         if (!isValid || isSubmitting) return;
         setIsSubmitting(true);
         try {
-            const me = await updateMe({
-                nickname,
+            const payload = {
+                nickname: nickname.trim(),
+                email: email.trim() || undefined,
+                profileImage: profileImageDataUrl || undefined,
                 agreeAge,
                 agreeTerms,
-            });
+            } as any;
+
+            const me = await updateMe(payload);
 
             gtag.event({
                 action: "sign_up",       // GA4 표준 회원가입 이벤트 이름
@@ -58,7 +94,7 @@ export function SignupForm() {
             {/* 로고 영역 */}
             <div className="flex flex-col items-center gap-3 mb-8">
                 <Link href="/">
-                    <Image src="/images/logo.png" alt="logo" width={300} height={200} />
+                    <Image src="/images/logo.png" alt="logo" width={200} height={100} />
                 </Link>
             </div>
 
@@ -71,10 +107,37 @@ export function SignupForm() {
                 </p>
             </div>
 
+            <div className="relative w-40 h-40">
+                {/* 사람 기본 이미지 */}
+                <Image
+                    src={profileImageDataUrl || "/images/profile_img.png"} // 사람 아이콘
+                    alt="profile"
+                    fill
+                    className="object-cover rounded-full"
+                    unoptimized={Boolean(profileImageDataUrl)}
+                />
+
+                {/* 프로필 업로드 버튼 */}
+                <button
+                    type="button"
+                    onClick={handleProfileUploadClick}
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-3 bg-blue-500 text-white text-sm font-semibold rounded-full whitespace-nowrap shadow-md hover:bg-blue-600"
+                >
+                    프로필 업로드
+                </button>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleProfileFileChange}
+                />
+            </div>
+
             <div className="w-full bg-white">
                 {/* 닉네임 */}
                 <div className="mb-6">
-                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    <label className="block text-sm font-semibold text-gray-800 mb-2" style={{ fontFamily: "KOTRA_HOPE" }}>
                         닉네임(필수)
                     </label>
                     <div className="relative">
@@ -83,11 +146,30 @@ export function SignupForm() {
                             onChange={(e) => setNickname(e.target.value)}
                             maxLength={16}
                             placeholder="프로듀서님의 이름을 알려주세요"
-                            className="w-full h-14 rounded-lg border border-gray-300 px-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
+                            className="w-full h-14 rounded-lg border border-gray-300 px-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#006FFF]" style={{ fontFamily: "KOTRA_HOPE" }}
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                             {nickname.length} / 16
                         </span>
+                    </div>
+                    <br />
+                    <label className="block text-sm font-semibold text-gray-800 mb-2" style={{ fontFamily: "KOTRA_HOPE" }}>
+                        이메일(선택)
+                    </label>
+                    <div className="relative">
+                        <input
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            maxLength={254}
+                            placeholder="이메일을 알려주시면 수록곡 정보를 보내드려요~"
+                            type="email"
+                            className="w-full h-14 rounded-lg border border-gray-300 px-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
+                        />
+                        {!isEmailOk && (
+                            <p className="mt-2 text-sm text-red-600">
+                                올바른 이메일 형식을 입력해주세요.
+                            </p>
+                        )}
                     </div>
                 </div>
 
