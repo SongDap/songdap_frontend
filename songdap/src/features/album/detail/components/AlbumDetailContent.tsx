@@ -464,7 +464,7 @@ export default function AlbumDetailContent() {
               className={`w-full flex-1 min-h-0 overflow-hidden flex flex-col ${DESKTOP_FIXED_WIDTH_CLASS}`}
             >
               {/* 보드(패널) - 편지/노래카드 공통 컨테이너 */}
-              <div className="flex-1 min-h-0 px-0 pb-4">
+              <div className="flex-1 min-h-0 px-0 pb-0">
                 <div className="relative h-full rounded-3xl bg-white/90 backdrop-blur-md border border-white/60 overflow-hidden flex flex-col">
                   {/* 상단 헤더: 탭(플레이어/편지) + 정렬 필터 (같은 Y축) */}
                   <div className="flex items-center justify-center px-4 pt-3 pb-2 flex-shrink-0">
@@ -561,36 +561,44 @@ export default function AlbumDetailContent() {
                       className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-0 pt-0 pb-40 md:pb-44"
                     >
                       <div className="flex flex-col">
-                        {musics.map((music, idx) => {
-                          const isActive = currentSong?.uuid === music.uuid;
-                          const isFirst = idx === 0;
-                          const isLast = idx === musics.length - 1;
-                          const separatorPlacement =
-                            musics.length <= 1
-                              ? "bottom"
-                              : isFirst
-                                ? "none"
-                                : isLast
-                                  ? "topBottom"
-                                  : "top";
-                          return (
-                            <div key={music.uuid} data-music-uuid={music.uuid}>
-                              <SongCard
-                                title={music.title}
-                                artist={music.artist ?? ""}
-                                imageUrl={music.image ?? null}
-                                backgroundOpacity={0.4}
-                                fullWidth={true}
-                                showPlayButton={true}
-                                isActive={isActive}
-                                separatorPlacement={separatorPlacement}
-                                separatorColor={album.color}
-                                onCardClick={() => handleSelectSong(music, false)}
-                                onPlay={() => handleSelectSong(music, true)}
-                              />
-                            </div>
-                          );
-                        })}
+                        {!musicsQuery.isLoading && musics.length === 0 ? (
+                          <div className="py-16 px-6 text-center text-gray-600">
+                            추가된 노래가 없습니다.
+                          </div>
+                        ) : (
+                          <>
+                            {musics.map((music, idx) => {
+                              const isActive = currentSong?.uuid === music.uuid;
+                              const isFirst = idx === 0;
+                              const isLast = idx === musics.length - 1;
+                              const separatorPlacement =
+                                musics.length <= 1
+                                  ? "bottom"
+                                  : isFirst
+                                    ? "none"
+                                    : isLast
+                                      ? "topBottom"
+                                      : "top";
+                              return (
+                                <div key={music.uuid} data-music-uuid={music.uuid}>
+                                  <SongCard
+                                    title={music.title}
+                                    artist={music.artist ?? ""}
+                                    imageUrl={music.image ?? null}
+                                    backgroundOpacity={0.4}
+                                    fullWidth={true}
+                                    showPlayButton={true}
+                                    isActive={isActive}
+                                    separatorPlacement={separatorPlacement}
+                                    separatorColor={album.color}
+                                    onCardClick={() => handleSelectSong(music, false)}
+                                    onPlay={() => handleSelectSong(music, true)}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </>
+                        )}
                       </div>
                       <div ref={sentinelRef} className="h-10" />
                     </div>
@@ -600,15 +608,23 @@ export default function AlbumDetailContent() {
                   {viewMode === "letter" && (
                     <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-6 md:px-4 pt-4 pb-28">
                       <div className="flex flex-col gap-8">
-                        {musics.map((music) => (
-                          <SongLetterItem
-                            key={music.uuid}
-                            music={music}
-                            todayLabel={todayLabel}
-                            tapeColor={album.color}
-                            enabled={viewMode === "letter"}
-                          />
-                        ))}
+                        {!musicsQuery.isLoading && musics.length === 0 ? (
+                          <div className="py-16 px-6 text-center text-gray-600">
+                            추가된 노래가 없습니다.
+                          </div>
+                        ) : (
+                          <>
+                            {musics.map((music) => (
+                              <SongLetterItem
+                                key={music.uuid}
+                                music={music}
+                                todayLabel={todayLabel}
+                                tapeColor={album.color}
+                                enabled={viewMode === "letter"}
+                              />
+                            ))}
+                          </>
+                        )}
                         <div ref={sentinelRef} className="h-10" />
                       </div>
                     </div>
