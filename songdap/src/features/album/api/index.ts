@@ -106,6 +106,60 @@ export interface PageResponse<T> {
  */
 export type AlbumSortOption = "LATEST" | "OLDEST" | "TITLE" | "POPULAR";
 
+/**
+ * 앨범 내 노래 목록 정렬 옵션
+ */
+export type MusicSortOption = "LATEST" | "OLDEST" | "TITLE" | "ARTIST";
+
+/**
+ * 앨범 노래 목록 아이템(목록 조회용)
+ * 백엔드 응답 스펙에 맞춰 필요한 필드만 사용
+ */
+export interface MusicListItem {
+  uuid: string;
+  title: string;
+  artist?: string | null;
+  url: string;
+  writer: string;
+  message?: string | null;
+  image?: string | null;
+  createdAt?: string;
+}
+
+export interface AlbumMusicsFlag {
+  canDelete: boolean;
+  owner: boolean;
+}
+
+export interface AlbumMusicsData {
+  flag: AlbumMusicsFlag;
+  items: PageResponse<MusicListItem>;
+}
+
+/**
+ * 노래 상세(편지/확장뷰 등에서 사용) - music 객체
+ */
+export interface MusicDetail {
+  uuid: string;
+  title: string;
+  artist?: string | null;
+  url: string;
+  writer: string;
+  message?: string | null;
+  image?: string | null;
+  createdAt?: string;
+}
+
+export interface MusicDetailFlag {
+  canDelete: boolean;
+  owner: boolean;
+}
+
+export interface MusicDetailData {
+  musics: MusicDetail;
+  flag: MusicDetailFlag;
+}
+
 // ============================================================================
 // 유틸리티 함수
 // ============================================================================
@@ -252,6 +306,80 @@ export async function getAlbum(albumUuid: string): Promise<AlbumResponse> {
 }
 
 /**
+ * 앨범 노래 목록 조회 API (페이지네이션)
+ *
+ * GET /api/v1/albums/{albumUuid}/musics?sort=&page=&size=
+ */
+export async function getAlbumMusics(
+  albumUuid: string,
+  params?: { sort?: MusicSortOption; page?: number; size?: number }
+): Promise<AlbumMusicsData> {
+  const endpoint = API_ENDPOINTS.ALBUM.ADD_MUSIC(albumUuid);
+
+  try {
+    const response = await apiClient.get<any>(endpoint, {
+      params: {
+        sort: params?.sort ?? "LATEST",
+        page: params?.page ?? 0,
+        size: params?.size ?? 10,
+      },
+    });
+
+    const data = extractDataFromResponse<AlbumMusicsData>(response.data);
+    if (data?.items && Array.isArray(data.items.content)) {
+      return data;
+    }
+
+    // 레거시/호환: data.items 없이 PageResponse만 내려주는 경우
+    const fallback = extractDataFromResponse<any>(response.data);
+    if (fallback && fallback.content) {
+      return {
+        flag: { canDelete: false, owner: false },
+        items: fallback as PageResponse<MusicListItem>,
+      };
+    }
+
+    throw new Error("노래 목록 응답 구조를 파싱할 수 없습니다. (data.items/content 없음)");
+  } catch (error: any) {
+    console.error("[Album API] 노래 목록 조회 실패:", {
+      albumUuid,
+      url: endpoint,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+    throw error;
+  }
+}
+
+/**
+ * 노래 상세 조회 API
+ *
+ * GET /api/v1/musics/{musicUuid}
+ */
+export async function getMusicDetail(musicUuid: string): Promise<MusicDetail> {
+  const endpoint = API_ENDPOINTS.MUSIC.DETAIL(musicUuid);
+
+  try {
+    const response = await apiClient.get<any>(endpoint);
+    const data = extractDataFromResponse<MusicDetailData>(response.data);
+    if (!data?.musics?.uuid) {
+      throw new Error("노래 상세 응답 구조를 파싱할 수 없습니다.");
+    }
+    return data.musics;
+  } catch (error: any) {
+    console.error("[Album API] 노래 상세 조회 실패:", {
+      musicUuid,
+      url: endpoint,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+    throw error;
+  }
+}
+
+/**
  * 앨범 목록 조회 API
  * 
  * @param sort 정렬 옵션 (LATEST, OLDEST, TITLE, POPULAR)
@@ -384,8 +512,15 @@ export async function addMusicToAlbum(
     
     if (!musicData || !('uuid' in musicData)) {
       // 레거시 호환: 바로 노래 데이터 구조
-      if (response.data && typeof response.data === 'object' && 'uuid' in response.data) {
-        return response.data as MusicResponse;
+      const legacy = response.data as any;
+      if (
+        legacy &&
+        typeof legacy === "object" &&
+        "uuid" in legacy &&
+        "title" in legacy &&
+        "artist" in legacy
+      ) {
+        return legacy as MusicResponse;
       }
       throw new Error("노래 추가 응답 구조를 파싱할 수 없습니다.");
     }

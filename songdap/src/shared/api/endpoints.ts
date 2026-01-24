@@ -20,4 +20,9 @@ export const API_ENDPOINTS = {
     DETAIL: (albumUuid: string) => `/api/v1/albums/${albumUuid}`,
     ADD_MUSIC: (albumUuid: string) => `/api/v1/albums/${albumUuid}/musics`,
   },
+
+  // 노래(뮤직)
+  MUSIC: {
+    DETAIL: (musicUuid: string) => `/api/v1/musics/${musicUuid}`,
+  },
 } as const;
