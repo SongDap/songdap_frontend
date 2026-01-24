@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@types/gtag.js": "^0.0.20"
+  }
+}

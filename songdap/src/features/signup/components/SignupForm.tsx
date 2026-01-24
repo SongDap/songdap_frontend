@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { updateMe } from "@/shared/api";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { useState } from "react";
+import * as gtag from "@/lib/gtag";
 
 export function SignupForm() {
     const {
@@ -33,6 +34,14 @@ export function SignupForm() {
                 agreeAge,
                 agreeTerms,
             });
+
+            gtag.event({
+                action: "sign_up",       // GA4 표준 회원가입 이벤트 이름
+                category: "account",
+                label: "onboarding",     // 추가 정보 (어떤 경로로 가입했는지 등)
+                value: 1
+            });
+
             // 쿠키 기반이라 accessToken은 비워도 됨
             loginFunction({ accessToken: "", user: me });
             router.replace("/");
