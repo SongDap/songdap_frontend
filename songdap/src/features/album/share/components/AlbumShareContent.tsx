@@ -6,7 +6,7 @@ import { ROUTES } from "@/shared/lib/routes";
 import { useAlbumData } from "./useAlbumData";
 import AlbumInfoDisplay, { type AlbumData } from "./AlbumInfoDisplay";
 import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
-import { shareKakaoText } from "@/shared/lib/kakaoShare";
+import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 
 type AlbumShareContentProps = {
@@ -55,9 +55,11 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
     });
     try {
       const nickname = user?.nickname ?? "누군가";
-      await shareKakaoText({
-        text: `【${albumData.title}】\n"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
+      await shareKakaoFeed({
+        title: albumData.title,
+        description: `"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
         url: shareUrl,
+        imageUrl: `${window.location.origin}/images/logo.png`,
         buttonTitle: "노래 추가하기",
       });
     } catch (err) {

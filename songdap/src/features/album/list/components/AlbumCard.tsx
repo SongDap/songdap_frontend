@@ -6,7 +6,7 @@ import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed, HiShare, HiLink } from "react-icons/hi";
 import AlbumCardEditMode from "./AlbumCardEditMode";
 import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
-import { shareKakaoText } from "@/shared/lib/kakaoShare";
+import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 
 type AlbumCardProps = {
@@ -95,9 +95,11 @@ export default function AlbumCard({
     });
     try {
       const nickname = user?.nickname ?? "누군가";
-      await shareKakaoText({
-        text: `【${albumName}】\n"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
+      await shareKakaoFeed({
+        title: albumName,
+        description: `"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
         url: shareUrl,
+        imageUrl: `${window.location.origin}/images/logo.png`,
         buttonTitle: "노래 추가하기",
       });
     } catch (err) {
