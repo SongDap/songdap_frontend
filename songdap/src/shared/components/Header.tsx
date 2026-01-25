@@ -14,7 +14,9 @@ export default function Header() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useOauthStore();
+  const user = useOauthStore((s) => s.user);
+  const logout = useOauthStore((s) => s.logout);
+  const isAuthenticated = useOauthStore((s) => s.isAuthenticated);
 
   const navItems: NavItem[] = [
     { label: "서비스 소개", href: "/introduceService" },
@@ -76,26 +78,35 @@ export default function Header() {
 
         {/* PC user */}
         <div className="hidden md:flex items-center gap-2 ml-4 relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setProfileMenuOpen(!profileMenuOpen);
-            }}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <img
-              src={user?.profileImage || "https://placehold.co/36x36"}
-              alt={user?.nickname || "프로필"}
-              className="w-9 h-9 rounded-full"
-            />
-            <span className="text-base text-gray-900 max-w-[200px] truncate" title={user?.nickname || "사용자"}>
-              {user?.nickname?.slice(0, 16) || "사용자"}
-              {user?.nickname && user.nickname.length > 16 && "..."}
+          {isAuthenticated ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setProfileMenuOpen(!profileMenuOpen);
+              }}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <img
+                src={user?.profileImage || "https://placehold.co/36x36"}
+                alt={user?.nickname || "프로필"}
+                className="w-9 h-9 rounded-full"
+              />
+              <span
+                className="text-base text-gray-900 max-w-[200px] truncate"
+                title={user?.nickname || "사용자"}
+              >
+                {user?.nickname?.slice(0, 16) || "사용자"}
+                {user?.nickname && user.nickname.length > 16 && "..."}
+              </span>
+            </button>
+          ) : (
+            <span className="text-sm text-gray-700 whitespace-nowrap">
+              로그인이 필요합니다.
             </span>
-          </button>
+          )}
           
           {/* PC Profile Dropdown */}
-          {profileMenuOpen && (
+          {isAuthenticated && profileMenuOpen && (
             <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               <div className="py-2">
                 <a
@@ -155,35 +166,43 @@ export default function Header() {
           <div className="flex flex-col px-4 py-3 gap-1">
             {/* Mobile profile */}
             <div className="flex flex-col gap-2 px-3 py-2 mb-2 border-b border-gray-200 pb-2">
-              <div className="flex items-center gap-2">
-                <img
-                  src={user?.profileImage || "https://placehold.co/36x36"}
-                  alt={user?.nickname || "프로필"}
-                  className="w-8 h-8 rounded-full"
-                />
-                <span className="text-base text-gray-900 truncate" title={user?.nickname || "사용자"}>
-                  {user?.nickname?.slice(0, 16) || "사용자"}
-                  {user?.nickname && user.nickname.length > 16 && "..."}
-                </span>
-              </div>
-              <a
-                href="/profile/edit"
-                className="px-3 py-2 rounded-lg text-base text-gray-800 hover:bg-gray-100"
-                onClick={() => setOpen(false)}
-              >
-                프로필 편집
-              </a>
-              <button
-                type="button"
-                className="px-3 py-2 rounded-lg text-base !text-red-600 hover:bg-red-50 text-left"
-                onClick={() => {
-                  setOpen(false);
-                  logout();
-                  router.replace("/");
-                }}
-              >
-                로그아웃
-              </button>
+              {isAuthenticated ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={user?.profileImage || "https://placehold.co/36x36"}
+                      alt={user?.nickname || "프로필"}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <span className="text-base text-gray-900 truncate" title={user?.nickname || "사용자"}>
+                      {user?.nickname?.slice(0, 16) || "사용자"}
+                      {user?.nickname && user.nickname.length > 16 && "..."}
+                    </span>
+                  </div>
+                  <a
+                    href="/profile/edit"
+                    className="px-3 py-2 rounded-lg text-base text-gray-800 hover:bg-gray-100"
+                    onClick={() => setOpen(false)}
+                  >
+                    프로필 편집
+                  </a>
+                  <button
+                    type="button"
+                    className="px-3 py-2 rounded-lg text-base !text-red-600 hover:bg-red-50 text-left"
+                    onClick={() => {
+                      setOpen(false);
+                      logout();
+                      router.replace("/");
+                    }}
+                  >
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <div className="text-sm text-gray-700 px-1">
+                  로그인이 필요합니다.
+                </div>
+              )}
             </div>
 
             {/* Navigation */}

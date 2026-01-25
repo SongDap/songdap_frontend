@@ -2,6 +2,9 @@
 import { HiChatBubbleLeftRight } from "react-icons/hi2";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import { ROUTES } from "@/shared/lib/routes";
 
 interface Album {
   id: number;
@@ -11,6 +14,13 @@ interface Album {
 
 
 export default function LandingMain() {
+  const isAuthenticated = useOauthStore((s) => s.isAuthenticated);
+  const hydrate = useOauthStore((s) => s.hydrate);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
   // 환경변수 가져오기
   const JAVASCRIPT_KEY =
     process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY ||
@@ -96,23 +106,49 @@ export default function LandingMain() {
       </div>
 
       {/* 카카오 로그인 버튼 클릭 */}
-      <button
-        type="button"
-        onClick={handleLogin}
-        className="
-          w-full sm:w-auto
-          flex items-center justify-center gap-2
-          px-10 py-4
-          bg-[#FEE500] hover:bg-[#FEE500]
-          text-gray-900 font-semibold
-          rounded-xl
-          transition-colors
-          active:scale-95
-          shadow-lg
-        "
-      >
-        <Image src="/images/kakaoButton.png" alt="kakao Login" width={220} height={52} priority className="h-auto" />
-      </button>
+      {isAuthenticated ? (
+        <Link
+          href={ROUTES.ALBUM.LIST}
+          className="
+            w-full sm:w-auto
+            inline-flex items-center justify-center gap-2
+            px-10 py-4
+            bg-[#006FFF] hover:bg-[#0056CC]
+            text-white font-semibold
+            rounded-xl
+            transition-colors
+            active:scale-95
+            shadow-lg
+          "
+        >
+          내 앨범 보기
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={handleLogin}
+          className="
+            w-full sm:w-auto
+            flex items-center justify-center gap-2
+            px-10 py-4
+            bg-[#FEE500] hover:bg-[#FEE500]
+            text-gray-900 font-semibold
+            rounded-xl
+            transition-colors
+            active:scale-95
+            shadow-lg
+          "
+        >
+          <Image
+            src="/images/kakaoButton.png"
+            alt="kakao Login"
+            width={220}
+            height={52}
+            priority
+            className="h-auto"
+          />
+        </button>
+      )}
     </div>
 
     {/* 오른쪽 */}

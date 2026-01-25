@@ -1,4 +1,5 @@
 import { apiClient } from "@/shared/api";
+import { API_ENDPOINTS } from "@/shared/api/endpoints";
 import type { AuthResponse } from "../model/types";
 
 /**
@@ -94,4 +95,15 @@ export async function loginWithKakao(code: string): Promise<AuthResponse & { new
   }
 
   return authResponse;
+}
+
+/**
+ * 로그아웃 (서버 쿠키/Redis Refresh Token 정리)
+ * - 실패해도 프론트 상태 정리는 진행 가능하므로 에러는 호출부에서 무시 가능
+ */
+export async function logoutFromServer(): Promise<void> {
+  await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, undefined, {
+    withCredentials: true,
+    __skipAuthRefresh: true,
+  } as any);
 }
