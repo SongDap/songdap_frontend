@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { HiChevronDown, HiMail } from "react-icons/hi";
 import { FaStepBackward, FaStepForward, FaPlay, FaPause, FaList, FaYoutube } from "react-icons/fa";
-import { LP, YouTubeModal } from "@/shared/ui";
+import { LP } from "@/shared/ui";
 
 // 상수
 const MARQUEE_GAP = 80;
@@ -42,12 +42,16 @@ type MusicPlayerExpandedViewProps = {
   nickname?: string;
   backgroundColor?: string;
   isPlaying: boolean;
+  notice?: string | null;
+  videoId?: string;
+  showMiniVideo?: boolean;
   onPlayPause: (e: React.MouseEvent) => void;
   onClose: () => void;
   isClosing?: boolean; // 접히는 애니메이션 중인지 여부
   isOpening?: boolean; // 열리는 애니메이션 중인지 여부
   onPrevious?: () => void; // 이전곡
   onNext?: () => void; // 다음곡
+  onOpenYouTubeModal?: () => void; // 유튜브 모달 열기(상위에서 처리)
 };
 
 export default function MusicPlayerExpandedView({
@@ -58,12 +62,16 @@ export default function MusicPlayerExpandedView({
   nickname,
   backgroundColor,
   isPlaying,
+  notice,
+  videoId,
+  showMiniVideo,
   onPlayPause,
   onClose,
   isClosing = false,
   isOpening = false,
   onPrevious,
   onNext,
+  onOpenYouTubeModal,
 }: MusicPlayerExpandedViewProps) {
   const [lpSize, setLpSize] = useState(280);
   const [iconSize, setIconSize] = useState(48);
@@ -71,7 +79,6 @@ export default function MusicPlayerExpandedView({
   const [spacing, setSpacing] = useState({ small: 8, medium: 16, large: 32 });
   const [titleOverflow, setTitleOverflow] = useState(false);
   const [artistOverflow, setArtistOverflow] = useState(false);
-  const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const artistRef = useRef<HTMLParagraphElement>(null);
   const titleContainerRef = useRef<HTMLDivElement>(null);
@@ -90,8 +97,12 @@ export default function MusicPlayerExpandedView({
       const smallMax = isDesktop ? 10 : SPACING_SMALL_MAX;
       const mediumMax = isDesktop ? 16 : SPACING_MEDIUM_MAX;
       const largeMax = isDesktop ? 28 : SPACING_LARGE_MAX;
+      // LP 크기: 세로(화면 높이) 기준으로 반응형 + 가로/최대값으로 안전하게 캡
+      const lpMax = isDesktop ? 320 : LP_MAX_SIZE;
+      const lpByHeight = screenHeight * (isDesktop ? 0.32 : 0.34);
+      const lpByWidthCap = (isDesktop ? Math.min(screenWidth, 672) : screenWidth) * 0.8;
       
-      setLpSize(Math.min(screenWidth * LP_SIZE_RATIO, LP_MAX_SIZE));
+      setLpSize(Math.min(lpByHeight, lpByWidthCap, lpMax));
       setIconSize(Math.max(ICON_MIN_SIZE, Math.min(screenWidth * ICON_SIZE_RATIO, iconMax)));
       setTitleSize(Math.max(TITLE_MIN_SIZE, Math.min(screenHeight * TITLE_SIZE_RATIO, TITLE_MAX_SIZE)));
       setSpacing({
@@ -156,11 +167,16 @@ export default function MusicPlayerExpandedView({
   // 아이콘 컨테이너 높이 계산 (paddingTop + iconSize + paddingBottom)
   const controlContainerHeight = spacing.medium + iconSize + spacing.large;
 
+  const resolvedLpImageUrl =
+    typeof imageUrl === "string" && imageUrl.trim().length > 0
+      ? imageUrl.trim()
+      : "https://placehold.co/256x256";
+
   return (
     <>
       {/* 위쪽 콘텐츠 부분 (슬라이드 애니메이션 적용) */}
       <div 
-        className={`fixed top-0 left-0 right-0 flex flex-col ${isClosing ? 'animate-slide-content-down' : 'animate-slide-content-up'} md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2`}
+        className={`fixed top-0 left-0 right-0 flex flex-col ${isClosing ? 'animate-slide-content-down' : 'animate-slide-content-up'} md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2 md:rounded-t-3xl md:overflow-hidden`}
         style={{
           background: backgroundColor || 'white',
           zIndex: 50,
@@ -185,7 +201,14 @@ export default function MusicPlayerExpandedView({
           onClick={(e) => e.stopPropagation()}
         >
         {/* 제목/아티스트/LP (고정) */}
-        <div className="flex-shrink-0 flex flex-col items-center w-full" style={{ paddingTop: `${spacing.large}px`, paddingBottom: `${spacing.medium}px` }}>
+        <div
+          className="flex-shrink-0 flex flex-col items-center w-full"
+          style={{
+            // 상단 여백을 조금 더 줘서 내용이 아래로 내려오게
+            paddingTop: `${spacing.large + 28}px`,
+            paddingBottom: `${spacing.medium}px`,
+          }}
+        >
           {/* 노래 제목 */}
           <div 
             ref={titleContainerRef}
@@ -228,7 +251,7 @@ export default function MusicPlayerExpandedView({
           <div style={{ marginBottom: `${spacing.medium}px` }}>
             <LP 
               size={lpSize} 
-              imageUrl={imageUrl}
+              imageUrl={resolvedLpImageUrl}
               className={isPlaying ? 'animate-lp-rotate' : ''}
             />
           </div>
@@ -300,7 +323,7 @@ export default function MusicPlayerExpandedView({
 
       {/* 하단 컨트롤 버튼 (고정 위치, 뮤직플레이어바와 같은 위치) */}
       <div 
-        className="fixed bottom-0 left-0 right-0 w-full px-6 flex items-center justify-between md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2"
+        className="fixed bottom-0 left-0 right-0 px-6 flex items-center justify-between md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2"
         style={{ 
           paddingTop: `${spacing.medium}px`, 
           paddingBottom: `${spacing.large}px`,
@@ -309,16 +332,40 @@ export default function MusicPlayerExpandedView({
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* 안내 문구 */}
+        {notice && (
+          <div className="absolute -top-12 left-0 right-0 flex justify-center px-6">
+            <div className="text-white text-sm bg-black/40 px-3 py-2 rounded-full">
+              {notice}
+            </div>
+          </div>
+        )}
         {/* 유튜브 버튼 */}
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setIsYouTubeModalOpen(true);
+            onOpenYouTubeModal?.();
           }}
           className={controlButtonClassName}
           aria-label="유튜브"
         >
-          <FaYoutube className="text-white" style={iconStyle} />
+          {showMiniVideo && videoId ? (
+            <div
+              className="relative overflow-hidden rounded-lg"
+              style={iconStyle}
+              aria-hidden
+            >
+              <img
+                src={`https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`}
+                alt="유튜브 미리보기"
+                className="w-full h-full object-cover"
+                style={iconStyle}
+              />
+              <div className="absolute inset-0 bg-black/10" />
+            </div>
+          ) : (
+            <FaYoutube className="text-white" style={iconStyle} />
+          )}
         </button>
 
         {/* 이전곡 버튼 */}
@@ -370,12 +417,6 @@ export default function MusicPlayerExpandedView({
           <FaList className="text-white" style={iconStyle} />
         </button>
       </div>
-
-      {/* 유튜브 모달 */}
-      <YouTubeModal
-        isOpen={isYouTubeModalOpen}
-        onClose={() => setIsYouTubeModalOpen(false)}
-      />
     </>
   );
 }

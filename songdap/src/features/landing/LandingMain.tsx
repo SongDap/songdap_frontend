@@ -95,6 +95,7 @@ export default function LandingMain() {
         </p>
       </div>
 
+      {/* 카카오 로그인 버튼 클릭 */}
       <button
         type="button"
         onClick={handleLogin}

@@ -6,11 +6,10 @@ import { Header } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed } from "react-icons/hi";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
-import { useTempDataStore } from "@/shared/store/tempDataStore";
-import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
 import { getAlbum, addMusicToAlbum } from "@/features/album/api";
 import type { AlbumResponse } from "@/features/album/api";
+import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
 
 type AlbumInfoFromUrl = {
   id: string;
@@ -31,26 +30,15 @@ function AddSongContent() {
   const { user } = useOauthStore();
   const [album, setAlbum] = useState<AlbumResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [songData, setSongData] = useState({
-    title: "",
-    artist: "",
-    imageUrl: "",
-  });
-  const [messageData, setMessageData] = useState({
-    nickname: "",
-    message: "",
-  });
-  const [showSongCard, setShowSongCard] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const showMessageForm = useTempDataStore((state) => state.showMessageForm);
-  const songAddData = useTempDataStore((state) => state.songAddData);
-  const songMessageData = useTempDataStore((state) => state.songMessageData);
-  const setShowMessageForm = useTempDataStore((state) => state.setShowMessageForm);
+  const { draft, setSong, setMessage, setStep } = useSongAddDraft(albumId || "");
+  const songData = draft.song;
+  const messageData = draft.message;
+  const showSongCard = draft.step === "message";
   
   // URL에서 앨범 정보 가져오기
   useEffect(() => {
-    // albumId가 있으면 항상 API로 최신 정보 조회 (URL의 albumData는 초기 로딩용으로만 사용)
     if (albumId) {
       setIsLoading(true);
       
@@ -75,58 +63,38 @@ function AddSongContent() {
         }
       }
       
-      // API로 최신 정보 조회
+      // NOTE: 노래 추가는 비로그인/공유 링크 케이스가 많아
+      // 백엔드가 비공개 앨범에 대해 GET /albums/{uuid}를 403으로 막으면 여기서 계속 실패함.
+      // albumData가 있으면 그 정보로만 표시하고, 없을 때만 시도(실패하면 기본값).
+      if (albumDataParam) {
+        setIsLoading(false);
+        return;
+      }
+
       getAlbum(albumId)
         .then((albumData) => {
           setAlbum(albumData);
         })
         .catch((error) => {
-          console.error("[Song Add] 앨범 정보 조회 실패:", error);
-          // 에러 발생 시 URL 정보가 있으면 그대로 사용, 없으면 기본값
-          if (!albumDataParam) {
-            setAlbum({
-              uuid: albumId,
-              title: "앨범",
-              description: "",
-              isPublic: true,
-              musicCount: 0,
-              musicCountLimit: 10,
-              color: "#929292",
-            });
-          }
+          console.warn("[Song Add] 앨범 정보 조회 실패(공유 링크일 수 있음):", error);
+          setAlbum({
+            uuid: albumId,
+            title: "앨범",
+            description: "",
+            isPublic: true,
+            musicCount: 0,
+            musicCountLimit: 10,
+            color: "#929292",
+          });
         })
         .finally(() => {
           setIsLoading(false);
         });
     } else {
-      // albumId가 없으면 샘플 데이터 사용
-      setAlbum({
-        uuid: "",
-        title: SAMPLE_ALBUMS[0].title,
-        description: SAMPLE_ALBUMS[0].description || "",
-        isPublic: SAMPLE_ALBUMS[0].isPublic,
-        musicCount: SAMPLE_ALBUMS[0].musicCount,
-        musicCountLimit: SAMPLE_ALBUMS[0].musicCountLimit,
-        color: SAMPLE_ALBUMS[0].color,
-      });
+      setAlbum(null);
+      setIsLoading(false);
     }
   }, [albumId, albumDataParam]);
-  
-  // 취소 버튼으로 돌아왔을 때 메시지 입력 화면 표시
-  useEffect(() => {
-    if (showMessageForm) {
-      // 임시 데이터 저장소에서 노래 데이터 복원
-      if (songAddData) {
-        setSongData(songAddData);
-      }
-      if (songMessageData) {
-        setMessageData(songMessageData);
-      }
-      
-      setShowSongCard(true);
-      setShowMessageForm(false);
-    }
-  }, [showMessageForm, songAddData, songMessageData, setShowMessageForm]);
 
   // PC: 180x180, 모바일: 140x140
   const coverSizePC = 180;
@@ -134,12 +102,12 @@ function AddSongContent() {
   const lpSizePC = coverSizePC * 0.8; // 144
   const lpSizeMobile = coverSizeMobile * 0.8; // 112
 
-  const handleSongDataChange = (field: string, value: string) => {
-    setSongData((prev) => ({ ...prev, [field]: value }));
+  const handleSongDataChange = (field: "title" | "artist", value: string) => {
+    setSong({ [field]: value });
   };
 
-  const handleMessageDataChange = (field: string, value: string) => {
-    setMessageData((prev) => ({ ...prev, [field]: value }));
+  const handleMessageDataChange = (field: "nickname" | "message", value: string) => {
+    setMessage({ [field]: value });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,11 +116,22 @@ function AddSongContent() {
       // TODO: 이미지 업로드 처리
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSongData((prev) => ({ ...prev, imageUrl: reader.result as string }));
+        setSong({ imageUrl: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
   };
+
+  if (!albumId) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-sm text-gray-600">앨범 정보가 없는 링크예요.</p>
+        </div>
+      </>
+    );
+  }
 
   // 로딩 중이거나 앨범 정보가 없으면 로딩 표시
   if (isLoading || !album) {
@@ -324,7 +303,7 @@ function AddSongContent() {
                 <div className="mt-6">
                   <button
                     type="button"
-                    onClick={() => setShowSongCard(true)}
+                    onClick={() => setStep("message")}
                     className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors"
                   >
                     다음
@@ -340,7 +319,7 @@ function AddSongContent() {
                 title={songData.title}
                 artist={songData.artist}
                 imageUrl={songData.imageUrl}
-                onEdit={() => setShowSongCard(false)}
+                onEdit={() => setStep("form")}
               />
 
               {/* 닉네임 및 메시지 입력 */}
@@ -409,13 +388,11 @@ function AddSongContent() {
                           nickname: messageData.nickname,
                         });
 
-                        // 임시 데이터 저장소에 데이터 저장 (완료 페이지에서 사용)
-                        const { useTempDataStore } = require("@/shared/store/tempDataStore");
-                        useTempDataStore.getState().setSongAddData(songData);
-                        useTempDataStore.getState().setSongMessageData(messageData);
-
                         // 완료 페이지로 이동
-                        router.push(`/song/add/completed?albumId=${targetAlbumId}`);
+                        const qp = new URLSearchParams();
+                        qp.set("albumId", targetAlbumId);
+                        if (albumDataParam) qp.set("albumData", albumDataParam);
+                        router.push(`/song/add/completed?${qp.toString()}`);
                       } catch (error: any) {
                         console.error("[Song Add] 노래 추가 실패:", error);
                         alert("노래 추가에 실패했습니다. 다시 시도해주세요.");
