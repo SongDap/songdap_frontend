@@ -13,6 +13,17 @@ export async function generateStaticParams() {
 // output: 'export'에서는 동적 라우트가 제한적이므로,
 // generateStaticParams에 없는 경로는 클라이언트에서 처리하기 위해
 // 페이지를 클라이언트 컴포넌트로 래핑
-export default function AlbumDetailPage() {
+export default function AlbumDetailPage({ params }: { params: { id: string } }) {
+  // export 빌드 시 생성되는 placeholder 경로는 "빌드 타임 프리렌더"가 수행됨.
+  // 이때 클라이언트 전용 로직(React Query/axios 등)이 실행되면 빌드가 실패할 수 있으므로,
+  // placeholder는 안전한 정적 마크업만 반환.
+  if (params?.id === "placeholder") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-700">로딩 중...</p>
+      </div>
+    );
+  }
+
   return <AlbumDetailContent />;
 }
