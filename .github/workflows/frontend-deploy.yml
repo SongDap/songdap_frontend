@@ -26,7 +26,7 @@ jobs:
           REACT_APP_GOOGLE_ANALYTICS_ID: ${{ secrets.REACT_APP_GOOGLE_ANALYTICS_ID }}
           NEXT_PUBLIC_DEBUG_OAUTH: ${{ secrets.NEXT_PUBLIC_DEBUG_OAUTH }}
         run: |
-          npm ci
+          npm ci --include=optional
           npm run build
         working-directory: ./songdap
 
