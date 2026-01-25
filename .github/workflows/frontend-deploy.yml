@@ -13,8 +13,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          # lightningcss(네이티브 모듈) 호환 이슈 방지: LTS 사용 권장
-          node-version: '20'
+          node-version: '22'  # 2025년 최신 프로젝트를 위한 Node 22
 
       - name: Install dependencies & Build
         env:
