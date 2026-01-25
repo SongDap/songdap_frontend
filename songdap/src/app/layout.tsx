@@ -5,6 +5,7 @@ import Script from "next/script";
 import "./globals.css";
 import { AuthHydrator } from "@/shared";
 import ReactQueryProvider from "@/shared/providers/ReactQueryProvider";
+import AuthExpiredOverlay from "@/shared/components/AuthExpiredOverlay";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,6 +60,7 @@ export default function RootLayout({
 
         <ReactQueryProvider>
           <AuthHydrator />
+          <AuthExpiredOverlay />
           {children}
         </ReactQueryProvider>
       </body>

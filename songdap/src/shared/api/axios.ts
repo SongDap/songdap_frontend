@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { API_ENDPOINTS } from "./endpoints";
+import { showAuthExpired } from "@/features/oauth/model/authUiStore";
 
 /**
  * Axios 인스턴스 생성
@@ -27,6 +29,20 @@ export const apiClient = axios.create({
   },
 });
 
+// axios config 확장 (내부 플래그)
+declare module "axios" {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface AxiosRequestConfig {
+    _retry?: boolean;
+    __skipAuthRefresh?: boolean;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface InternalAxiosRequestConfig {
+    _retry?: boolean;
+    __skipAuthRefresh?: boolean;
+  }
+}
+
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: any) => void;
@@ -39,6 +55,11 @@ const processQueue = (error: any, token: string | null = null) => {
     else p.resolve(token);
   });
   failedQueue = [];
+};
+
+const handleAuthExpired = () => {
+  if (typeof window === "undefined") return;
+  showAuthExpired();
 };
 
 //
@@ -82,6 +103,11 @@ apiClient.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
+    // refresh/logout 요청은 재발급 로직에서 제외 (무한루프 방지)
+    if (originalRequest?.__skipAuthRefresh) {
+      return Promise.reject(error);
+    }
+
     // Access Token 만료 (401 에러)
     if (
       error.response?.status === 401 &&
@@ -104,7 +130,11 @@ apiClient.interceptors.response.use(
       try {
         // Refresh Token은 HttpOnly Cookie로 자동 전송됨
         // Access Token도 쿠키로 자동 설정됨
-        await apiClient.post('/api/v1/auth/reissue');
+        await apiClient.post(
+          API_ENDPOINTS.AUTH.REISSUE,
+          undefined,
+          { __skipAuthRefresh: true } as any
+        );
 
         // 대기 중인 요청들 재시도
         processQueue(null, null);
@@ -116,11 +146,17 @@ apiClient.interceptors.response.use(
         // Refresh Token도 만료
         processQueue(refreshError, null);
 
-        // 로그아웃 처리
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user');
-          // 로그인 페이지로 리다이렉트 (필요시)
-          
+        // 로그아웃 API 호출(최선) + 로컬 상태 정리 후 홈으로 이동
+        try {
+          await apiClient.post(
+            API_ENDPOINTS.AUTH.LOGOUT,
+            undefined,
+            { __skipAuthRefresh: true } as any
+          );
+        } catch {
+          // ignore
+        } finally {
+          handleAuthExpired();
         }
 
         return Promise.reject(refreshError);
@@ -128,6 +164,18 @@ apiClient.interceptors.response.use(
       } finally {
         isRefreshing = false;
       }
+    }
+
+    // 이미 한 번 재시도했는데도 401이면 (혹시 재발급이 반영되지 않았거나, 쿠키 삭제됨)
+    // 사용자에게 재로그인/홈 선택을 제공
+    if (error.response?.status === 401 && originalRequest?._retry) {
+      handleAuthExpired();
+    }
+
+    // 일부 API는 인증이 없을 때 403으로 내려올 수 있음(권한 없음/미인증).
+    // 이 경우에도 동일하게 재로그인/홈 선택 제공.
+    if (error.response?.status === 403) {
+      handleAuthExpired();
     }
 
     return Promise.reject(error);

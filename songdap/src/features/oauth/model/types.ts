@@ -2,7 +2,9 @@
 // 이건 백이랑 얘기해야하는 부분
 
 export interface UserInfo {
-    id: number;
+    // UI 표시(닉네임/프로필)만 필요한 화면이 많아
+    // localStorage hydrate 시에는 id가 없을 수 있음
+    id?: number;
     nickname: string;
     email?: string;
     profileImage?: string;

@@ -7,11 +7,14 @@ export const API_ENDPOINTS = {
   // 인증
   AUTH: {
     KAKAO_LOGIN: "/api/v1/auth/login/kakao",
+    REISSUE: "/api/v1/auth/reissue",
+    LOGOUT: "/api/v1/auth/logout",
   },
 
   // 사용자
   USER: {
     ME: "/api/v1/users/me",
+    WITHDRAW: "/api/v1/users",
   },
 
   // 앨범
