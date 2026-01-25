@@ -13,11 +13,17 @@ export async function generateStaticParams() {
 // output: 'export'에서는 동적 라우트가 제한적이므로,
 // generateStaticParams에 없는 경로는 클라이언트에서 처리하기 위해
 // 페이지를 클라이언트 컴포넌트로 래핑
-export default async function AlbumDetailPage({ params }: { params: { id: string } }) {
+export default async function AlbumDetailPage({
+  params,
+}: {
+  // Next.js 버전에 따라 params가 Promise로 전달될 수 있음 (sync dynamic APIs)
+  params: { id: string } | Promise<{ id: string }>;
+}) {
+  const resolvedParams = await params;
   // export 빌드 시 생성되는 placeholder 경로는 "빌드 타임 프리렌더"가 수행됨.
   // 이때 클라이언트 전용 로직(React Query/axios 등)이 실행되면 빌드가 실패할 수 있으므로,
   // placeholder는 안전한 정적 마크업만 반환.
-  if (params?.id === "placeholder") {
+  if (resolvedParams?.id === "placeholder") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-700">로딩 중...잘못된 페이지입니다.</p>
