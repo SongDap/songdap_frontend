@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
@@ -18,9 +19,10 @@ export default function Header() {
   const logout = useOauthStore((s) => s.logout);
   const isAuthenticated = useOauthStore((s) => s.isAuthenticated);
 
+  // NOTE: 로그인 상태가 아닐 때는 "내 앨범" 메뉴를 navItems에 포함하지 않음
   const navItems: NavItem[] = [
     { label: "서비스 소개", href: "/introduceService" },
-    { label: "내 앨범", href: "/album/list" },
+    ...(isAuthenticated ? [{ label: "내 앨범", href: "/album/list" }] : []),
   ];
 
   const isActive = (href: string) => {
@@ -38,20 +40,20 @@ export default function Header() {
       {/* top bar */}
       <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto relative">
         {/* Logo */}
-        <Link href = "/">
-          <img
-            src="/images/logo.png"
-            alt="logo"
-            className="h-10 md:h-16 w-auto object-contain"
-          />
+        <Link href="/">
+          <img src="/images/logo.png" alt="logo" className="h-10 md:h-16 w-auto object-contain" />
         </Link>
 
         {/* 모바일에서만 가운데 타이틀 표시 */}
         {pathname === "/album/list" && (
-          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">내 앨범</h1>
+          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">
+            내 앨범
+          </h1>
         )}
         {pathname === "/song/add" && (
-          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">노래 추가</h1>
+          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">
+            노래 추가
+          </h1>
         )}
 
         {/* PC nav */}
@@ -62,12 +64,9 @@ export default function Header() {
               <a
                 key={idx}
                 href={item.href}
-                className={`px-3 py-2 rounded-lg text-base transition
-                  ${
-                    active
-                      ? "text-white font-medium"
-                      : "text-gray-800 hover:bg-gray-100"
-                  }`}
+                className={`px-3 py-2 rounded-lg text-base transition ${
+                  active ? "text-white font-medium" : "text-gray-800 hover:bg-gray-100"
+                }`}
                 style={active ? { backgroundColor: "#006FFF" } : undefined}
               >
                 {item.label}
@@ -100,11 +99,9 @@ export default function Header() {
               </span>
             </button>
           ) : (
-            <span className="text-sm text-gray-700 whitespace-nowrap">
-              로그인이 필요합니다.
-            </span>
+            <span className="text-sm text-gray-700 whitespace-nowrap">로그인이 필요합니다.</span>
           )}
-          
+
           {/* PC Profile Dropdown */}
           {isAuthenticated && profileMenuOpen && (
             <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
@@ -143,12 +140,7 @@ export default function Header() {
             className="p-2 rounded-lg hover:bg-gray-100"
             aria-label="menu"
           >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <path
                 d="M4 7h16M4 12h16M4 17h16"
                 stroke="currentColor"
@@ -199,9 +191,7 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                <div className="text-sm text-gray-700 px-1">
-                  로그인이 필요합니다.
-                </div>
+                <div className="text-sm text-gray-700 px-1">로그인이 필요합니다.</div>
               )}
             </div>
 
@@ -213,13 +203,11 @@ export default function Header() {
                   <a
                     key={idx}
                     href={item.href}
-                    className={`px-3 py-2 rounded-lg text-base
-                      ${
-                        active
-                          ? "text-white font-medium"
-                          : "text-gray-800 hover:bg-gray-100"
-                      }`}
+                    className={`px-3 py-2 rounded-lg text-base ${
+                      active ? "text-white font-medium" : "text-gray-800 hover:bg-gray-100"
+                    }`}
                     style={active ? { backgroundColor: "#006FFF" } : undefined}
+                    onClick={() => setOpen(false)}
                   >
                     {item.label}
                   </a>
