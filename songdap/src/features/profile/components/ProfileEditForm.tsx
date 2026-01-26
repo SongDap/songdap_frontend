@@ -35,6 +35,11 @@ export default function ProfileEditForm({
     e.preventDefault();
     if (!isDirty || isSubmitting) return;
 
+    const resolvedProfileImage =
+      profileImageDataUrl.startsWith("http")
+        ? profileImageDataUrl
+        : initialProfileImage || undefined;
+
     setIsSubmitting(true);
     try {
       await onSubmit({

@@ -28,8 +28,16 @@ export async function getMe() {
 
 export type UpdateMeRequest = {
   nickname: string;
-  agreeAge: boolean;
-  agreeTerms: boolean;
+  email?: string;
+
+};
+
+export type WithdrawRequest = {
+  nickname: string;
+  email: string;  
+  profileImage?: string;
+  reasons: string[];
+  reasonDetail?: string;
 };
 
 /**
@@ -41,8 +49,8 @@ export async function updateMe(payload: UpdateMeRequest) {
   if (DEBUG_OAUTH) {
     console.log("[OAUTH][USER][API] PATCH", API_ENDPOINTS.USER.ME, {
       nicknameLength: payload.nickname?.length ?? 0,
-      agreeAge: payload.agreeAge,
-      agreeTerms: payload.agreeTerms,
+      hasEmail: Boolean(payload.email),
+
     });
   }
   const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, payload, {
