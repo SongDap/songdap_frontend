@@ -30,6 +30,7 @@ export function SignupForm() {
     const loginFunction = useOauthStore((s) => s.login);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
 
     const handleProfileUploadClick = () => {
         fileInputRef.current?.click();
@@ -43,6 +44,7 @@ export function SignupForm() {
             alert("이미지 파일만 업로드할 수 있습니다.");
             e.target.value = "";
             setProfileImage(null);
+            setProfileImageFile(null);
             return;
         }
 
@@ -51,10 +53,12 @@ export function SignupForm() {
             alert(`이미지 용량은 ${maxSizeMb}MB 이하만 가능합니다.`);
             e.target.value = "";
             setProfileImage(null);
+            setProfileImageFile(null);
             return;
         }
 
         setProfileImage(file);
+        setProfileImageFile(file);
     };
 
     async function handleSubmit() {
@@ -64,7 +68,7 @@ export function SignupForm() {
             const payload = {
                 nickname: nickname.trim(),
                 email: email.trim() || undefined,
-                profileImage: profileImageDataUrl || undefined,
+                profileImageFile: profileImageFile || undefined,
                 agreeAge,
                 agreeTerms,
             } as any;

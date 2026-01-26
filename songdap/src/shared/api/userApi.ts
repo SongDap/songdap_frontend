@@ -24,7 +24,9 @@ export async function getMe() {
 export type UpdateMeRequest = {
   nickname: string;
   email?: string;
-
+  profileImageFile?: File;
+  agreeAge?: boolean;
+  agreeTerms?: boolean;
 };
 
 export type WithdrawRequest = {
@@ -37,7 +39,7 @@ export type WithdrawRequest = {
 
 /**
  * 온보딩/회원가입: 닉네임 및 약관 동의 저장
- * (백엔드가 아직 다른 엔드포인트를 쓰면 여기만 바꾸면 됩니다)
+ * 백엔드 형식: @RequestPart("request") String requestJson, @RequestPart(value = "file", required = false) MultipartFile file
  */
 export async function updateMe(payload: UpdateMeRequest) {
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
@@ -45,10 +47,28 @@ export async function updateMe(payload: UpdateMeRequest) {
     console.log("[OAUTH][USER][API] PATCH", API_ENDPOINTS.USER.ME, {
       nicknameLength: payload.nickname?.length ?? 0,
       hasEmail: Boolean(payload.email),
-
+      hasProfileImage: Boolean(payload.profileImageFile),
     });
   }
-  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, payload, {
+
+  // 백엔드 형식에 맞게 항상 FormData 사용
+  const formData = new FormData();
+  
+  // request 파트: JSON 문자열로 변환
+  // 백엔드 UpdateUserRequest는 nickname, email만 받음
+  // agreeAge, agreeTerms는 추후 확장 가능성을 위해 타입에는 남겨두지만 전송하지 않음
+  const requestJson = JSON.stringify({
+    nickname: payload.nickname,
+    email: payload.email,
+  });
+  formData.append("request", requestJson);
+  
+  // file 파트: 프로필 이미지 파일 (있는 경우만)
+  if (payload.profileImageFile) {
+    formData.append("file", payload.profileImageFile);
+  }
+
+  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, formData, {
     withCredentials: true,
   });
   const data = extractDataFromResponse<UserInfo>(res.data);

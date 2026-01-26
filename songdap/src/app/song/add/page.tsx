@@ -32,6 +32,7 @@ function AddSongContent() {
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const { draft, setSong, setMessage, setStep } = useSongAddDraft(albumId || "");
   const songData = draft.song;
@@ -121,6 +122,9 @@ function AddSongContent() {
     const file = e.target.files?.[0];
     if (file) {
       // 미리보기용 Data URL 생성
+      // 파일 객체 저장 (FormData 전송용)
+      setImageFile(file);
+      // 미리보기용 DataURL 생성
       const reader = new FileReader();
       reader.onloadend = () => {
         setSong({ 
@@ -396,13 +400,16 @@ function AddSongContent() {
                       const targetAlbumId = album?.uuid || albumId || "";
 
                       try {
-                        // 노래 추가 API 호출
+                        // 노래 추가 API 호출 (이미지 파일이 있으면 FormData로 전송)
                         await addMusicToAlbum(targetAlbumId, {
                           title: songData.title,
                           artist: songData.artist,
                           message: messageData.message.trim() || undefined,
                           writer: messageData.writer.trim() || undefined,
                           imageFile: songData.imageFile,
+                          imageFile: imageFile || undefined,
+                          message: messageData.message,
+                          nickname: messageData.nickname,
                         });
 
                         // 완료 페이지로 이동

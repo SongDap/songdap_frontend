@@ -453,6 +453,7 @@ export async function deleteAlbum(albumUuid: string): Promise<void> {
 export interface AddMusicRequest {
   title: string;
   artist: string;
+  imageFile?: File;
   message?: string;
   writer?: string;
   imageFile?: File;
@@ -492,6 +493,29 @@ export async function addMusicToAlbum(
   try {
     // FormData 구성
     const formData = new FormData();
+    // 이미지 파일이 있으면 FormData로 전송, 없으면 JSON으로 전송
+    let requestData: FormData | AddMusicRequest;
+    let config: any = {};
+
+    if (data.imageFile) {
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("artist", data.artist);
+      formData.append("musicImage", data.imageFile);
+      if (data.message) formData.append("message", data.message);
+      if (data.nickname) formData.append("nickname", data.nickname);
+      requestData = formData;
+      // FormData 전송 시 Content-Type은 axios interceptor에서 자동 처리됨
+    } else {
+      requestData = {
+        title: data.title,
+        artist: data.artist,
+        message: data.message,
+        nickname: data.nickname,
+      };
+    }
+
+    const response = await apiClient.post<ApiResponse<MusicResponse>>(endpoint, requestData, config);
     
     // request 필드: JSON 문자열
     const requestPayload = {

@@ -13,7 +13,22 @@ export async function getProfile(): Promise<ProfileResponse> {
 }
 
 export async function updateProfile(payload: UpdateProfileRequest): Promise<ProfileResponse> {
-  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, payload, {
+  // 백엔드 형식: @RequestPart("request") String requestJson, @RequestPart(value = "file", required = false) MultipartFile file
+  const formData = new FormData();
+  
+  // request 파트: JSON 문자열로 변환
+  const requestJson = JSON.stringify({
+    nickname: payload.nickname,
+    email: payload.email,
+  });
+  formData.append("request", requestJson);
+  
+  // file 파트: 프로필 이미지 파일 (있는 경우만)
+  if (payload.profileImageFile) {
+    formData.append("file", payload.profileImageFile);
+  }
+  
+  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, formData, {
     withCredentials: true,
   });
   const data = extractDataFromResponse<ProfileResponse>(res.data);
