@@ -76,6 +76,16 @@ apiClient.interceptors.request.use(
       config.url = '/' + config.url;
     }
     
+    // FormData인 경우 Content-Type을 제거하여 브라우저가 자동으로 multipart/form-data와 boundary를 설정하도록 함
+    if (config.data instanceof FormData) {
+      // config.headers에서 Content-Type을 제거하거나 undefined로 설정
+      if (config.headers) {
+        if ('Content-Type' in config.headers) {
+          delete config.headers['Content-Type'];
+        }
+      }
+    }
+    
     // 디버그 모드에서 요청 정보 로깅
     const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
     if (DEBUG_OAUTH && typeof window !== 'undefined') {
@@ -87,6 +97,7 @@ apiClient.interceptors.request.use(
         url: config.url,
         fullURL: fullUrl,
         withCredentials: config.withCredentials,
+        isFormData: config.data instanceof FormData,
       });
     }
 

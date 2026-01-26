@@ -7,7 +7,8 @@ import Link from "next/link";
 
 type ProfileEditPayload = {
   nickname: string;
-  profileImage?: string;
+  email?: string;
+  profileImageFile?: File;
 };
 
 type ProfileEditFormProps = {
@@ -24,6 +25,9 @@ export default function ProfileEditForm({
   const {
     nickname,
     setNickname,
+    profileImageDataUrl,
+    profileImageFile,
+    setProfileImage,
     isDirty,
   } = useProfileForm({
     initialNickname,
@@ -35,17 +39,11 @@ export default function ProfileEditForm({
     e.preventDefault();
     if (!isDirty || isSubmitting) return;
 
-    const resolvedProfileImage =
-      profileImageDataUrl.startsWith("http")
-        ? profileImageDataUrl
-        : initialProfileImage || undefined;
-
     setIsSubmitting(true);
     try {
       await onSubmit({
         nickname: nickname.trim(),
-        // 백엔드 요청 바디는 URL(string)이므로, 현재는 카카오 프로필 URL을 유지
-        profileImage: initialProfileImage || undefined,
+        profileImageFile: profileImageFile || undefined,
       });
     } finally {
       setIsSubmitting(false);
@@ -55,9 +53,9 @@ export default function ProfileEditForm({
   return (
     <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-md flex-col items-center gap-8">
       <ProfileImageUploader
-        imageUrl={initialProfileImage}
-        onChange={() => {}}
-        disabled
+        imageUrl={profileImageDataUrl || initialProfileImage}
+        onChange={setProfileImage}
+        disabled={false}
       />
 
       <div className="w-full">
