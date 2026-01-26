@@ -106,17 +106,20 @@ function AddSongContent() {
     setSong({ [field]: value });
   };
 
-  const handleMessageDataChange = (field: "nickname" | "message", value: string) => {
+  const handleMessageDataChange = (field: "writer" | "message", value: string) => {
     setMessage({ [field]: value });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // TODO: 이미지 업로드 처리
+      // 미리보기용 Data URL 생성
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSong({ imageUrl: reader.result as string });
+        setSong({ 
+          imageUrl: reader.result as string,
+          imageFile: file,
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -328,12 +331,12 @@ function AddSongContent() {
                   {/* 닉네임 */}
                   <div>
                     <label className="block text-base font-medium text-gray-900 mb-2">
-                      닉네임
+                      닉네임 <span className="text-sm font-normal text-gray-500">(선택)</span>
                     </label>
                     <input
                       type="text"
-                      value={messageData.nickname}
-                      onChange={(e) => handleMessageDataChange("nickname", e.target.value)}
+                      value={messageData.writer}
+                      onChange={(e) => handleMessageDataChange("writer", e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
                       placeholder="닉네임을 입력하세요"
                     />
@@ -342,7 +345,7 @@ function AddSongContent() {
                   {/* 전하고 싶은 메시지 */}
                   <div>
                     <label className="block text-base font-medium text-gray-900 mb-2">
-                      전하고 싶은 메시지
+                      전하고 싶은 메시지 <span className="text-sm font-normal text-gray-500">(선택)</span>
                     </label>
                     <textarea
                       value={messageData.message}
@@ -370,11 +373,6 @@ function AddSongContent() {
                         return;
                       }
 
-                      if (!messageData.nickname.trim() || !messageData.message.trim()) {
-                        alert("닉네임과 메시지를 입력해주세요.");
-                        return;
-                      }
-
                       setIsSubmitting(true);
                       const targetAlbumId = album?.uuid || albumId || "";
 
@@ -383,9 +381,9 @@ function AddSongContent() {
                         await addMusicToAlbum(targetAlbumId, {
                           title: songData.title,
                           artist: songData.artist,
-                          imageUrl: songData.imageUrl || undefined,
-                          message: messageData.message,
-                          nickname: messageData.nickname,
+                          message: messageData.message.trim() || undefined,
+                          writer: messageData.writer.trim() || undefined,
+                          imageFile: songData.imageFile,
                         });
 
                         // 완료 페이지로 이동

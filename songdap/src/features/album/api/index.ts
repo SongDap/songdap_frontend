@@ -112,49 +112,59 @@ export type AlbumSortOption = "LATEST" | "OLDEST" | "TITLE" | "POPULAR";
 export type MusicSortOption = "LATEST" | "OLDEST" | "TITLE" | "ARTIST";
 
 /**
- * 앨범 노래 목록 아이템(목록 조회용)
- * 백엔드 응답 스펙에 맞춰 필요한 필드만 사용
+ * 앨범 내 노래 목록 아이템
  */
-export interface MusicListItem {
+export interface MusicInfo {
   uuid: string;
   title: string;
-  artist?: string | null;
+  artist: string;
+  message?: string | null;
   url: string;
   writer: string;
-  message?: string | null;
   image?: string | null;
-  createdAt?: string;
-}
-
-export interface AlbumMusicsFlag {
-  canDelete: boolean;
-  owner: boolean;
-}
-
-export interface AlbumMusicsData {
-  flag: AlbumMusicsFlag;
-  items: PageResponse<MusicListItem>;
 }
 
 /**
- * 노래 상세(편지/확장뷰 등에서 사용) - music 객체
+ * 노래 목록 조회 권한 정보
+ */
+export interface AlbumMusicsFlag {
+  isOwner: boolean;
+  canDelete: boolean;
+  canAdd: boolean;
+}
+
+/**
+ * 노래 목록 조회 응답 데이터
+ */
+export interface AlbumMusicsData {
+  flag: AlbumMusicsFlag;
+  items: PageResponse<MusicInfo>;
+}
+
+/**
+ * 노래 상세(편지/확장뷰 등에서 사용)
  */
 export interface MusicDetail {
   uuid: string;
   title: string;
-  artist?: string | null;
+  artist: string;
   url: string;
   writer: string;
   message?: string | null;
   image?: string | null;
-  createdAt?: string;
 }
 
+/**
+ * 노래 상세 조회 권한 정보
+ */
 export interface MusicDetailFlag {
+  isOwner: boolean;
   canDelete: boolean;
-  owner: boolean;
 }
 
+/**
+ * 노래 상세 조회 응답 데이터
+ */
 export interface MusicDetailData {
   musics: MusicDetail;
   flag: MusicDetailFlag;
@@ -306,67 +316,39 @@ export async function getAlbum(albumUuid: string): Promise<AlbumResponse> {
 }
 
 /**
- * 앨범 노래 목록 조회 API (페이지네이션)
- *
- * GET /api/v1/albums/{albumUuid}/musics?sort=&page=&size=
- */
-export async function getAlbumMusics(
-  albumUuid: string,
-  params?: { sort?: MusicSortOption; page?: number; size?: number }
-): Promise<AlbumMusicsData> {
-  const endpoint = API_ENDPOINTS.ALBUM.ADD_MUSIC(albumUuid);
-
-  try {
-    const response = await apiClient.get<any>(endpoint, {
-      params: {
-        sort: params?.sort ?? "LATEST",
-        page: params?.page ?? 0,
-        size: params?.size ?? 10,
-      },
-    });
-
-    const data = extractDataFromResponse<AlbumMusicsData>(response.data);
-    if (data?.items && Array.isArray(data.items.content)) {
-      return data;
-    }
-
-    // 레거시/호환: data.items 없이 PageResponse만 내려주는 경우
-    const fallback = extractDataFromResponse<any>(response.data);
-    if (fallback && fallback.content) {
-      return {
-        flag: { canDelete: false, owner: false },
-        items: fallback as PageResponse<MusicListItem>,
-      };
-    }
-
-    throw new Error("노래 목록 응답 구조를 파싱할 수 없습니다. (data.items/content 없음)");
-  } catch (error: any) {
-    console.error("[Album API] 노래 목록 조회 실패:", {
-      albumUuid,
-      url: endpoint,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
-    throw error;
-  }
-}
-
-/**
  * 노래 상세 조회 API
  *
  * GET /api/v1/musics/{musicUuid}
+ * 
+ * @param musicUuid 노래 UUID
+ * @returns 노래 상세 정보 및 권한 정보
+ * 
+ * @throws {AxiosError} API 호출 실패 시
  */
-export async function getMusicDetail(musicUuid: string): Promise<MusicDetail> {
+export async function getMusicDetail(musicUuid: string): Promise<MusicDetailData> {
   const endpoint = API_ENDPOINTS.MUSIC.DETAIL(musicUuid);
 
   try {
-    const response = await apiClient.get<any>(endpoint);
+    const response = await apiClient.get<ApiResponse<MusicDetailData>>(endpoint);
+    
+    // 응답 구조: { success, message, data: { musics, flag } }
     const data = extractDataFromResponse<MusicDetailData>(response.data);
-    if (!data?.musics?.uuid) {
+    
+    if (!data || !("musics" in data) || !("flag" in data)) {
       throw new Error("노래 상세 응답 구조를 파싱할 수 없습니다.");
     }
-    return data.musics;
+    
+    if (!data.musics?.uuid) {
+      throw new Error("노래 데이터를 파싱할 수 없습니다.");
+    }
+    
+    console.log("[Album API] 노래 상세 조회 성공:", {
+      musicUuid,
+      title: data.musics.title,
+      artist: data.musics.artist,
+    });
+    
+    return data;
   } catch (error: any) {
     console.error("[Album API] 노래 상세 조회 실패:", {
       musicUuid,
@@ -472,9 +454,9 @@ export async function deleteAlbum(albumUuid: string): Promise<void> {
 export interface AddMusicRequest {
   title: string;
   artist: string;
-  imageUrl?: string;
   message?: string;
-  nickname?: string;
+  writer?: string;
+  imageFile?: File;
 }
 
 /**
@@ -486,11 +468,15 @@ export interface MusicResponse {
   artist: string;
   imageUrl?: string;
   message?: string;
-  nickname?: string;
+  writer?: string;
 }
 
 /**
  * 노래 추가 API
+ * 
+ * Multipart Form Data로 전송:
+ * - request: JSON 문자열 (필수)
+ * - file: 이미지 파일 (선택)
  * 
  * @param albumUuid 앨범 UUID
  * @param data 노래 추가 데이터
@@ -505,35 +491,100 @@ export async function addMusicToAlbum(
   const endpoint = API_ENDPOINTS.ALBUM.ADD_MUSIC(albumUuid);
 
   try {
-    const response = await apiClient.post<ApiResponse<MusicResponse>>(endpoint, data);
+    // FormData 구성
+    const formData = new FormData();
     
-    // 응답 구조: { code, message, data: { uuid, title, ... } }
-    const musicData = extractDataFromResponse<MusicResponse>(response.data);
+    // request 필드: JSON 문자열
+    const requestPayload = {
+      title: data.title,
+      artist: data.artist,
+      message: data.message || null,
+      writer: data.writer || null,
+    };
+    formData.append("request", JSON.stringify(requestPayload));
     
-    if (!musicData || !('uuid' in musicData)) {
-      // 레거시 호환: 바로 노래 데이터 구조
-      const legacy = response.data as any;
-      if (
-        legacy &&
-        typeof legacy === "object" &&
-        "uuid" in legacy &&
-        "title" in legacy &&
-        "artist" in legacy
-      ) {
-        return legacy as MusicResponse;
-      }
-      throw new Error("노래 추가 응답 구조를 파싱할 수 없습니다.");
+    // file 필드: 이미지 파일 (선택)
+    if (data.imageFile) {
+      formData.append("file", data.imageFile);
     }
+    
+    // multipart/form-data로 전송
+    // Content-Type 헤더를 제거하면 Axios가 자동으로 multipart/form-data를 설정
+    const response = await apiClient.post<ApiResponse<null>>(endpoint, formData, {
+      headers: {
+        // Content-Type 헤더 제거 (Axios가 자동으로 설정하도록)
+        "Content-Type": undefined,
+      },
+    });
     
     console.log("[Album API] 노래 추가 성공:", {
       albumUuid,
-      musicUuid: musicData.uuid,
-      title: musicData.title,
+      title: data.title,
+      artist: data.artist,
+      code: response.data?.code,
+      message: response.data?.message,
     });
     
-    return musicData;
+    // 응답: { code: 200, message: "노래 등록 성공", data: null }
+    // 성공한 경우 요청 데이터를 반환
+    return {
+      uuid: "", // 백엔드에서 data가 null이므로 uuid는 빈 문자열
+      title: data.title,
+      artist: data.artist,
+      message: data.message,
+      writer: data.writer,
+    };
   } catch (error: any) {
     console.error("[Album API] 노래 추가 실패:", {
+      albumUuid,
+      url: endpoint,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+    throw error;
+  }
+}
+
+/**
+ * 노래 목록 조회 API
+ * 
+ * @param albumUuid 앨범 UUID
+ * @param page 페이지 번호 (기본값: 0)
+ * @param size 페이지 크기 (기본값: 10)
+ * @returns 노래 목록 데이터
+ * 
+ * @throws {AxiosError} API 호출 실패 시
+ */
+export async function getAlbumMusics(
+  albumUuid: string,
+  page: number = 0,
+  size: number = 10
+): Promise<AlbumMusicsData> {
+  const endpoint = API_ENDPOINTS.ALBUM.DETAIL(albumUuid) + "/musics";
+
+  try {
+    const response = await apiClient.get<ApiResponse<AlbumMusicsData>>(endpoint, {
+      params: { page, size },
+    });
+
+    // 응답 구조: { success, message, data: { flag, items } }
+    const responseData = extractDataFromResponse<AlbumMusicsData>(response.data);
+
+    if (!responseData || !("flag" in responseData) || !("items" in responseData)) {
+      throw new Error("노래 목록 응답 구조를 파싱할 수 없습니다.");
+    }
+
+    console.log("[Album API] 노래 목록 조회 성공:", {
+      albumUuid,
+      totalElements: responseData.items.totalElements,
+      numberOfElements: responseData.items.numberOfElements,
+      flag: responseData.flag,
+    });
+
+    return responseData;
+  } catch (error: any) {
+    console.error("[Album API] 노래 목록 조회 실패:", {
       albumUuid,
       url: endpoint,
       status: error.response?.status,

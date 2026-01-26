@@ -6,7 +6,7 @@ import { HiMail, HiMusicNote } from "react-icons/hi";
 import { HiInformationCircle, HiX, HiChevronDown } from "react-icons/hi";
 
 import { getAlbum, getAlbumMusics, getMusicDetail } from "@/features/album/api";
-import type { AlbumResponse, MusicListItem, MusicSortOption } from "@/features/album/api";
+import type { AlbumResponse, MusicInfo, MusicSortOption } from "@/features/album/api";
 import { SongCard } from "@/features/song/add/components";
 import { SongLetter } from "@/features/song/components";
 import { PageHeader } from "@/shared";
@@ -38,7 +38,7 @@ function SongLetterItem({
   tapeColor,
   enabled,
 }: {
-  music: MusicListItem;
+  music: MusicInfo;
   todayLabel: string;
   tapeColor: string;
   enabled: boolean;
@@ -50,7 +50,7 @@ function SongLetterItem({
     staleTime: 1000 * 60 * 10,
   });
 
-  const detail = detailQuery.data;
+  const detail = detailQuery.data?.musics;
 
   return (
     <div className="w-full">
@@ -223,7 +223,7 @@ export default function AlbumDetailContent() {
     return undefined;
   }, []);
 
-  const toCurrentSong = useCallback((music: MusicListItem): CurrentSong => {
+  const toCurrentSong = useCallback((music: MusicInfo): CurrentSong => {
     const videoId = music.url ? extractYouTubeVideoId(music.url) : undefined;
     return {
       uuid: music.uuid,
@@ -238,7 +238,7 @@ export default function AlbumDetailContent() {
   }, [extractYouTubeVideoId]);
 
   const handleSelectSong = useCallback(
-    (music: MusicListItem, openExpanded = true) => {
+    (music: MusicInfo, openExpanded = true) => {
       setCurrentSong(toCurrentSong(music));
       if (openExpanded) {
         setExpandTrigger((prev) => (prev ?? 0) + 1);
