@@ -37,11 +37,17 @@ export default function ProfileEditForm({
     e.preventDefault();
     if (!isDirty || isSubmitting) return;
 
+    const resolvedProfileImage =
+      profileImageDataUrl.startsWith("http")
+        ? profileImageDataUrl
+        : initialProfileImage || undefined;
+
     setIsSubmitting(true);
     try {
       await onSubmit({
         nickname: nickname.trim(),
-        profileImage: profileImageDataUrl || undefined,
+        // 백엔드 요청 바디는 URL(string)이므로, 현재는 카카오 프로필 URL을 유지
+        profileImage: initialProfileImage || undefined,
       });
     } finally {
       setIsSubmitting(false);
@@ -50,7 +56,11 @@ export default function ProfileEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-md flex-col items-center gap-8">
-      <ProfileImageUploader imageUrl={profileImageDataUrl} onChange={setProfileImage} />
+      <ProfileImageUploader
+        imageUrl={initialProfileImage}
+        onChange={() => {}}
+        disabled
+      />
 
       <div className="w-full">
         <div className="mb-6">
