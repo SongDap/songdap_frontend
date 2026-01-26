@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from "react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { HiLockClosed } from "react-icons/hi";
@@ -13,15 +14,29 @@ type PageHeaderProps = {
   hideTextOnMobile?: boolean; // 모바일에서 텍스트 숨김, 아이콘만 표시
   isPublic?: boolean; // 비공개일 때 자물쇠 아이콘 표시
   showBackButton?: boolean; // 뒤로가기 버튼 표시 여부 (기본값: true)
+  backHref?: string; // 뒤로가기 시 이동할 경로(정렬/페이지 유지용)
+  rightAction?: ReactNode; // 헤더 우측 액션(예: 앨범 정보 버튼)
 };
 
-export default function PageHeader({ title, backButtonText = "내 앨범", backgroundColor, hideTextOnMobile, isPublic, showBackButton = true }: PageHeaderProps) {
+export default function PageHeader({
+  title,
+  backButtonText = "내 앨범",
+  backgroundColor,
+  hideTextOnMobile,
+  isPublic,
+  showBackButton = true,
+  backHref,
+  rightAction,
+}: PageHeaderProps) {
   const router = useRouter();
-  const { user } = useOauthStore();
+  const user = useOauthStore((s) => s.user);
+  const logout = useOauthStore((s) => s.logout);
+  const isAuthenticated = useOauthStore((s) => s.isAuthenticated);
   const [showModal, setShowModal] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const resolvedBackHref = backHref || ROUTES.ALBUM.LIST;
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -46,14 +61,14 @@ export default function PageHeader({ title, backButtonText = "내 앨범", backg
       setShowModal(true);
     } else {
       if (window.confirm("모든 작업을 취소하고 내 앨범으로 돌아가겠습니까?")) {
-        router.push(ROUTES.ALBUM.LIST);
+        router.push(resolvedBackHref);
       }
     }
   };
 
   const handleConfirm = () => {
     setShowModal(false);
-    router.push(ROUTES.ALBUM.LIST);
+    router.push(resolvedBackHref);
   };
 
   const handleCancel = () => {
@@ -110,6 +125,83 @@ export default function PageHeader({ title, backButtonText = "내 앨범", backg
             <span className="truncate">{title}</span>
           </h1>
 
+          {/* 오른쪽 영역 (뒤로가기 버튼이 있는 페이지: rightAction + 프로필 메뉴/안내문구) */}
+          {showBackButton && (
+            <div className="flex items-center gap-2 ml-auto">
+              {rightAction}
+
+              {isAuthenticated ? (
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProfileMenuOpen((v) => !v);
+                    }}
+                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                    aria-label="프로필 메뉴"
+                  >
+                    <img
+                      src={user?.profileImage || "https://placehold.co/36x36"}
+                      alt={user?.nickname || "프로필"}
+                      className="w-9 h-9 rounded-full"
+                    />
+                    <span
+                      className="text-base text-gray-900 max-w-[200px] truncate hidden md:inline"
+                      title={user?.nickname || "사용자"}
+                    >
+                      {user?.nickname?.slice(0, 16) || "사용자"}
+                      {user?.nickname && user.nickname.length > 16 && "..."}
+                    </span>
+                  </button>
+
+                  {profileMenuOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                      <div className="py-2">
+                        <a
+                          href={ROUTES.ALBUM.LIST}
+                          className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors hover:text-gray-900"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProfileMenuOpen(false);
+                          }}
+                        >
+                          내 앨범
+                        </a>
+                        <a
+                          href="/profile/edit"
+                          className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors hover:text-gray-900"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProfileMenuOpen(false);
+                          }}
+                        >
+                          프로필 편집
+                        </a>
+                        <button
+                          type="button"
+                          className="w-full text-left px-4 py-2 text-base text-red-600 hover:bg-red-50 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProfileMenuOpen(false);
+                            logout();
+                            router.replace("/");
+                          }}
+                        >
+                          로그아웃
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-700 whitespace-nowrap">
+                  로그인이 필요합니다.
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 오른쪽 헤더 메뉴 (데스크탑용) */}
           {!showBackButton && (
             <>
@@ -120,43 +212,71 @@ export default function PageHeader({ title, backButtonText = "내 앨범", backg
                 >
                   내 앨범
                 </a>
-                <div className="relative" ref={profileMenuRef}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setProfileMenuOpen(!profileMenuOpen);
-                    }}
-                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                  >
-                    <img
-                      src={user?.profileImage || "https://placehold.co/36x36"}
-                      alt={user?.nickname || "프로필"}
-                      className="w-9 h-9 rounded-full"
-                    />
-                    <span className="text-base text-gray-900 max-w-[200px] truncate" title={user?.nickname || "사용자"}>
-                      {user?.nickname?.slice(0, 16) || "사용자"}
-                      {user?.nickname && user.nickname.length > 16 && "..."}
-                    </span>
-                  </button>
-                  
-                  {/* Profile Dropdown */}
-                  {profileMenuOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                      <div className="py-2">
-                        <a
-                          href="#"
-                          className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setProfileMenuOpen(false);
-                          }}
-                        >
-                          프로필 편집
-                        </a>
+                {isAuthenticated ? (
+                  <div className="relative" ref={profileMenuRef}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProfileMenuOpen(!profileMenuOpen);
+                      }}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                    >
+                      <img
+                        src={user?.profileImage || "https://placehold.co/36x36"}
+                        alt={user?.nickname || "프로필"}
+                        className="w-9 h-9 rounded-full"
+                      />
+                      <span className="text-base text-gray-900 max-w-[200px] truncate" title={user?.nickname || "사용자"}>
+                        {user?.nickname?.slice(0, 16) || "사용자"}
+                        {user?.nickname && user.nickname.length > 16 && "..."}
+                      </span>
+                    </button>
+                    
+                    {/* Profile Dropdown */}
+                    {profileMenuOpen && (
+                      <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                        <div className="py-2">
+                          <a
+                            href={ROUTES.ALBUM.LIST}
+                            className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProfileMenuOpen(false);
+                            }}
+                          >
+                            내 앨범
+                          </a>
+                          <a
+                            href="/profile/edit"
+                            className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProfileMenuOpen(false);
+                            }}
+                          >
+                            프로필 편집
+                          </a>
+                          <button
+                            type="button"
+                            className="w-full text-left px-4 py-2 text-base text-red-600 hover:bg-red-50 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProfileMenuOpen(false);
+                              logout();
+                              router.replace("/");
+                            }}
+                          >
+                            로그아웃
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-700 whitespace-nowrap">
+                    로그인이 필요합니다.
+                  </div>
+                )}
               </div>
 
               {/* 모바일 메뉴 버튼 */}
@@ -183,21 +303,6 @@ export default function PageHeader({ title, backButtonText = "내 앨범", backg
               </div>
             </>
           )}
-
-          {/* 오른쪽 프로필 (기존 버전 - showBackButton이 true일 때) */}
-          {showBackButton && (
-            <div className="flex items-center gap-2">
-              <img
-                src={user?.profileImage || "https://placehold.co/36x36"}
-                alt={user?.nickname || "프로필"}
-                className="w-9 h-9 rounded-full"
-              />
-              <span className="text-base text-gray-900 max-w-[200px] truncate hidden md:inline" title={user?.nickname || "사용자"}>
-                {user?.nickname?.slice(0, 16) || "사용자"}
-                {user?.nickname && user.nickname.length > 16 && "..."}
-              </span>
-            </div>
-          )}
       </div>
         </div>
 
@@ -207,24 +312,43 @@ export default function PageHeader({ title, backButtonText = "내 앨범", backg
             <div className="flex flex-col px-4 py-3 gap-1">
               {/* Mobile profile */}
               <div className="flex flex-col gap-2 px-3 py-2 mb-2 border-b border-gray-200 pb-2">
-                <div className="flex items-center gap-2">
-                  <img
-                    src={user?.profileImage || "https://placehold.co/36x36"}
-                    alt={user?.nickname || "프로필"}
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <span className="text-base text-gray-900 truncate" title={user?.nickname || "사용자"}>
-                    {user?.nickname?.slice(0, 16) || "사용자"}
-                    {user?.nickname && user.nickname.length > 16 && "..."}
-                  </span>
-                </div>
-                <a
-                  href="#"
-                  className="px-3 py-2 rounded-lg text-base text-gray-800 hover:bg-gray-100"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  프로필 편집
-                </a>
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={user?.profileImage || "https://placehold.co/36x36"}
+                        alt={user?.nickname || "프로필"}
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <span className="text-base text-gray-900 truncate" title={user?.nickname || "사용자"}>
+                        {user?.nickname?.slice(0, 16) || "사용자"}
+                        {user?.nickname && user.nickname.length > 16 && "..."}
+                      </span>
+                    </div>
+                    <a
+                      href="/profile/edit"
+                      className="px-3 py-2 rounded-lg text-base text-gray-800 hover:bg-gray-100"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      프로필 편집
+                    </a>
+                    <button
+                      type="button"
+                      className="px-3 py-2 rounded-lg text-base !text-red-600 hover:bg-red-50 text-left"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        logout();
+                        router.replace("/");
+                      }}
+                    >
+                      로그아웃
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-sm text-gray-700 px-1">
+                    로그인이 필요합니다.
+                  </div>
+                )}
               </div>
 
               {/* Navigation */}

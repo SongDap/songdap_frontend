@@ -33,12 +33,14 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
       getAlbum(albumId)
         .then((album) => {
           const data: AlbumData = {
+            uuid: albumId,
             title: album.title,
             description: album.description,
             isPublic: album.isPublic,
             musicCount: album.musicCount,
             musicCountLimit: album.musicCountLimit,
             color: album.color,
+            createdAt: album.createdAt,
           };
           setAlbumData(data);
           setAlbumColor(album.color);
@@ -53,12 +55,14 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
     // 임시 데이터 저장소에서 가져오기 (UUID가 없을 때만)
     else if (tempAlbumData) {
       const data: AlbumData = {
+        uuid: tempAlbumData.uuid,
         title: tempAlbumData.title || "",
         description: tempAlbumData.description || "",
         isPublic: tempAlbumData.isPublic ?? true,
         musicCount: tempAlbumData.musicCount ?? 0,
         musicCountLimit: tempAlbumData.musicCountLimit || 15,
         color: tempAlbumData.color || "#929292",
+        createdAt: tempAlbumData.createdAt,
       };
       setAlbumData(data);
       setAlbumColor(data.color);

@@ -3,6 +3,12 @@ import { API_ENDPOINTS } from "./endpoints";
 import type { UserInfo } from "@/features/oauth/model/types";
 import type { AxiosError } from "axios";
 
+function extractDataFromResponse<T>(responseData: any): T | null {
+  if (!responseData || typeof responseData !== "object") return null;
+  if ("data" in responseData) return (responseData as any).data as T;
+  return responseData as T;
+}
+
 /**
  * 현재 로그인된 사용자 정보 조회
  * - 백엔드가 쿠키 기반 인증을 쓰는 경우(withCredentials) 이 API로 유저 정보를 가져올 수 있음
@@ -12,10 +18,12 @@ export async function getMe() {
   if (DEBUG_OAUTH) {
     console.log("[OAUTH][USER][API] GET", API_ENDPOINTS.USER.ME);
   }
-  const res = await apiClient.get<UserInfo>(API_ENDPOINTS.USER.ME, {
+  const res = await apiClient.get<any>(API_ENDPOINTS.USER.ME, {
     withCredentials: true,
   });
-  return res.data;
+  const data = extractDataFromResponse<UserInfo>(res.data);
+  if (!data) throw new Error("유저 정보 응답 구조를 파싱할 수 없습니다.");
+  return data;
 }
 
 export type UpdateMeRequest = {
@@ -45,7 +53,7 @@ export async function updateMe(payload: UpdateMeRequest) {
 
     });
   }
-  const res = await apiClient.patch<UserInfo>(API_ENDPOINTS.USER.ME, payload, {
+  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, payload, {
     withCredentials: true,
   });
   const data = extractDataFromResponse<UserInfo>(res.data);

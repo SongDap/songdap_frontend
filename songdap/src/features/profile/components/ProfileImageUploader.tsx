@@ -6,15 +6,18 @@ import { useRef } from "react";
 type ProfileImageUploaderProps = {
     imageUrl?: string;
     onChange: (file: File | null) => void;
+    disabled?: boolean;
 };
 
 export default function ProfileImageUploader({
     imageUrl,
     onChange,
+    disabled = false,
 }: ProfileImageUploaderProps) {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const handleProfileUploadClick = () => {
+        if (disabled) return;
         fileInputRef.current?.click();
     };
 
@@ -58,6 +61,7 @@ export default function ProfileImageUploader({
                     accept="image/*"
                     className="hidden"
                     onChange={handleProfileFileChange}
+                    disabled={disabled}
                 />
             </div>
 
@@ -65,9 +69,14 @@ export default function ProfileImageUploader({
             <button
                 type="button"
                 onClick={handleProfileUploadClick}
-                className="rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-md whitespace-nowrap hover:bg-blue-600 transition-colors"
+                disabled={disabled}
+                className={`rounded-full px-6 py-3 text-sm font-semibold shadow-md whitespace-nowrap transition-colors ${
+                  disabled
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : "bg-blue-500 text-white hover:bg-blue-600"
+                }`}
             >
-                프로필 변경
+                {disabled ? "카카오 프로필로 설정됨" : "프로필 변경"}
             </button>
         </div>
 

@@ -3,12 +3,14 @@ import { AlbumCover } from "@/shared/ui";
 import { HiLockOpen, HiLockClosed } from "react-icons/hi";
 
 export type AlbumData = {
+  uuid?: string;
   title: string;
   description: string;
   isPublic: boolean;
   musicCountLimit: number; // 설정된 앨범 곡 개수
   musicCount?: number; // 현재 곡 개수 (optional)
   color: string;
+  createdAt?: string;
 };
 
 type AlbumInfoDisplayProps = {

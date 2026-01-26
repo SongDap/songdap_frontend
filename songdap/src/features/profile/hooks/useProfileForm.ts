@@ -10,17 +10,9 @@ type UseProfileFormOptions = {
 
 export function useProfileForm(options: UseProfileFormOptions = {}) {
   const [nickname, setNickname] = useState(options.initialNickname || "");
-<<<<<<< HEAD
-  const [profileImageDataUrl, setProfileImageDataUrl] = useState(
-    options.initialProfileImage || ""
-  );
-
-  const [isProfileImageChanged, setIsProfileImageChanged] = useState(false);
-=======
   const [profileImageDataUrl, setProfileImageDataUrl] = useState("");
   const [isProfileImageChanged, setIsProfileImageChanged] = useState(false);
 
->>>>>>> 596d664 (회원탈퇴 api추가 연결, 프로필이미지 편집 axios 수정)
   const setProfileImage = useCallback((file: File | null) => {
     if (!file) {
       setProfileImageDataUrl("");
@@ -33,13 +25,8 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
       setIsProfileImageChanged(false);
       return;
     }
-<<<<<<< HEAD
-    setIsProfileImageChanged(true);
-
-=======
 
     setIsProfileImageChanged(true);
->>>>>>> 596d664 (회원탈퇴 api추가 연결, 프로필이미지 편집 axios 수정)
     const reader = new FileReader();
     reader.onloadend = () => {
       setProfileImageDataUrl(typeof reader.result === "string" ? reader.result : "");
@@ -47,11 +34,13 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
     reader.readAsDataURL(file);
   }, []);
 
+  // NOTE: 현재 백엔드는 profileImage를 URL(string)로 받음.
+  // 프론트에서 파일 업로드를 URL로 변환하는 업로드 API가 없으므로,
+  // 프로필 편집에서는 이미지를 변경하지 않고(카카오 프로필 URL 유지) 닉네임만 수정한다.
+
+
   const isNicknameOk = useMemo(() => isNicknameValid(nickname), [nickname]);
-  const isProfileImageOk = useMemo(
-    () => isProfileImageValid(profileImageDataUrl),
-    [profileImageDataUrl]
-  );
+  const isProfileImageOk = true;
 
   const isValid = useMemo(
     () => isNicknameOk && isProfileImageOk,
@@ -60,23 +49,15 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
 
   const isDirty = useMemo(() => {
     const initialNickname = options.initialNickname || "";
-<<<<<<< HEAD
-  
-    return (
-      nickname.trim() !== initialNickname.trim() ||
-      isProfileImageChanged
-    );
-  }, [nickname, isProfileImageChanged, options.initialNickname])
-=======
     return nickname.trim() !== initialNickname.trim() || isProfileImageChanged;
   }, [nickname, isProfileImageChanged, options.initialNickname]);
->>>>>>> 596d664 (회원탈퇴 api추가 연결, 프로필이미지 편집 axios 수정)
+
+  }, [nickname, options.initialNickname])
+
 
   return {
     nickname,
-    profileImageDataUrl,
     setNickname,
-    setProfileImage,
     isNicknameOk,
     isProfileImageOk,
     isValid,

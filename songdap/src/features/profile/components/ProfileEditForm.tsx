@@ -23,9 +23,7 @@ export default function ProfileEditForm({
 }: ProfileEditFormProps) {
   const {
     nickname,
-    profileImageDataUrl,
     setNickname,
-    setProfileImage,
     isDirty,
   } = useProfileForm({
     initialNickname,

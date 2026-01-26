@@ -5,35 +5,33 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/shared";
 import { AlbumCover } from "@/shared/ui";
 import { SongLetter } from "@/features/song/components";
-import { useTempDataStore } from "@/shared/store/tempDataStore";
-import { SAMPLE_ALBUMS } from "@/shared/lib/mockData";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { HiLockClosed } from "react-icons/hi";
 import { getAlbum } from "@/features/album/api";
 import type { AlbumResponse } from "@/features/album/api";
+import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
 
-type SongData = {
+type AlbumInfoFromUrl = {
+  id: string;
   title: string;
-  artist: string;
-  imageUrl: string;
-};
-
-type MessageData = {
-  nickname: string;
-  message: string;
+  color: string;
+  description?: string;
+  musicCount?: number;
+  musicCountLimit?: number;
+  createdAt?: string;
+  isPublic?: boolean;
 };
 
 function SongAddCompletedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const albumId = searchParams.get("albumId");
+  const albumDataParam = searchParams.get("albumData");
   const { user } = useOauthStore();
 
-  const songAddData = useTempDataStore((state) => state.songAddData);
-  const songMessageData = useTempDataStore((state) => state.songMessageData);
-  
-  const [songData, setSongData] = useState<SongData | null>(null);
-  const [messageData, setMessageData] = useState<MessageData | null>(null);
+  const { draft, reset } = useSongAddDraft(albumId || "");
+  const songData = draft.song;
+  const messageData = draft.message;
   const [album, setAlbum] = useState<AlbumResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,13 +39,35 @@ function SongAddCompletedContent() {
   useEffect(() => {
     if (albumId) {
       setIsLoading(true);
+
+      // URL albumData가 있으면 그걸로 표시(공유 링크/비로그인에서 GET /albums/{uuid}가 403일 수 있음)
+      if (albumDataParam) {
+        try {
+          const decodedData = decodeURIComponent(escape(atob(decodeURIComponent(albumDataParam))));
+          const albumInfo: AlbumInfoFromUrl = JSON.parse(decodedData);
+          setAlbum({
+            uuid: albumInfo.id,
+            title: albumInfo.title,
+            description: albumInfo.description || "",
+            isPublic: albumInfo.isPublic !== undefined ? albumInfo.isPublic : true,
+            musicCount: albumInfo.musicCount !== undefined ? albumInfo.musicCount : 0,
+            musicCountLimit: albumInfo.musicCountLimit !== undefined ? albumInfo.musicCountLimit : 10,
+            color: albumInfo.color,
+            createdAt: albumInfo.createdAt,
+          });
+          setIsLoading(false);
+          return;
+        } catch (error) {
+          console.warn("[Song Completed] URL에서 앨범 정보 디코딩 실패:", error);
+        }
+      }
+
       getAlbum(albumId)
         .then((albumData) => {
           setAlbum(albumData);
         })
         .catch((error) => {
-          console.error("[Song Completed] 앨범 정보 조회 실패:", error);
-          // 에러 발생 시 기본값 사용
+          console.warn("[Song Completed] 앨범 정보 조회 실패(공유 링크일 수 있음):", error);
           setAlbum({
             uuid: albumId,
             title: "앨범",
@@ -62,28 +82,10 @@ function SongAddCompletedContent() {
           setIsLoading(false);
         });
     } else {
-      // albumId가 없으면 샘플 데이터 사용
-      setAlbum({
-        uuid: "",
-        title: SAMPLE_ALBUMS[0].title,
-        description: SAMPLE_ALBUMS[0].description || "",
-        isPublic: SAMPLE_ALBUMS[0].isPublic,
-        musicCount: SAMPLE_ALBUMS[0].musicCount,
-        musicCountLimit: SAMPLE_ALBUMS[0].musicCountLimit,
-        color: SAMPLE_ALBUMS[0].color,
-      });
+      setAlbum(null);
+      setIsLoading(false);
     }
-  }, [albumId]);
-
-  useEffect(() => {
-    // 임시 데이터 저장소에서 노래 데이터 가져오기
-    if (songAddData) {
-      setSongData(songAddData);
-    }
-    if (songMessageData) {
-      setMessageData(songMessageData);
-    }
-  }, [songAddData, songMessageData]);
+  }, [albumId, albumDataParam]);
 
   // PC: 180x180, 모바일: 140x140
   const coverSizePC = 180;
@@ -92,8 +94,13 @@ function SongAddCompletedContent() {
   const lpSizeMobile = coverSizeMobile * 0.8; // 112
 
   const handleAddMoreSongs = () => {
+    // 다음 노래 추가를 위해 드래프트 초기화
+    reset();
     // 노래 추가 페이지로 이동
-    router.push(`/song/add?albumId=${albumId}`);
+    const qp = new URLSearchParams();
+    if (albumId) qp.set("albumId", albumId);
+    if (albumDataParam) qp.set("albumData", albumDataParam);
+    router.push(`/song/add?${qp.toString()}`);
   };
 
   const handleCreateAlbum = () => {
@@ -101,14 +108,33 @@ function SongAddCompletedContent() {
     router.push("/album/create");
   };
 
-  if (isLoading || !album || !songData || !messageData) {
+  if (!albumId) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-sm text-gray-600">앨범 정보가 없는 링크예요.</p>
+        </div>
+      </>
+    );
+  }
+
+  const hasDraft =
+    songData.title.trim().length > 0 &&
+    songData.artist.trim().length > 0 &&
+    messageData.nickname.trim().length > 0 &&
+    messageData.message.trim().length > 0;
+
+  if (isLoading || !album || !hasDraft) {
     return (
       <>
         <Header />
         <div className="min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
-            <p className="text-sm text-gray-600">로딩 중...</p>
+            <p className="text-sm text-gray-600">
+              {isLoading || !album ? "로딩 중..." : "완료 정보를 불러올 수 없어요. 다시 시도해주세요."}
+            </p>
           </div>
         </div>
       </>

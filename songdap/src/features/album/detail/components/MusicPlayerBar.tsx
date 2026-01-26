@@ -22,6 +22,9 @@ type MusicPlayerBarProps = {
   artist: string;
   imageUrl?: string | null;
   isPlaying: boolean;
+  notice?: string | null;
+  videoId?: string;
+  showMiniVideo?: boolean;
   onPlayPause: (e: React.MouseEvent) => void;
   onExpand: () => void;
   onOpenYouTubeModal?: () => void;
@@ -33,6 +36,9 @@ type MusicPlayerBarProps = {
 export default function MusicPlayerBar({
   imageUrl,
   isPlaying,
+  notice,
+  videoId,
+  showMiniVideo,
   onPlayPause,
   onExpand,
   onOpenYouTubeModal,
@@ -50,12 +56,18 @@ export default function MusicPlayerBar({
       
       const screenHeight = window.innerHeight;
       const screenWidth = window.innerWidth;
+      const isDesktop = screenWidth >= 768;
       
-      setIconSize(Math.max(ICON_MIN_SIZE, Math.min(screenWidth * ICON_SIZE_RATIO, ICON_MAX_SIZE)));
+      const iconMax = isDesktop ? 52 : ICON_MAX_SIZE;
+      const smallMax = isDesktop ? 10 : SPACING_SMALL_MAX;
+      const mediumMax = isDesktop ? 16 : SPACING_MEDIUM_MAX;
+      const largeMax = isDesktop ? 28 : SPACING_LARGE_MAX;
+
+      setIconSize(Math.max(ICON_MIN_SIZE, Math.min(screenWidth * ICON_SIZE_RATIO, iconMax)));
       setSpacing({
-        small: Math.max(SPACING_SMALL_MIN, Math.min(screenHeight * SPACING_SMALL_RATIO, SPACING_SMALL_MAX)),
-        medium: Math.max(SPACING_MEDIUM_MIN, Math.min(screenHeight * SPACING_MEDIUM_RATIO, SPACING_MEDIUM_MAX)),
-        large: Math.max(SPACING_LARGE_MIN, Math.min(screenHeight * SPACING_LARGE_RATIO, SPACING_LARGE_MAX)),
+        small: Math.max(SPACING_SMALL_MIN, Math.min(screenHeight * SPACING_SMALL_RATIO, smallMax)),
+        medium: Math.max(SPACING_MEDIUM_MIN, Math.min(screenHeight * SPACING_MEDIUM_RATIO, mediumMax)),
+        large: Math.max(SPACING_LARGE_MIN, Math.min(screenHeight * SPACING_LARGE_RATIO, largeMax)),
       });
     };
 
@@ -71,20 +83,26 @@ export default function MusicPlayerBar({
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 z-[60] md:hidden rounded-t-[20px]"
-      onClick={onExpand}
+      className="fixed bottom-0 left-0 right-0 z-[60] rounded-t-[20px] md:left-1/2 md:right-auto md:w-[672px] md:-translate-x-1/2 md:rounded-t-[20px]"
       style={{
         background: backgroundColor || 'rgba(0, 0, 0, 0.8)',
         backdropFilter: 'blur(10px)',
       }}
     >
+      {notice && (
+        <div className="w-full flex justify-center px-6 pt-3">
+          <div className="text-white text-sm bg-black/40 px-3 py-2 rounded-full">
+            {notice}
+          </div>
+        </div>
+      )}
       {/* 하단 컨트롤 버튼 (유튜브, 이전곡, 재생/일시정지, 다음곡, 리스트) */}
       <div 
-        className="flex-shrink-0 w-full max-w-lg mx-auto px-6 flex items-center justify-between"
+        className="flex-shrink-0 w-full max-w-2xl mx-auto px-6 flex items-center justify-between"
         style={{ paddingTop: `${spacing.medium}px`, paddingBottom: `${spacing.large}px` }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 유튜브 버튼 */}
+        {/* 유튜브 / 작게 보기 버튼 */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -93,7 +111,23 @@ export default function MusicPlayerBar({
           className={controlButtonClassName}
           aria-label="유튜브"
         >
-          <FaYoutube className="text-white" style={iconStyle} />
+          {showMiniVideo && videoId ? (
+            <div
+              className="relative overflow-hidden rounded-lg"
+              style={iconStyle}
+              aria-hidden
+            >
+              <img
+                src={`https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`}
+                alt="유튜브 미리보기"
+                className="w-full h-full object-cover"
+                style={iconStyle}
+              />
+              <div className="absolute inset-0 bg-black/10" />
+            </div>
+          ) : (
+            <FaYoutube className="text-white" style={iconStyle} />
+          )}
         </button>
 
         {/* 이전곡 버튼 */}
@@ -134,23 +168,22 @@ export default function MusicPlayerBar({
         </button>
 
         {/* 노래 이미지 */}
-        {imageUrl && (
-          <div
-            className="flex items-center justify-center overflow-hidden rounded-lg cursor-pointer hover:opacity-80 active:opacity-70 transition-opacity"
+        <div
+          className="flex items-center justify-center overflow-hidden rounded-lg cursor-pointer hover:opacity-80 active:opacity-70 transition-opacity"
+          style={iconStyle}
+          onClick={(e) => {
+            e.stopPropagation();
+            onExpand();
+          }}
+          aria-label="확장 뷰 열기"
+        >
+          <img
+            src={imageUrl || "https://placehold.co/56x56"}
+            alt="노래 이미지"
+            className="w-full h-full object-cover"
             style={iconStyle}
-            onClick={(e) => {
-              e.stopPropagation();
-              onExpand();
-            }}
-          >
-            <img
-              src={imageUrl}
-              alt="노래 이미지"
-              className="w-full h-full object-cover"
-              style={iconStyle}
-            />
-          </div>
-        )}
+          />
+        </div>
       </div>
     </div>
   );
