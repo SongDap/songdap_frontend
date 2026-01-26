@@ -15,13 +15,21 @@ const normalizeBaseURL = (url: string | undefined): string => {
   if (!url) return '';
   // 따옴표 제거 (환경 변수에 따옴표가 포함된 경우)
   const cleaned = url.trim().replace(/^["']|["']$/g, '');
-  return cleaned || '';
+  
+  if (!cleaned) return '';
+  
+  // 프로덕션에서 HTTPS 강제
+  if (process.env.NODE_ENV === 'production' && cleaned.startsWith('http://')) {
+    console.warn('[Security] HTTPS를 사용해야 합니다. HTTP는 프로덕션에서 안전하지 않습니다.');
+  }
+  
+  return cleaned;
 };
 
 export const apiClient = axios.create({
   // baseURL이 빈 문자열이면 undefined로 설정하여 axios가 절대 경로를 올바르게 처리하도록 함
   baseURL: normalizeBaseURL(process.env.NEXT_PUBLIC_API_URL) || undefined,
-  timeout: 10000,
+  timeout: 15000,
   // Access Token과 Refresh Token이 HttpOnly Cookie로 설정되므로 필수
   withCredentials: true,
   headers: {

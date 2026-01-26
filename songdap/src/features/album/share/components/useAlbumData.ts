@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { AlbumData } from "./AlbumInfoDisplay";
 import { useTempDataStore } from "@/shared/store/tempDataStore";
@@ -19,17 +19,18 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
   const [todayDate, setTodayDate] = useState<string>("");
   const [albumData, setAlbumData] = useState<AlbumData | null>(initialAlbumData || null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const hasLoadedRef = useRef(false);
+  const currentAlbumIdRef = useRef<string | null>(null);
 
   // 클라이언트에서만 앨범 데이터 로드 및 오늘 날짜 설정
   useEffect(() => {
-    // props로 전달된 데이터가 있으면 사용
-    if (initialAlbumData) {
-      setAlbumData(initialAlbumData);
-      setAlbumColor(initialAlbumData.color);
-    } 
-    // URL에 albumId가 있으면 API로 조회
-    else if (albumId) {
+    // URL에 albumId가 있으면 항상 API로 조회 (최신 데이터 확보)
+    if (albumId && albumId !== currentAlbumIdRef.current) {
+      currentAlbumIdRef.current = albumId;
+      hasLoadedRef.current = false;
       setIsLoading(true);
+      
       getAlbum(albumId)
         .then((album) => {
           const data: AlbumData = {
@@ -44,32 +45,44 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
           };
           setAlbumData(data);
           setAlbumColor(album.color);
+          hasLoadedRef.current = true;
         })
         .catch((error) => {
           console.error("앨범 조회 실패:", error);
+          hasLoadedRef.current = true;
         })
         .finally(() => {
           setIsLoading(false);
         });
     }
-    // 임시 데이터 저장소에서 가져오기 (UUID가 없을 때만)
-    else if (tempAlbumData) {
-      const data: AlbumData = {
-        uuid: tempAlbumData.uuid,
-        title: tempAlbumData.title || "",
-        description: tempAlbumData.description || "",
-        isPublic: tempAlbumData.isPublic ?? true,
-        musicCount: tempAlbumData.musicCount ?? 0,
-        musicCountLimit: tempAlbumData.musicCountLimit || 15,
-        color: tempAlbumData.color || "#929292",
-        createdAt: tempAlbumData.createdAt,
-      };
-      setAlbumData(data);
-      setAlbumColor(data.color);
-      
-      // 사용 후 삭제 옵션이 활성화되어 있으면 삭제
-      if (options?.shouldRemoveAfterLoad) {
-        clearAlbumShareData();
+    // albumId가 없고 아직 로드되지 않았을 때만 처리
+    else if (!albumId && !hasLoadedRef.current) {
+      // 임시 데이터 저장소에서 가져오기 (albumId가 없을 때만)
+      if (tempAlbumData) {
+        const data: AlbumData = {
+          uuid: tempAlbumData.uuid,
+          title: tempAlbumData.title || "",
+          description: tempAlbumData.description || "",
+          isPublic: tempAlbumData.isPublic ?? true,
+          musicCount: tempAlbumData.musicCount ?? 0,
+          musicCountLimit: tempAlbumData.musicCountLimit || 15,
+          color: tempAlbumData.color || "#929292",
+          createdAt: tempAlbumData.createdAt,
+        };
+        setAlbumData(data);
+        setAlbumColor(data.color);
+        
+        // 사용 후 삭제 옵션이 활성화되어 있으면 삭제
+        if (options?.shouldRemoveAfterLoad) {
+          clearAlbumShareData();
+        }
+        hasLoadedRef.current = true;
+      }
+      // props로 전달된 데이터가 있으면 사용 (fallback)
+      else if (initialAlbumData) {
+        setAlbumData(initialAlbumData);
+        setAlbumColor(initialAlbumData.color);
+        hasLoadedRef.current = true;
       }
     }
 
@@ -79,7 +92,7 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
     setTodayDate(`${year}.${month}.${day}`);
-  }, [initialAlbumData, albumId, tempAlbumData, options, clearAlbumShareData]);
+  }, [albumId]); // albumId만 dependency로 추적
 
   return { albumData, albumColor, todayDate, isLoading };
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { HiMail, HiMusicNote } from "react-icons/hi";
 import { HiInformationCircle, HiX, HiChevronDown } from "react-icons/hi";
 
 import { getAlbum, getAlbumMusics, getMusicDetail } from "@/features/album/api";
-import type { AlbumResponse, MusicListItem, MusicSortOption } from "@/features/album/api";
+import type { AlbumResponse, MusicInfo, MusicSortOption } from "@/features/album/api";
 import { SongCard } from "@/features/song/add/components";
 import { SongLetter } from "@/features/song/components";
 import { PageHeader } from "@/shared";
@@ -38,7 +38,7 @@ function SongLetterItem({
   tapeColor,
   enabled,
 }: {
-  music: MusicListItem;
+  music: MusicInfo;
   todayLabel: string;
   tapeColor: string;
   enabled: boolean;
@@ -50,7 +50,7 @@ function SongLetterItem({
     staleTime: 1000 * 60 * 10,
   });
 
-  const detail = detailQuery.data;
+  const detail = detailQuery.data?.musics;
 
   return (
     <div className="w-full">
@@ -69,10 +69,12 @@ function SongLetterItem({
 
 export default function AlbumDetailContent() {
   const params = useParams();
-  const albumUuid = (params?.id as string | undefined) ?? "";
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const albumUuid = (params?.id as string | undefined) ?? "";
 
   const [viewMode, setViewMode] = useState<ViewMode>("player");
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [currentSong, setCurrentSong] = useState<CurrentSong | null>(null);
   // 확장뷰 트리거: 기본은 undefined (초기 진입 시 확장뷰 자동 오픈 방지)
   const [expandTrigger, setExpandTrigger] = useState<number | undefined>(undefined);
@@ -130,6 +132,14 @@ export default function AlbumDetailContent() {
     const pages = musicsQuery.data?.pages ?? [];
     return pages.flatMap((p) => p.items?.content ?? []);
   }, [musicsQuery.data]);
+
+  // musicsQuery 데이터에서 flag 정보 추출
+  useEffect(() => {
+    const firstPageFlag = musicsQuery.data?.pages?.[0]?.flag;
+    if (firstPageFlag) {
+      setIsOwner(firstPageFlag.isOwner);
+    }
+  }, [musicsQuery.data?.pages]);
 
   // 무한 스크롤: 스크롤 컨테이너 안의 sentinel이 보이면 다음 페이지
   useEffect(() => {
@@ -223,7 +233,7 @@ export default function AlbumDetailContent() {
     return undefined;
   }, []);
 
-  const toCurrentSong = useCallback((music: MusicListItem): CurrentSong => {
+  const toCurrentSong = useCallback((music: MusicInfo): CurrentSong => {
     const videoId = music.url ? extractYouTubeVideoId(music.url) : undefined;
     return {
       uuid: music.uuid,
@@ -238,7 +248,7 @@ export default function AlbumDetailContent() {
   }, [extractYouTubeVideoId]);
 
   const handleSelectSong = useCallback(
-    (music: MusicListItem, openExpanded = true) => {
+    (music: MusicInfo, openExpanded = true) => {
       setCurrentSong(toCurrentSong(music));
       if (openExpanded) {
         setExpandTrigger((prev) => (prev ?? 0) + 1);
@@ -494,6 +504,21 @@ export default function AlbumDetailContent() {
                           <HiMail className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                       </div>
+
+                      {/* 노래 추가 버튼 (비소유자만 표시) */}
+                      {isOwner === false && (
+                        <button
+                          onClick={() => {
+                            const params = new URLSearchParams();
+                            params.set("albumId", albumUuid);
+                            router.push(`/song/add?${params.toString()}`);
+                          }}
+                          className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-full bg-[#006FFF] text-white hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors flex-shrink-0"
+                          aria-label="노래 추가"
+                        >
+                          + 노래 추가
+                        </button>
+                      )}
 
                       {/* 노래 목록 정렬 드롭다운 */}
                       <div className="flex items-center justify-end gap-2 flex-1 min-w-0">

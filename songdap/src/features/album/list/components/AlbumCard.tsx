@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed, HiShare, HiLink } from "react-icons/hi";
 import AlbumCardEditMode from "./AlbumCardEditMode";
@@ -40,8 +40,10 @@ export default function AlbumCard({
   onDelete,
   onEdit,
 }: AlbumCardProps) {
+  const router = useRouter();
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [showPrivateModal, setShowPrivateModal] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const user = useOauthStore((s) => s.user);
 
@@ -58,6 +60,11 @@ export default function AlbumCard({
 
   const handleLinkCopy = (e: React.MouseEvent) => {
     e.preventDefault();
+    // 비공개 앨범 체크
+    if (!isPublic) {
+      setShowPrivateModal(true);
+      return;
+    }
     if (typeof window === "undefined") return;
     
     const songAddUrl = buildSongAddUrlFromAlbumInfo({
@@ -81,6 +88,11 @@ export default function AlbumCard({
 
   const handleKakaoShare = async (e: React.MouseEvent) => {
     e.preventDefault();
+    // 비공개 앨범 체크
+    if (!isPublic) {
+      setShowPrivateModal(true);
+      return;
+    }
     if (typeof window === "undefined") return;
     
     const shareUrl = buildSongAddUrlFromAlbumInfo({
@@ -123,19 +135,17 @@ export default function AlbumCard({
   };
 
   return (
-    <Link 
-      href={href || `/album/${id}`} 
-      className="block group album-card-item"
-      onClick={(e) => {
-        // 편집 모드일 때 링크 클릭 비활성화
-        if (isEditMode) {
-          e.preventDefault();
-        }
-      }}
-    >
-      <div className="flex flex-col items-center gap-3">
-        {/* 앨범 커버 - 모바일과 PC에서 다른 크기 */}
-        <div className="w-[170px] h-[170px] md:w-[240px] md:h-[240px] relative">
+    <>
+      <div className="flex flex-col items-center gap-3 group album-card-item">
+        {/* 앨범 커버 - 클릭 가능 */}
+        <div 
+          className="w-[170px] h-[170px] md:w-[240px] md:h-[240px] relative cursor-pointer"
+          onClick={() => {
+            if (!isEditMode && !showShareMenu) {
+              router.push(href || `/album/${id}`);
+            }
+          }}
+        >
           {/* 모바일 버전 */}
           <div className="md:hidden">
             <AlbumCover
@@ -186,7 +196,14 @@ export default function AlbumCard({
           )}
           {/* 앨범명 + 공유 아이콘 */}
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-base md:text-lg font-semibold text-gray-900 flex-1 truncate">
+            <h3 
+              className="text-base md:text-lg font-semibold text-gray-900 flex-1 truncate cursor-pointer hover:text-blue-600 transition-colors"
+              onClick={() => {
+                if (!isEditMode && !showShareMenu) {
+                  router.push(href || `/album/${id}`);
+                }
+              }}
+            >
               {albumName}
             </h3>
             <div className="relative flex-shrink-0">
@@ -247,6 +264,25 @@ export default function AlbumCard({
           </div>
         </div>
       </div>
-    </Link>
+
+      {/* 비공개 앨범 모달 */}
+    {showPrivateModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="bg-white rounded-2xl shadow-xl p-6 mx-4 max-w-sm">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">공유 불가</h2>
+          <p className="text-gray-600 mb-6">
+            비공개 앨범은 공유가 불가합니다.<br />
+            비공개를 해제해주세요.
+          </p>
+          <button
+            onClick={() => setShowPrivateModal(false)}
+            className="w-full py-2.5 px-4 bg-[#006FFF] text-white rounded-lg font-medium hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors"
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    )}
+  </>
   );
 }

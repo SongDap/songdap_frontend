@@ -91,32 +91,17 @@ export default function CreateAlbumForm({
       
       console.log("[Album Form] 생성된 앨범 응답:", createdAlbum);
       
-      // UUID는 optional - 있으면 사용하고 없어도 공유 페이지로 이동 가능
-      const albumUuid = createdAlbum?.uuid || createdAlbum?.id;
-      console.log("[Album Form] 앨범 UUID:", albumUuid || "(없음)");
+      // 새로운 API 응답 구조: data.uuid가 반드시 있음
+      const albumUuid = createdAlbum?.uuid;
       
-      // 공유 페이지로 이동
-      // UUID가 있으면 API로 조회, 없으면 임시 데이터 저장소 사용
-      const { useTempDataStore } = await import("@/shared/store/tempDataStore");
-      const setAlbumShareData = useTempDataStore.getState().setAlbumShareData;
-      
-      if (albumUuid) {
-        // UUID가 있으면 API로 조회 가능하므로 임시 데이터 불필요
-        setAlbumShareData(null);
-        router.push(`${ROUTES.ALBUM.SHARE}?albumId=${albumUuid}`);
-      } else {
-        // UUID가 없을 때만 임시 데이터 저장
-        const albumShareData = {
-          title: createdAlbum?.title || trimmedTitle,
-          description: createdAlbum?.description || trimmedDescription,
-          isPublic: createdAlbum?.isPublic ?? formData.isPublic,
-          musicCount: createdAlbum?.musicCount ?? 0,
-          musicCountLimit: createdAlbum?.musicCountLimit || musicCountLimit,
-          color: createdAlbum?.color || formData.color,
-        };
-        setAlbumShareData(albumShareData);
-        router.push(ROUTES.ALBUM.SHARE);
+      if (!albumUuid) {
+        throw new Error("앨범 UUID를 받을 수 없습니다.");
       }
+      
+      console.log("[Album Form] 앨범 UUID:", albumUuid);
+      
+      // 공유 페이지로 이동 (UUID로 API 조회 가능)
+      router.push(`${ROUTES.ALBUM.SHARE}?albumId=${albumUuid}`);
     } catch (error) {
       console.error("[Album] 앨범 생성 실패:", error);
       

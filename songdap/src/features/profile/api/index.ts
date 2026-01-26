@@ -1,12 +1,7 @@
 import { apiClient } from "@/shared/api";
 import { API_ENDPOINTS } from "@/shared/api/endpoints";
+import { extractDataFromResponse } from "@/shared/api/utils";
 import type { ProfileResponse, UpdateProfileRequest } from "../model/types";
-
-function extractDataFromResponse<T>(responseData: any): T | null {
-  if (!responseData || typeof responseData !== "object") return null;
-  if ("data" in responseData) return (responseData as any).data as T;
-  return responseData as T;
-}
 
 export async function getProfile(): Promise<ProfileResponse> {
   const res = await apiClient.get<any>(API_ENDPOINTS.USER.ME, {
