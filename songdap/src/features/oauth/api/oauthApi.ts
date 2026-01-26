@@ -1,5 +1,6 @@
 import { apiClient } from "@/shared/api";
 import { API_ENDPOINTS } from "@/shared/api/endpoints";
+import { extractDataFromResponse } from "@/shared/api/utils";
 import type { AuthResponse } from "../model/types";
 
 /**
@@ -25,21 +26,6 @@ type KakaoLoginResponseData = {
   profileImage?: string;
   newMember: boolean;
 };
-
-/**
- * ApiResponse에서 data 필드 추출 유틸리티
- */
-function extractDataFromResponse<T>(responseData: any): T | null {
-  // 경우 1: { code, message, data } 구조
-  if (responseData && typeof responseData === 'object' && 'data' in responseData) {
-    return responseData.data as T;
-  }
-  // 경우 2: 바로 데이터 구조 (레거시 호환)
-  if (responseData && typeof responseData === 'object') {
-    return responseData as T;
-  }
-  return null;
-}
 
 export async function loginWithKakao(code: string): Promise<AuthResponse & { newMember?: boolean }> {
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";

@@ -52,9 +52,6 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
     return nickname.trim() !== initialNickname.trim() || isProfileImageChanged;
   }, [nickname, isProfileImageChanged, options.initialNickname]);
 
-  }, [nickname, options.initialNickname])
-
-
   return {
     nickname,
     setNickname,

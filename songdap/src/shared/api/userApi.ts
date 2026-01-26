@@ -1,13 +1,8 @@
 import { apiClient } from "./axios";
 import { API_ENDPOINTS } from "./endpoints";
+import { extractDataFromResponse } from "./utils";
 import type { UserInfo } from "@/features/oauth/model/types";
 import type { AxiosError } from "axios";
-
-function extractDataFromResponse<T>(responseData: any): T | null {
-  if (!responseData || typeof responseData !== "object") return null;
-  if ("data" in responseData) return (responseData as any).data as T;
-  return responseData as T;
-}
 
 /**
  * 현재 로그인된 사용자 정보 조회

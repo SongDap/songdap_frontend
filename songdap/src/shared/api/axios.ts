@@ -15,13 +15,21 @@ const normalizeBaseURL = (url: string | undefined): string => {
   if (!url) return '';
   // 따옴표 제거 (환경 변수에 따옴표가 포함된 경우)
   const cleaned = url.trim().replace(/^["']|["']$/g, '');
-  return cleaned || '';
+  
+  if (!cleaned) return '';
+  
+  // 프로덕션에서 HTTPS 강제
+  if (process.env.NODE_ENV === 'production' && cleaned.startsWith('http://')) {
+    console.warn('[Security] HTTPS를 사용해야 합니다. HTTP는 프로덕션에서 안전하지 않습니다.');
+  }
+  
+  return cleaned;
 };
 
 export const apiClient = axios.create({
   // baseURL이 빈 문자열이면 undefined로 설정하여 axios가 절대 경로를 올바르게 처리하도록 함
   baseURL: normalizeBaseURL(process.env.NEXT_PUBLIC_API_URL) || undefined,
-  timeout: 10000,
+  timeout: 15000,
   // Access Token과 Refresh Token이 HttpOnly Cookie로 설정되므로 필수
   withCredentials: true,
   headers: {
@@ -74,20 +82,6 @@ apiClient.interceptors.request.use(
     // 상대 경로면 절대 경로로 변환 (현재 페이지 경로가 붙는 문제 방지)
     if ((!config.baseURL || config.baseURL === '') && config.url && !config.url.startsWith('/')) {
       config.url = '/' + config.url;
-    }
-    
-    // 디버그 모드에서 요청 정보 로깅
-    const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
-    if (DEBUG_OAUTH && typeof window !== 'undefined') {
-      const fullUrl = config.baseURL 
-        ? `${config.baseURL}${config.url}` 
-        : config.url;
-      console.log(`[API][REQUEST] ${config.method?.toUpperCase()} ${fullUrl}`, {
-        baseURL: config.baseURL || '(없음)',
-        url: config.url,
-        fullURL: fullUrl,
-        withCredentials: config.withCredentials,
-      });
     }
 
     return config;

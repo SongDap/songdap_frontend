@@ -7,7 +7,7 @@ import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed } from "react-icons/hi";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
-import { getAlbum, addMusicToAlbum } from "@/features/album/api";
+import { getAlbum, addMusicToAlbum, getAlbumMusics } from "@/features/album/api";
 import type { AlbumResponse } from "@/features/album/api";
 import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
 
@@ -29,6 +29,7 @@ function AddSongContent() {
   const albumDataParam = searchParams.get("albumData");
   const { user } = useOauthStore();
   const [album, setAlbum] = useState<AlbumResponse | null>(null);
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -68,12 +69,17 @@ function AddSongContent() {
       // albumData가 있으면 그 정보로만 표시하고, 없을 때만 시도(실패하면 기본값).
       if (albumDataParam) {
         setIsLoading(false);
+        setIsOwner(false); // URL 공유 시 항상 비소유자
         return;
       }
 
-      getAlbum(albumId)
-        .then((albumData) => {
+      Promise.all([
+        getAlbum(albumId),
+        getAlbumMusics(albumId, 0, 1), // 권한 정보만 필요하므로 페이지 크기 1
+      ])
+        .then(([albumData, musicsData]) => {
           setAlbum(albumData);
+          setIsOwner(musicsData.flag.isOwner);
         })
         .catch((error) => {
           console.warn("[Song Add] 앨범 정보 조회 실패(공유 링크일 수 있음):", error);
@@ -86,6 +92,7 @@ function AddSongContent() {
             musicCountLimit: 10,
             color: "#929292",
           });
+          setIsOwner(false); // 실패 시 비소유자로 처리
         })
         .finally(() => {
           setIsLoading(false);
@@ -146,6 +153,18 @@ function AddSongContent() {
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
             <p className="text-sm text-gray-600">앨범 정보를 불러오는 중...</p>
           </div>
+        </div>
+      </>
+    );
+  }
+
+  // 앨범 소유자는 노래 추가 불가
+  if (isOwner === true) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-base text-gray-600">앨범 소유자는 노래를 추가할 수 없습니다.</p>
         </div>
       </>
     );
