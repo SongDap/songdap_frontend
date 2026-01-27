@@ -201,6 +201,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status >= 500) {
       const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
       if (DEBUG_OAUTH || process.env.NODE_ENV === 'production') {
+        const errorData = error.response.data;
         console.error('[API][ERROR] 서버 에러 발생:', {
           status: error.response.status,
           statusText: error.response.statusText,
@@ -210,9 +211,20 @@ apiClient.interceptors.response.use(
             ? `${error.config.baseURL}${error.config.url}` 
             : error.config?.url,
           method: error.config?.method,
-          errorData: error.response.data,
           requestData: error.config?.data,
         });
+        
+        // errorData를 별도로 로깅하여 객체 내용을 펼쳐서 볼 수 있도록 함
+        if (errorData) {
+          console.error('[API][ERROR] 에러 응답 데이터:', errorData);
+          // 에러 메시지가 있으면 별도로 표시
+          if (errorData.message) {
+            console.error('[API][ERROR] 에러 메시지:', errorData.message);
+          }
+          if (errorData.code) {
+            console.error('[API][ERROR] 에러 코드:', errorData.code);
+          }
+        }
       }
     }
 

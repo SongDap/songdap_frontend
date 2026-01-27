@@ -85,17 +85,29 @@ export async function loginWithKakao(code: string): Promise<AuthResponse & { new
   } catch (error: any) {
     // 에러 발생 시 상세 정보 로깅
     if (DEBUG_OAUTH || process.env.NODE_ENV === 'production') {
+      const errorData = error?.response?.data;
       console.error("[OAUTH][KAKAO][API] 카카오 로그인 API 호출 실패:", {
         exchangePath,
         baseURL: process.env.NEXT_PUBLIC_API_URL || '(설정 안 됨)',
         fullUrl: `${process.env.NEXT_PUBLIC_API_URL || ''}${exchangePath}`,
         status: error?.response?.status,
         statusText: error?.response?.statusText,
-        errorData: error?.response?.data,
         errorMessage: error?.message,
         requestPayload: payload,
         headers: error?.config?.headers,
       });
+      
+      // errorData를 별도로 로깅하여 객체 내용을 펼쳐서 볼 수 있도록 함
+      if (errorData) {
+        console.error("[OAUTH][KAKAO][API] 에러 응답 데이터:", errorData);
+        // 에러 메시지가 있으면 별도로 표시
+        if (errorData.message) {
+          console.error("[OAUTH][KAKAO][API] 에러 메시지:", errorData.message);
+        }
+        if (errorData.code) {
+          console.error("[OAUTH][KAKAO][API] 에러 코드:", errorData.code);
+        }
+      }
     }
     throw error;
   }
