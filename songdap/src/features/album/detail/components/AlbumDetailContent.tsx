@@ -75,6 +75,11 @@ export default function AlbumDetailContent() {
   const router = useRouter();
   const albumUuid = (params?.id as string | undefined) ?? "";
 
+  // 디버그
+  console.log("[AlbumDetail] params:", params);
+  console.log("[AlbumDetail] albumUuid:", albumUuid);
+  console.log("[AlbumDetail] albumUuid is empty:", albumUuid === "");
+
   const [viewMode, setViewMode] = useState<ViewMode>("player");
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [currentSong, setCurrentSong] = useState<CurrentSong | null>(null);
