@@ -17,6 +17,7 @@ jobs:
 
       - name: Install dependencies & Build
         env:
+          NODE_ENV: production
           NEXT_PUBLIC_STATIC_EXPORT: "true"
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_KAKAO_API_KEY: ${{ secrets.NEXT_PUBLIC_KAKAO_API_KEY }}
