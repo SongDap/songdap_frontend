@@ -1,9 +1,4 @@
-import dynamic from "next/dynamic";
-
-const AlbumDetailPageClient = dynamic(
-  () => import("./_client"),
-  { ssr: false }
-);
+import AlbumDetailPageClient from "./_client";
 
 export async function generateStaticParams() {
   return [];
