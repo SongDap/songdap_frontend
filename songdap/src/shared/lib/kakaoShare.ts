@@ -3,7 +3,7 @@
  *
  * - SDK를 필요 시점에만 동적으로 로드합니다.
  * - sendDefault로 텍플릿을 전송합니다. (공식 문서 방식)
- * - env: NEXT_PUBLIC_KAKAO_API_KEY 필요
+ * - env: NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY 필요
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -56,8 +56,8 @@ async function ensureKakaoSdkLoaded(): Promise<any> {
 
 async function ensureKakaoInitialized(): Promise<any> {
   const Kakao = await ensureKakaoSdkLoaded();
-  const key = process.env.NEXT_PUBLIC_KAKAO_API_KEY;
-  if (!key) throw new Error("NEXT_PUBLIC_KAKAO_API_KEY is missing");
+  const key = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
+  if (!key) throw new Error("NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY is missing");
 
   try {
     if (typeof Kakao.isInitialized === "function" && Kakao.isInitialized()) return Kakao;

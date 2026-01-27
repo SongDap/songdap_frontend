@@ -5,7 +5,8 @@ import { hideAuthExpired, useAuthUiStore } from "@/features/oauth/model/authUiSt
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 
 function buildKakaoAuthorizeUrl(): string | null {
-  const clientId = process.env.NEXT_PUBLIC_KAKAO_API_KEY;
+  const clientId =
+    process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY || process.env.NEXT_PUBLIC_KAKAO_API_KEY;
   const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
   if (!clientId || !redirectUri) return null;
 
