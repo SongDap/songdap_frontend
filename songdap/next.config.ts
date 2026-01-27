@@ -2,11 +2,10 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
-  /* 정적 배포를 위한 설정 (빌드 시에만 적용) */
-  // 개발 환경에서는 동적 라우트를 위해 비활성화
-  ...(process.env.NODE_ENV === 'production' ? { output: 'export' } : {}),
+  // output: 'export' 제거 - 동적 라우트(앨범 상세) 지원을 위해
+  // 배포 환경에서는 서버사이드 렌더링(SSR) 사용
 
-  /* 정적 배포 시 이미지 최적화 오류 방지 */
+  /* 이미지 최적화 */
   images: {
     unoptimized: true,
   },
