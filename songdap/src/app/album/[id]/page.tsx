@@ -1,12 +1,16 @@
+import { Suspense } from "react";
+
+// 동적 라우트에서 generateStaticParams()에 없는 경로는 404 처리
+// Nginx SPA fallback이 index.html로 serve하므로 클라이언트 라우팅 작동
+export const dynamicParams = false;
+
 // 정적 생성을 위한 파라미터 생성
 // output: 'export' 설정에서는 빌드 시점에 모든 경로를 생성해야 합니다.
 // 실제 앨범 UUID는 런타임에만 알 수 있으므로, 샘플 데이터를 사용하여 최소한의 경로를 생성합니다.
 // 실제 앨범은 클라이언트 사이드에서 동적으로 처리됩니다.
-import { Suspense } from "react";
-
 export async function generateStaticParams() {
   // 빌드 시점에 최소 1개 경로는 필요 (export 모드)
-  // 실제 앨범은 런타임에 클라이언트에서 처리됨
+  // dynamicParams = true이므로 이 함수에 없는 경로도 클라이언트에서 처리됨
   return [{ id: "placeholder" }];
 }
 
