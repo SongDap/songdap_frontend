@@ -76,7 +76,7 @@ function AddSongContent() {
 
       Promise.all([
         getAlbum(albumId),
-        getAlbumMusics(albumId, 0, 1), // 권한 정보만 필요하므로 페이지 크기 1
+        getAlbumMusics(albumId, { page: 0, size: 1 }), // 권한 정보만 필요하므로 페이지 크기 1
       ])
         .then(([albumData, musicsData]) => {
           setAlbum(albumData);
