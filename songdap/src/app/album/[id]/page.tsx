@@ -1,10 +1,6 @@
 import AlbumDetailPageClient from "./_client";
 
-export async function generateStaticParams() {
-  return [];
-}
-
-export const dynamicParams = true;
+export const dynamic = 'force-dynamic';
 
 export default function AlbumDetailPage() {
   return <AlbumDetailPageClient />;
