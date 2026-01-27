@@ -142,7 +142,7 @@ export default function AlbumCard({
           className="w-[170px] h-[170px] md:w-[240px] md:h-[240px] relative cursor-pointer"
           onClick={() => {
             if (!isEditMode && !showShareMenu) {
-              router.push(href || `/album/${id}`);
+              router.push(href || `/album?id=${id}`);
             }
           }}
         >
@@ -200,7 +200,7 @@ export default function AlbumCard({
               className="text-base md:text-lg font-semibold text-gray-900 flex-1 truncate cursor-pointer hover:text-blue-600 transition-colors"
               onClick={() => {
                 if (!isEditMode && !showShareMenu) {
-                  router.push(href || `/album/${id}`);
+                  router.push(href || `/album?id=${id}`);
                 }
               }}
             >
