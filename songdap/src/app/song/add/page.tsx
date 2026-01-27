@@ -406,10 +406,7 @@ function AddSongContent() {
                           artist: songData.artist,
                           message: messageData.message.trim() || undefined,
                           writer: messageData.writer.trim() || undefined,
-                          imageFile: songData.imageFile,
                           imageFile: imageFile || undefined,
-                          message: messageData.message,
-                          nickname: messageData.nickname,
                         });
 
                         // 완료 페이지로 이동
