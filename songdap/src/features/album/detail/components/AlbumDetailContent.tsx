@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { HiMail, HiMusicNote } from "react-icons/hi";
 import { HiInformationCircle, HiX, HiChevronDown } from "react-icons/hi";
 
@@ -69,11 +69,10 @@ function SongLetterItem({
   );
 }
 
-export default function AlbumDetailContent() {
-  const params = useParams();
+export default function AlbumDetailContent({ id }: { id: string }) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const albumUuid = (params?.id as string | undefined) ?? "";
+  const albumUuid = id ?? "";
 
   const [viewMode, setViewMode] = useState<ViewMode>("player");
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
