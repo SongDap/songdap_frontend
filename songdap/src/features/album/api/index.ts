@@ -256,52 +256,6 @@ export async function getAlbum(albumUuid: string): Promise<AlbumResponse> {
 }
 
 /**
- * 노래 상세 조회 API
- *
- * GET /api/v1/musics/{musicUuid}
- * 
- * @param musicUuid 노래 UUID
- * @returns 노래 상세 정보 및 권한 정보
- * 
- * @throws {AxiosError} API 호출 실패 시
- */
-export async function getMusicDetail(musicUuid: string): Promise<MusicDetailData> {
-  const endpoint = API_ENDPOINTS.MUSIC.DETAIL(musicUuid);
-
-  try {
-    const response = await apiClient.get<ApiResponse<MusicDetailData>>(endpoint);
-    
-    // 응답 구조: { success, message, data: { musics, flag } }
-    const data = extractDataFromResponse<MusicDetailData>(response.data);
-    
-    if (!data || !("musics" in data) || !("flag" in data)) {
-      throw new Error("노래 상세 응답 구조를 파싱할 수 없습니다.");
-    }
-    
-    if (!data.musics?.uuid) {
-      throw new Error("노래 데이터를 파싱할 수 없습니다.");
-    }
-    
-    console.log("[Album API] 노래 상세 조회 성공:", {
-      musicUuid,
-      title: data.musics.title,
-      artist: data.musics.artist,
-    });
-    
-    return data;
-  } catch (error: any) {
-    console.error("[Album API] 노래 상세 조회 실패:", {
-      musicUuid,
-      url: endpoint,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
-    throw error;
-  }
-}
-
-/**
  * 앨범 목록 조회 API
  * 
  * @param sort 정렬 옵션 (LATEST, OLDEST, TITLE, POPULAR)
