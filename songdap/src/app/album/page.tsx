@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 
 const AlbumDetailContent = dynamic(
@@ -8,14 +8,14 @@ const AlbumDetailContent = dynamic(
   { ssr: false }
 );
 
-export default function AlbumDetailPageClient() {
-  const params = useParams();
-  const albumId = (params?.id as string | undefined) ?? "";
+export default function AlbumPage() {
+  const searchParams = useSearchParams();
+  const albumId = searchParams.get("id") ?? "";
 
   if (!albumId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-700">로딩 중...</p>
+        <p className="text-gray-700">앨범을 찾을 수 없습니다.</p>
       </div>
     );
   }
