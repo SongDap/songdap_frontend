@@ -122,7 +122,7 @@ function SongAddCompletedContent() {
   const hasDraft =
     songData.title.trim().length > 0 &&
     songData.artist.trim().length > 0 &&
-    messageData.nickname.trim().length > 0 &&
+    messageData.writer.trim().length > 0 &&
     messageData.message.trim().length > 0;
 
   if (isLoading || !album || !hasDraft) {
@@ -210,7 +210,7 @@ function SongAddCompletedContent() {
                 artist={songData.artist}
                 imageUrl={songData.imageUrl}
                 message={messageData.message}
-                nickname={messageData.nickname}
+                nickname={messageData.writer}
                 date={new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
                 tapeColor={album.color}
               />
