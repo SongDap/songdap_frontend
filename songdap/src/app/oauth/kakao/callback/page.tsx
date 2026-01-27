@@ -76,7 +76,6 @@ function KakaoCallbackContent() {
         
         console.error('[OAUTH][KAKAO][ERR] 카카오 로그인 실패', { 
           status, 
-          errorData,
           requestUrl,
           baseURL,
           fullUrl,
@@ -85,6 +84,18 @@ function KakaoCallbackContent() {
           requestData: axiosError?.config?.data,
           responseHeaders: axiosError?.response?.headers,
         });
+        
+        // errorData를 별도로 로깅하여 객체 내용을 펼쳐서 볼 수 있도록 함
+        if (errorData) {
+          console.error('[OAUTH][KAKAO][ERR] 에러 응답 데이터:', errorData);
+          // 에러 메시지가 있으면 별도로 표시
+          if (errorData.message) {
+            console.error('[OAUTH][KAKAO][ERR] 에러 메시지:', errorData.message);
+          }
+          if (errorData.code) {
+            console.error('[OAUTH][KAKAO][ERR] 에러 코드:', errorData.code);
+          }
+        }
 
         isRequesting.current = false;
         if (!hasHandledError.current) {
