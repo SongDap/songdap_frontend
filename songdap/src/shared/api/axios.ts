@@ -197,6 +197,25 @@ apiClient.interceptors.response.use(
       handleAuthExpired();
     }
 
+    // 500 에러 등 기타 에러에 대한 상세 로깅 (프로덕션에서도)
+    if (error.response?.status >= 500) {
+      const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
+      if (DEBUG_OAUTH || process.env.NODE_ENV === 'production') {
+        console.error('[API][ERROR] 서버 에러 발생:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          url: error.config?.url,
+          baseURL: error.config?.baseURL,
+          fullUrl: error.config?.baseURL 
+            ? `${error.config.baseURL}${error.config.url}` 
+            : error.config?.url,
+          method: error.config?.method,
+          errorData: error.response.data,
+          requestData: error.config?.data,
+        });
+      }
+    }
+
     return Promise.reject(error);
   }
 );
