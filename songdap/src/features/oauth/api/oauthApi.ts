@@ -45,42 +45,60 @@ export async function loginWithKakao(code: string): Promise<AuthResponse & { new
     console.groupEnd();
   }
 
-  const res = await apiClient.post<ApiResponse<KakaoLoginResponseData>>(exchangePath, payload, {
-    withCredentials: true,
-  });
+  try {
+    const res = await apiClient.post<ApiResponse<KakaoLoginResponseData>>(exchangePath, payload, {
+      withCredentials: true,
+    });
 
-  // ApiResponse에서 data 필드 추출
-  const responseData = extractDataFromResponse<KakaoLoginResponseData>(res.data);
-  
-  if (!responseData) {
-    throw new Error("카카오 로그인 응답 구조를 파싱할 수 없습니다.");
+    // ApiResponse에서 data 필드 추출
+    const responseData = extractDataFromResponse<KakaoLoginResponseData>(res.data);
+    
+    if (!responseData) {
+      throw new Error("카카오 로그인 응답 구조를 파싱할 수 없습니다.");
+    }
+    
+    if (DEBUG_OAUTH) {
+      console.log("[OAUTH][KAKAO][API] 백엔드 응답 수신:", res.data);
+      console.log("[OAUTH][KAKAO][API] 추출된 데이터:", responseData);
+      console.log("[OAUTH][KAKAO][API] Access Token과 Refresh Token이 HttpOnly Cookie로 자동 설정됨");
+    }
+
+    // Access Token과 Refresh Token은 HttpOnly Cookie로 자동 설정됨
+    // 프론트엔드에서는 메모리에 저장할 필요 없음
+
+    // 백엔드 응답을 AuthResponse 형식으로 변환
+    const authResponse: AuthResponse & { newMember?: boolean } = {
+      accessToken: "", // 쿠키 기반이므로 빈 문자열 (실제 토큰은 쿠키에 있음)
+      user: {
+        id: responseData.userId,
+        nickname: responseData.nickname,
+        profileImage: responseData.profileImage,
+      },
+      newMember: responseData.newMember,
+    };
+
+    if (DEBUG_OAUTH) {
+      console.log("[OAUTH][KAKAO][API] 변환된 AuthResponse:", authResponse);
+    }
+
+    return authResponse;
+  } catch (error: any) {
+    // 에러 발생 시 상세 정보 로깅
+    if (DEBUG_OAUTH || process.env.NODE_ENV === 'production') {
+      console.error("[OAUTH][KAKAO][API] 카카오 로그인 API 호출 실패:", {
+        exchangePath,
+        baseURL: process.env.NEXT_PUBLIC_API_URL || '(설정 안 됨)',
+        fullUrl: `${process.env.NEXT_PUBLIC_API_URL || ''}${exchangePath}`,
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        errorData: error?.response?.data,
+        errorMessage: error?.message,
+        requestPayload: payload,
+        headers: error?.config?.headers,
+      });
+    }
+    throw error;
   }
-  
-  if (DEBUG_OAUTH) {
-    console.log("[OAUTH][KAKAO][API] 백엔드 응답 수신:", res.data);
-    console.log("[OAUTH][KAKAO][API] 추출된 데이터:", responseData);
-    console.log("[OAUTH][KAKAO][API] Access Token과 Refresh Token이 HttpOnly Cookie로 자동 설정됨");
-  }
-
-  // Access Token과 Refresh Token은 HttpOnly Cookie로 자동 설정됨
-  // 프론트엔드에서는 메모리에 저장할 필요 없음
-
-  // 백엔드 응답을 AuthResponse 형식으로 변환
-  const authResponse: AuthResponse & { newMember?: boolean } = {
-    accessToken: "", // 쿠키 기반이므로 빈 문자열 (실제 토큰은 쿠키에 있음)
-    user: {
-      id: responseData.userId,
-      nickname: responseData.nickname,
-      profileImage: responseData.profileImage,
-    },
-    newMember: responseData.newMember,
-  };
-
-  if (DEBUG_OAUTH) {
-    console.log("[OAUTH][KAKAO][API] 변환된 AuthResponse:", authResponse);
-  }
-
-  return authResponse;
 }
 
 /**
