@@ -46,7 +46,7 @@ export default async function AlbumDetailPage({
         </div>
       }
     >
-      <AlbumDetailContent />
+      <AlbumDetailContent id={resolvedParams.id} />
     </Suspense>
   );
 }
