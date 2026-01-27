@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 
@@ -8,7 +9,7 @@ const AlbumDetailContent = dynamic(
   { ssr: false }
 );
 
-export default function AlbumPage() {
+function AlbumPageContent() {
   const searchParams = useSearchParams();
   const albumId = searchParams.get("id") ?? "";
 
@@ -21,4 +22,16 @@ export default function AlbumPage() {
   }
 
   return <AlbumDetailContent id={albumId} />;
+}
+
+export default function AlbumPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-700">로딩 중...</p>
+      </div>
+    }>
+      <AlbumPageContent />
+    </Suspense>
+  );
 }
