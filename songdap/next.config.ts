@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
-  /* 정적 배포를 위한 설정 */
-  output: 'export',
+  /* 정적 배포를 위한 설정 (프로덕션 빌드 시에만) */
+  ...(process.env.NODE_ENV === 'production' ? { output: 'export' } : {}),
 
   /* 이미지 최적화 */
   images: {
