@@ -7,7 +7,7 @@ import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed } from "react-icons/hi";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
-import { getAlbum, addMusicToAlbum } from "@/features/album/api";
+import { getAlbum, addMusicToAlbum, getAlbumMusics } from "@/features/album/api";
 import type { AlbumResponse } from "@/features/album/api";
 import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
 
@@ -29,8 +29,10 @@ function AddSongContent() {
   const albumDataParam = searchParams.get("albumData");
   const { user } = useOauthStore();
   const [album, setAlbum] = useState<AlbumResponse | null>(null);
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const { draft, setSong, setMessage, setStep } = useSongAddDraft(albumId || "");
   const songData = draft.song;
@@ -68,12 +70,17 @@ function AddSongContent() {
       // albumData가 있으면 그 정보로만 표시하고, 없을 때만 시도(실패하면 기본값).
       if (albumDataParam) {
         setIsLoading(false);
+        setIsOwner(false); // URL 공유 시 항상 비소유자
         return;
       }
 
-      getAlbum(albumId)
-        .then((albumData) => {
+      Promise.all([
+        getAlbum(albumId),
+        getAlbumMusics(albumId, 0, 1), // 권한 정보만 필요하므로 페이지 크기 1
+      ])
+        .then(([albumData, musicsData]) => {
           setAlbum(albumData);
+          setIsOwner(musicsData.flag.isOwner);
         })
         .catch((error) => {
           console.warn("[Song Add] 앨범 정보 조회 실패(공유 링크일 수 있음):", error);
@@ -86,6 +93,7 @@ function AddSongContent() {
             musicCountLimit: 10,
             color: "#929292",
           });
+          setIsOwner(false); // 실패 시 비소유자로 처리
         })
         .finally(() => {
           setIsLoading(false);
@@ -106,17 +114,23 @@ function AddSongContent() {
     setSong({ [field]: value });
   };
 
-  const handleMessageDataChange = (field: "nickname" | "message", value: string) => {
+  const handleMessageDataChange = (field: "writer" | "message", value: string) => {
     setMessage({ [field]: value });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // TODO: 이미지 업로드 처리
+      // 미리보기용 Data URL 생성
+      // 파일 객체 저장 (FormData 전송용)
+      setImageFile(file);
+      // 미리보기용 DataURL 생성
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSong({ imageUrl: reader.result as string });
+        setSong({ 
+          imageUrl: reader.result as string,
+          imageFile: file,
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -143,6 +157,18 @@ function AddSongContent() {
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black" />
             <p className="text-sm text-gray-600">앨범 정보를 불러오는 중...</p>
           </div>
+        </div>
+      </>
+    );
+  }
+
+  // 앨범 소유자는 노래 추가 불가
+  if (isOwner === true) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-base text-gray-600">앨범 소유자는 노래를 추가할 수 없습니다.</p>
         </div>
       </>
     );
@@ -328,12 +354,12 @@ function AddSongContent() {
                   {/* 닉네임 */}
                   <div>
                     <label className="block text-base font-medium text-gray-900 mb-2">
-                      닉네임
+                      닉네임 <span className="text-sm font-normal text-gray-500">(선택)</span>
                     </label>
                     <input
                       type="text"
-                      value={messageData.nickname}
-                      onChange={(e) => handleMessageDataChange("nickname", e.target.value)}
+                      value={messageData.writer}
+                      onChange={(e) => handleMessageDataChange("writer", e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
                       placeholder="닉네임을 입력하세요"
                     />
@@ -342,7 +368,7 @@ function AddSongContent() {
                   {/* 전하고 싶은 메시지 */}
                   <div>
                     <label className="block text-base font-medium text-gray-900 mb-2">
-                      전하고 싶은 메시지
+                      전하고 싶은 메시지 <span className="text-sm font-normal text-gray-500">(선택)</span>
                     </label>
                     <textarea
                       value={messageData.message}
@@ -370,20 +396,18 @@ function AddSongContent() {
                         return;
                       }
 
-                      if (!messageData.nickname.trim() || !messageData.message.trim()) {
-                        alert("닉네임과 메시지를 입력해주세요.");
-                        return;
-                      }
-
                       setIsSubmitting(true);
                       const targetAlbumId = album?.uuid || albumId || "";
 
                       try {
-                        // 노래 추가 API 호출
+                        // 노래 추가 API 호출 (이미지 파일이 있으면 FormData로 전송)
                         await addMusicToAlbum(targetAlbumId, {
                           title: songData.title,
                           artist: songData.artist,
-                          imageUrl: songData.imageUrl || undefined,
+                          message: messageData.message.trim() || undefined,
+                          writer: messageData.writer.trim() || undefined,
+                          imageFile: songData.imageFile,
+                          imageFile: imageFile || undefined,
                           message: messageData.message,
                           nickname: messageData.nickname,
                         });

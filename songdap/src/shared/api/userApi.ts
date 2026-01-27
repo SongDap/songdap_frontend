@@ -1,5 +1,6 @@
 import { apiClient } from "./axios";
 import { API_ENDPOINTS } from "./endpoints";
+import { extractDataFromResponse } from "./utils";
 import type { UserInfo } from "@/features/oauth/model/types";
 import type { AxiosError } from "axios";
 
@@ -12,35 +13,87 @@ export async function getMe() {
   if (DEBUG_OAUTH) {
     console.log("[OAUTH][USER][API] GET", API_ENDPOINTS.USER.ME);
   }
-  const res = await apiClient.get<UserInfo>(API_ENDPOINTS.USER.ME, {
+  const res = await apiClient.get<any>(API_ENDPOINTS.USER.ME, {
     withCredentials: true,
   });
-  return res.data;
+  const data = extractDataFromResponse<UserInfo>(res.data);
+  if (!data) throw new Error("유저 정보 응답 구조를 파싱할 수 없습니다.");
+  return data;
 }
 
 export type UpdateMeRequest = {
   nickname: string;
-  agreeAge: boolean;
-  agreeTerms: boolean;
+  email?: string;
+  profileImageFile?: File;
+  agreeAge?: boolean;
+  agreeTerms?: boolean;
+};
+
+export type WithdrawRequest = {
+  nickname: string;
+  email: string;  
+  profileImage?: string;
+  reasons: string[];
+  reasonDetail?: string;
 };
 
 /**
  * 온보딩/회원가입: 닉네임 및 약관 동의 저장
- * (백엔드가 아직 다른 엔드포인트를 쓰면 여기만 바꾸면 됩니다)
+ * 백엔드 형식: @RequestPart("request") String requestJson, @RequestPart(value = "file", required = false) MultipartFile file
  */
 export async function updateMe(payload: UpdateMeRequest) {
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
   if (DEBUG_OAUTH) {
     console.log("[OAUTH][USER][API] PATCH", API_ENDPOINTS.USER.ME, {
       nicknameLength: payload.nickname?.length ?? 0,
-      agreeAge: payload.agreeAge,
-      agreeTerms: payload.agreeTerms,
+      hasEmail: Boolean(payload.email),
+      hasProfileImage: Boolean(payload.profileImageFile),
     });
   }
-  const res = await apiClient.patch<UserInfo>(API_ENDPOINTS.USER.ME, payload, {
+
+  // 백엔드 형식에 맞게 항상 FormData 사용
+  const formData = new FormData();
+  
+  // request 파트: JSON 문자열로 변환
+  // 백엔드 UpdateUserRequest는 nickname, email만 받음
+  // agreeAge, agreeTerms는 추후 확장 가능성을 위해 타입에는 남겨두지만 전송하지 않음
+  const requestJson = JSON.stringify({
+    nickname: payload.nickname,
+    email: payload.email,
+  });
+  formData.append("request", requestJson);
+  
+  // file 파트: 프로필 이미지 파일 (있는 경우만)
+  if (payload.profileImageFile) {
+    formData.append("file", payload.profileImageFile);
+  }
+
+  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, formData, {
     withCredentials: true,
   });
-  return res.data;
+  const data = extractDataFromResponse<UserInfo>(res.data);
+  if (!data) throw new Error("유저 수정 응답 구조를 파싱할 수 없습니다.");
+  return data;
+}
+
+/**
+ * 회원 탈퇴
+ * - 사용자 정보 Soft Delete + OAuth 연동 해제 + Redis Refresh Token 삭제 + 쿠키 삭제(백엔드)
+ */
+export async function withdrawUser() {
+  const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
+  if (DEBUG_OAUTH) {
+    console.log("[OAUTH][USER][API] DELETE", API_ENDPOINTS.USER.WITHDRAW);
+  }
+
+  // 백엔드 스펙: DELETE /api/v1/users (파라미터/바디 없음)
+  const res = await apiClient.delete<any>(API_ENDPOINTS.USER.WITHDRAW, {
+    withCredentials: true,
+    __skipAuthRefresh: true,
+  } as any);
+
+  // 응답 예시: { code, message, data: {} }
+  return extractDataFromResponse<{}>(res.data) ?? {};
 }
 
 export function isNotFoundError(error: unknown) {

@@ -7,7 +7,8 @@ import Link from "next/link";
 
 type ProfileEditPayload = {
   nickname: string;
-  profileImage?: string;
+  email?: string;
+  profileImageFile?: File;
 };
 
 type ProfileEditFormProps = {
@@ -23,8 +24,9 @@ export default function ProfileEditForm({
 }: ProfileEditFormProps) {
   const {
     nickname,
-    profileImageDataUrl,
     setNickname,
+    profileImageDataUrl,
+    profileImageFile,
     setProfileImage,
     isDirty,
   } = useProfileForm({
@@ -41,7 +43,7 @@ export default function ProfileEditForm({
     try {
       await onSubmit({
         nickname: nickname.trim(),
-        profileImage: profileImageDataUrl || undefined,
+        profileImageFile: profileImageFile || undefined,
       });
     } finally {
       setIsSubmitting(false);
@@ -50,7 +52,11 @@ export default function ProfileEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-md flex-col items-center gap-8">
-      <ProfileImageUploader imageUrl={profileImageDataUrl} onChange={setProfileImage} />
+      <ProfileImageUploader
+        imageUrl={profileImageDataUrl || initialProfileImage}
+        onChange={setProfileImage}
+        disabled={false}
+      />
 
       <div className="w-full">
         <div className="mb-6">

@@ -10,37 +10,36 @@ type UseProfileFormOptions = {
 
 export function useProfileForm(options: UseProfileFormOptions = {}) {
   const [nickname, setNickname] = useState(options.initialNickname || "");
-  const [profileImageDataUrl, setProfileImageDataUrl] = useState(
-    options.initialProfileImage || ""
-  );
-
+  const [profileImageDataUrl, setProfileImageDataUrl] = useState(options.initialProfileImage || "");
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [isProfileImageChanged, setIsProfileImageChanged] = useState(false);
+
   const setProfileImage = useCallback((file: File | null) => {
     if (!file) {
-      setProfileImageDataUrl("");
+      setProfileImageDataUrl(options.initialProfileImage || "");
+      setProfileImageFile(null);
       setIsProfileImageChanged(false);
       return;
     }
 
     if (!file.type.startsWith("image/")) {
-      setProfileImageDataUrl("");
+      setProfileImageDataUrl(options.initialProfileImage || "");
+      setProfileImageFile(null);
       setIsProfileImageChanged(false);
       return;
     }
-    setIsProfileImageChanged(true);
 
+    setIsProfileImageChanged(true);
+    setProfileImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       setProfileImageDataUrl(typeof reader.result === "string" ? reader.result : "");
     };
     reader.readAsDataURL(file);
-  }, []);
+  }, [options.initialProfileImage]);
 
   const isNicknameOk = useMemo(() => isNicknameValid(nickname), [nickname]);
-  const isProfileImageOk = useMemo(
-    () => isProfileImageValid(profileImageDataUrl),
-    [profileImageDataUrl]
-  );
+  const isProfileImageOk = true;
 
   const isValid = useMemo(
     () => isNicknameOk && isProfileImageOk,
@@ -49,17 +48,14 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
 
   const isDirty = useMemo(() => {
     const initialNickname = options.initialNickname || "";
-  
-    return (
-      nickname.trim() !== initialNickname.trim() ||
-      isProfileImageChanged
-    );
-  }, [nickname, isProfileImageChanged, options.initialNickname])
+    return nickname.trim() !== initialNickname.trim() || isProfileImageChanged;
+  }, [nickname, isProfileImageChanged, options.initialNickname]);
 
   return {
     nickname,
-    profileImageDataUrl,
     setNickname,
+    profileImageDataUrl,
+    profileImageFile,
     setProfileImage,
     isNicknameOk,
     isProfileImageOk,

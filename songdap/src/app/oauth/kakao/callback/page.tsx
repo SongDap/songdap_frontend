@@ -70,12 +70,37 @@ function KakaoCallbackContent() {
 
         const status = axiosError?.response?.status;
         const errorData = axiosError?.response?.data;
-        console.error('[OAUTH][KAKAO][ERR] 카카오 로그인 실패', { status, errorData });
+        const requestUrl = axiosError?.config?.url;
+        const baseURL = axiosError?.config?.baseURL;
+        const fullUrl = baseURL ? `${baseURL}${requestUrl}` : requestUrl;
+        
+        console.error('[OAUTH][KAKAO][ERR] 카카오 로그인 실패', { 
+          status, 
+          errorData,
+          requestUrl,
+          baseURL,
+          fullUrl,
+          method: axiosError?.config?.method,
+          headers: axiosError?.config?.headers,
+          requestData: axiosError?.config?.data,
+          responseHeaders: axiosError?.response?.headers,
+        });
 
         isRequesting.current = false;
         if (!hasHandledError.current) {
           hasHandledError.current = true;
-          alert('카카오 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          
+          // 더 자세한 에러 메시지 제공
+          let errorMessage = '카카오 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.';
+          if (status === 500) {
+            errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          } else if (status === 400) {
+            errorMessage = '잘못된 요청입니다. 다시 시도해주세요.';
+          } else if (status === 401) {
+            errorMessage = '인증에 실패했습니다. 다시 시도해주세요.';
+          }
+          
+          alert(errorMessage);
           router.replace(ROUTES.HOME);
         }
       });

@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { API_ENDPOINTS } from "./endpoints";
+import { showAuthExpired } from "@/features/oauth/model/authUiStore";
 
 /**
  * Axios 인스턴스 생성
@@ -13,19 +15,41 @@ const normalizeBaseURL = (url: string | undefined): string => {
   if (!url) return '';
   // 따옴표 제거 (환경 변수에 따옴표가 포함된 경우)
   const cleaned = url.trim().replace(/^["']|["']$/g, '');
-  return cleaned || '';
+  
+  if (!cleaned) return '';
+  
+  // 프로덕션에서 HTTPS 강제
+  if (process.env.NODE_ENV === 'production' && cleaned.startsWith('http://')) {
+    console.warn('[Security] HTTPS를 사용해야 합니다. HTTP는 프로덕션에서 안전하지 않습니다.');
+  }
+  
+  return cleaned;
 };
 
 export const apiClient = axios.create({
   // baseURL이 빈 문자열이면 undefined로 설정하여 axios가 절대 경로를 올바르게 처리하도록 함
   baseURL: normalizeBaseURL(process.env.NEXT_PUBLIC_API_URL) || undefined,
-  timeout: 10000,
+  timeout: 15000,
   // Access Token과 Refresh Token이 HttpOnly Cookie로 설정되므로 필수
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// axios config 확장 (내부 플래그)
+declare module "axios" {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface AxiosRequestConfig {
+    _retry?: boolean;
+    __skipAuthRefresh?: boolean;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface InternalAxiosRequestConfig {
+    _retry?: boolean;
+    __skipAuthRefresh?: boolean;
+  }
+}
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -39,6 +63,11 @@ const processQueue = (error: any, token: string | null = null) => {
     else p.resolve(token);
   });
   failedQueue = [];
+};
+
+const handleAuthExpired = () => {
+  if (typeof window === "undefined") return;
+  showAuthExpired();
 };
 
 //
@@ -55,6 +84,16 @@ apiClient.interceptors.request.use(
       config.url = '/' + config.url;
     }
     
+    // FormData인 경우 Content-Type을 제거하여 브라우저가 자동으로 multipart/form-data와 boundary를 설정하도록 함
+    if (config.data instanceof FormData) {
+      // config.headers에서 Content-Type을 제거하거나 undefined로 설정
+      if (config.headers) {
+        if ('Content-Type' in config.headers) {
+          delete config.headers['Content-Type'];
+        }
+      }
+    }
+    
     // 디버그 모드에서 요청 정보 로깅
     const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
     if (DEBUG_OAUTH && typeof window !== 'undefined') {
@@ -66,6 +105,7 @@ apiClient.interceptors.request.use(
         url: config.url,
         fullURL: fullUrl,
         withCredentials: config.withCredentials,
+        isFormData: config.data instanceof FormData,
       });
     }
 
@@ -81,6 +121,11 @@ apiClient.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config;
+
+    // refresh/logout 요청은 재발급 로직에서 제외 (무한루프 방지)
+    if (originalRequest?.__skipAuthRefresh) {
+      return Promise.reject(error);
+    }
 
     // Access Token 만료 (401 에러)
     if (
@@ -104,7 +149,11 @@ apiClient.interceptors.response.use(
       try {
         // Refresh Token은 HttpOnly Cookie로 자동 전송됨
         // Access Token도 쿠키로 자동 설정됨
-        await apiClient.post('/api/v1/auth/reissue');
+        await apiClient.post(
+          API_ENDPOINTS.AUTH.REISSUE,
+          undefined,
+          { __skipAuthRefresh: true } as any
+        );
 
         // 대기 중인 요청들 재시도
         processQueue(null, null);
@@ -116,17 +165,54 @@ apiClient.interceptors.response.use(
         // Refresh Token도 만료
         processQueue(refreshError, null);
 
-        // 로그아웃 처리
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user');
-          // 로그인 페이지로 리다이렉트 (필요시)
-          
+        // 로그아웃 API 호출(최선) + 로컬 상태 정리 후 홈으로 이동
+        try {
+          await apiClient.post(
+            API_ENDPOINTS.AUTH.LOGOUT,
+            undefined,
+            { __skipAuthRefresh: true } as any
+          );
+        } catch {
+          // ignore
+        } finally {
+          handleAuthExpired();
         }
 
         return Promise.reject(refreshError);
 
       } finally {
         isRefreshing = false;
+      }
+    }
+
+    // 이미 한 번 재시도했는데도 401이면 (혹시 재발급이 반영되지 않았거나, 쿠키 삭제됨)
+    // 사용자에게 재로그인/홈 선택을 제공
+    if (error.response?.status === 401 && originalRequest?._retry) {
+      handleAuthExpired();
+    }
+
+    // 일부 API는 인증이 없을 때 403으로 내려올 수 있음(권한 없음/미인증).
+    // 이 경우에도 동일하게 재로그인/홈 선택 제공.
+    if (error.response?.status === 403) {
+      handleAuthExpired();
+    }
+
+    // 500 에러 등 기타 에러에 대한 상세 로깅 (프로덕션에서도)
+    if (error.response?.status >= 500) {
+      const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
+      if (DEBUG_OAUTH || process.env.NODE_ENV === 'production') {
+        console.error('[API][ERROR] 서버 에러 발생:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          url: error.config?.url,
+          baseURL: error.config?.baseURL,
+          fullUrl: error.config?.baseURL 
+            ? `${error.config.baseURL}${error.config.url}` 
+            : error.config?.url,
+          method: error.config?.method,
+          errorData: error.response.data,
+          requestData: error.config?.data,
+        });
       }
     }
 
