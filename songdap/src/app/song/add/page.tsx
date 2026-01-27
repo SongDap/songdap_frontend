@@ -7,7 +7,8 @@ import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed } from "react-icons/hi";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
-import { getAlbum, addMusicToAlbum, getAlbumMusics } from "@/features/album/api";
+import { getAlbum } from "@/features/album/api";
+import { addMusicToAlbum, getAlbumMusics } from "@/features/song/api";
 import type { AlbumResponse } from "@/features/album/api";
 import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
 

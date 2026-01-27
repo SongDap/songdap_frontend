@@ -5,8 +5,10 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { HiMail, HiMusicNote } from "react-icons/hi";
 import { HiInformationCircle, HiX, HiChevronDown } from "react-icons/hi";
 
-import { getAlbum, getAlbumMusics, getMusicDetail } from "@/features/album/api";
-import type { AlbumResponse, MusicInfo, MusicSortOption } from "@/features/album/api";
+import { getAlbum } from "@/features/album/api";
+import { getAlbumMusics, getMusicDetail } from "@/features/song/api";
+import type { AlbumResponse } from "@/features/album/api";
+import type { MusicInfo, MusicSortOption } from "@/features/song/api";
 import { SongCard } from "@/features/song/add/components";
 import { SongLetter } from "@/features/song/components";
 import { PageHeader } from "@/shared";
