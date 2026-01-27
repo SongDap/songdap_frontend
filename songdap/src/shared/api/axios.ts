@@ -28,6 +28,7 @@ const normalizeBaseURL = (url: string | undefined): string => {
 
 export const apiClient = axios.create({
   // baseURL이 빈 문자열이면 undefined로 설정하여 axios가 절대 경로를 올바르게 처리하도록 함
+  // NEXT_PUBLIC_* 변수는 빌드 시점에 대체됨
   baseURL: normalizeBaseURL(process.env.NEXT_PUBLIC_API_URL) || undefined,
   timeout: 15000,
   // Access Token과 Refresh Token이 HttpOnly Cookie로 설정되므로 필수
