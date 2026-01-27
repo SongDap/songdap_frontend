@@ -22,10 +22,8 @@ export default function LandingMain() {
   }, [hydrate]);
 
   // 환경변수 가져오기
-  const JAVASCRIPT_KEY =
-    process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY ||
-    process.env.NEXT_PUBLIC_KAKAO_API_KEY; // 기존 키명 fallback
-  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI; // 여기 나중에 서버 URI로 바꿔야함
+  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_API_KEY;
+  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
 
   // 카카오 로그인 주소 조합하기
