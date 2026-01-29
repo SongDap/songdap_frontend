@@ -32,8 +32,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // 환경 변수 가져오기
-  const GA_ID = process.env.REACT_APP_GOOGLE_ANALYTICS_ID;
+  // 환경 변수 가져오기 (Next.js 클라이언트 사이드 노출을 위해 NEXT_PUBLIC_ 접두사 필요)
+  const GA_ID = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || process.env.REACT_APP_GOOGLE_ANALYTICS_ID;
 
   return (
     <html lang="ko">
