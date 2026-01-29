@@ -22,7 +22,7 @@ export default function LandingMain() {
   }, [hydrate]);
 
   // 환경변수 가져오기
-  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
+  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_API_KEY;
   const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI; // 여기 나중에 서버 URI로 바꿔야함
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
 
@@ -74,40 +74,33 @@ export default function LandingMain() {
   }
 
   return (
-<div className="w-full px-6 lg:px-16">
-  <div className="grid grid-cols-1 lg:grid-cols-2 items-center max-w-[1440px] mx-auto py-12 gap-12 lg:gap-8">
-    {/* 왼쪽 */}
-    <div className="flex flex-col justify-center space-y-6">
-      <div className="space-y-3">
-        <p className="text-base lg:text-lg text-gray-600 font-medium" style={{ fontFamily: "KOTRA_HOPE" }}>
-          그날을 추억하는 방법
-        </p>
-
-        <Link href="/">
+    <div className="w-full">
+      
+      {/* Mobile only */}
+      <div className="md:hidden relative w-full">
+        <Image
+          src="/images/rightAlbum.png"
+          alt="landing mobile"
+          width={2400}
+          height={2400}
+          priority
+          className="block h-auto"
+        />
+        {/* 오버레이 */}
+        <div className="absolute inset-0 bg-black/30 z-10" />
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-6 px-6 text-center">
           <Image
-            src="/images/logo.png"
-            alt="paper airplane"
+            src="/images/logoMobile.png"
+            alt="노래로 답해줘"
             width={500}
             height={260}
             priority
-            className="w-[280px] sm:w-[360px] lg:w-[460px] h-auto mb-6"
+            className="h-auto w-[70%] max-w-[360px]"
           />
-        </Link>
-
-        <p className="text-lg lg:text-xl text-gray-700 leading-relaxed max-w-xl" style={{ fontFamily: "KOTRA_HOPE" }}>
-          전교 1등은 무슨 노래를 듣는지 궁금할 때
-          <br />
-          음악으로 졸업식 같은 기념일을 추억하고 싶을 때
-          <br />
-          공감해주는 말한마디를 건낼 때, 노래로 답해줘
-        </p>
-      </div>
-
-      {/* 카카오 로그인 버튼 클릭 */}
-      {isAuthenticated ? (
-        <Link
-          href={ROUTES.ALBUM.LIST}
-          className="
+          {isAuthenticated ? (
+            <Link
+              href={ROUTES.ALBUM.LIST}
+              className="
             w-full sm:w-auto
             inline-flex items-center justify-center gap-2
             px-10 py-4
@@ -118,14 +111,14 @@ export default function LandingMain() {
             active:scale-95
             shadow-lg
           "
-        >
-          내 앨범 보기
-        </Link>
-      ) : (
-        <button
-          type="button"
-          onClick={handleLogin}
-          className="
+            >
+              내 앨범 보기
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={handleLogin}
+              className="
             w-full sm:w-auto
             flex items-center justify-center gap-2
             px-10 py-4
@@ -136,32 +129,114 @@ export default function LandingMain() {
             active:scale-95
             shadow-lg
           "
-        >
-          <Image
-            src="/images/kakaoButton.png"
-            alt="kakao Login"
-            width={220}
-            height={52}
-            priority
-            className="h-auto"
-          />
-        </button>
-      )}
-    </div>
+            >
+              <Image
+                src="/images/kakaoButton.png"
+                alt="kakao Login"
+                width={220}
+                height={52}
+                priority
+                className="h-auto"
+              />
+            </button>
+          )}
+        </div>
+      </div>
 
-    {/* 오른쪽 */}
-    <div className="flex justify-center lg:justify-end">
-      <Image
-        src="/images/rightAlbum.png"
-        alt="right album"
-        width={900}
-        height={500}
-        priority
-        className="w-[95%] sm:w-[90%] lg:w-[120%] 2xl:w-[135%] max-w-none h-auto"
-      />
+      
+
+      
+
+
+
+      {/* PC */}
+      <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 items-center max-w-[1440px] mx-auto py-12 gap-12 lg:gap-8">
+        {/* 왼쪽 */}
+        <div className="flex flex-col justify-center space-y-6">
+          <div className="space-y-3">
+            <p className="text-base lg:text-lg text-gray-600 font-medium" style={{ fontFamily: "KOTRA_HOPE" }}>
+              그날을 추억하는 방법
+            </p>
+
+            <Link href="/">
+              <Image
+                src="/images/logo.png"
+                alt="paper airplane"
+                width={500}
+                height={260}
+                priority
+                className="w-[280px] sm:w-[360px] lg:w-[460px] h-auto mb-6"
+              />
+            </Link>
+
+            <p className="text-lg lg:text-xl text-gray-700 leading-relaxed max-w-xl" style={{ fontFamily: "KOTRA_HOPE" }}>
+              전교 1등은 무슨 노래를 듣는지 궁금할 때
+              <br />
+              음악으로 졸업식 같은 기념일을 추억하고 싶을 때
+              <br />
+              공감해주는 말한마디를 건낼 때, 노래로 답해줘
+            </p>
+          </div>
+
+          {/* 카카오 로그인 버튼 클릭 */}
+          {isAuthenticated ? (
+            <Link
+              href={ROUTES.ALBUM.LIST}
+              className="
+            w-full sm:w-auto
+            inline-flex items-center justify-center gap-2
+            px-10 py-4
+            bg-[#006FFF] hover:bg-[#0056CC]
+            text-white font-semibold
+            rounded-xl
+            transition-colors
+            active:scale-95
+            shadow-lg
+          "
+            >
+              내 앨범 보기
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={handleLogin}
+              className="
+            w-full sm:w-auto
+            flex items-center justify-center gap-2
+            px-10 py-4
+            bg-[#FEE500] hover:bg-[#FEE500]
+            text-gray-900 font-semibold
+            rounded-xl
+            transition-colors
+            active:scale-95
+            shadow-lg
+          "
+            >
+              <Image
+                src="/images/kakaoButton.png"
+                alt="kakao Login"
+                width={220}
+                height={52}
+                priority
+                className="h-auto"
+              />
+            </button>
+          )}
+        </div>
+
+        {/* 오른쪽 */}
+        <div className="flex justify-center lg:justify-end ml-20">
+          <Image
+            src="/images/rightAlbum.png"
+            alt="right album"
+            width={900}
+            height={500}
+            priority
+            className="w-[95%] sm:w-[90%] lg:w-[120%] 2xl:w-[135%] max-w-none h-auto"
+          />
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
   );
 }

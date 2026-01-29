@@ -88,7 +88,7 @@ export default function ProfileEditPage() {
                 isAuthenticated: true,
               }));
 
-              router.replace("/");
+              router.replace("/album/list");
             }}
           />
         )}

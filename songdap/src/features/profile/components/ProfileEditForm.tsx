@@ -86,12 +86,18 @@ export default function ProfileEditForm({
         >
           {isSubmitting ? "처리 중..." : "수정하기"}
         </button>
-          <br/>
-        <Link href="/profile/withdraw">
-          <div className="text-right text-red-600 hover:text-red-700 cursor-pointer">
-            회원탈퇴하기
-          </div>
-        </Link>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <div className="flex">
+          <Link href="/profile/withdraw" className="ml-auto">
+            <span className="text-red-600 hover:text-red-700 cursor-pointer">
+              회원탈퇴하기
+            </span>
+          </Link>
+        </div>
       </div>
     </form>
   );
