@@ -18,6 +18,7 @@ export type GAEvent =
   | { event: "add_to_cart"; items: GAItem[] }
   | { event: "search"; search_term: string }
   | { event: "select_content"; content_type: string; item_id: string }
+  | { event: "page_view"; page_path?: string; page_location?: string; page_title?: string }
   | { event: "scroll"; percent_scrolled: 25 | 50 | 75 | 90 }
   // Custom events
   | { event: "login_failed"; error_code?: string }
