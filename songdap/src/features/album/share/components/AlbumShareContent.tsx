@@ -35,10 +35,11 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
       return;
     }
 
-    if (!albumData?.uuid) return;
+    const albumId = albumData?.uuid;
+    if (!albumId) return;
 
     const songAddUrl = buildSongAddUrlFromAlbumInfo({
-      id: albumData.uuid,
+      id: albumId,
       title: albumData.title,
       color: albumColor,
       description: albumData.description || "",
@@ -52,8 +53,8 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
       setIsLinkCopied(true);
       // 완료 이벤트 추적
       trackEvent(
-        { event: "share_album", item_id: albumData.uuid },
-        { category: "album", action: "share", label: albumData.uuid }
+        { event: "share_album", item_id: albumId },
+        { category: "album", action: "share", label: albumId }
       );
       setTimeout(() => setIsLinkCopied(false), 2000);
     });
@@ -72,10 +73,11 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
       return;
     }
 
-    if (!albumData?.uuid) return;
+    const albumId = albumData?.uuid;
+    if (!albumId) return;
 
     const shareUrl = buildSongAddUrlFromAlbumInfo({
-      id: albumData.uuid,
+      id: albumId,
       title: albumData.title,
       color: albumColor,
       description: albumData.description || "",
@@ -95,8 +97,8 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
       });
       // 완료 이벤트 추적
       trackEvent(
-        { event: "share_album", item_id: albumData.uuid },
-        { category: "album", action: "share_kakao", label: albumData.uuid }
+        { event: "share_album", item_id: albumId },
+        { category: "album", action: "share_kakao", label: albumId }
       );
     } catch (err) {
       console.error("카카오 공유 실패:", err);
