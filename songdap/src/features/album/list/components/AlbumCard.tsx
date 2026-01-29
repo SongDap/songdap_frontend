@@ -8,6 +8,7 @@ import AlbumCardEditMode from "./AlbumCardEditMode";
 import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
 import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import { trackEvent } from "@/lib/gtag";
 
 type AlbumCardProps = {
   id: string;
@@ -78,6 +79,10 @@ export default function AlbumCard({
       isPublic,
     });
     navigator.clipboard.writeText(songAddUrl).then(() => {
+      trackEvent(
+        { event: "select_content", content_type: "album_link_copy", item_id: id },
+        { category: "album", action: "share_link_copy", label: id }
+      );
       setIsLinkCopied(true);
       setTimeout(() => {
         setIsLinkCopied(false);
@@ -114,6 +119,10 @@ export default function AlbumCard({
         imageUrl: `${window.location.origin}/images/logo.png`,
         buttonTitle: "노래 추가하기",
       });
+      trackEvent(
+        { event: "share_album", item_id: id },
+        { category: "album", action: "share_kakao", label: id }
+      );
     } catch (err) {
       console.error("카카오 공유 실패:", err);
       // 최소 fallback: 링크 복사
@@ -134,17 +143,23 @@ export default function AlbumCard({
     }
   };
 
+  const handleOpenDetail = () => {
+    if (!isEditMode && !showShareMenu) {
+      trackEvent(
+        { event: "select_item", items: [{ item_id: id }] },
+        { category: "album", action: "select", label: id }
+      );
+      router.push(href || `/album?id=${id}`);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col items-center gap-3 group album-card-item">
         {/* 앨범 커버 - 클릭 가능 */}
         <div 
           className="w-[170px] h-[170px] md:w-[240px] md:h-[240px] relative cursor-pointer"
-          onClick={() => {
-            if (!isEditMode && !showShareMenu) {
-              router.push(href || `/album?id=${id}`);
-            }
-          }}
+          onClick={handleOpenDetail}
         >
           {/* 모바일 버전 */}
           <div className="md:hidden">
@@ -198,11 +213,7 @@ export default function AlbumCard({
           <div className="flex items-center justify-between gap-2">
             <h3 
               className="text-base md:text-lg font-semibold text-gray-900 flex-1 truncate cursor-pointer hover:text-blue-600 transition-colors"
-              onClick={() => {
-                if (!isEditMode && !showShareMenu) {
-                  router.push(href || `/album?id=${id}`);
-                }
-              }}
+              onClick={handleOpenDetail}
             >
               {albumName}
             </h3>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import { trackEvent } from "@/lib/gtag";
 import { ROUTES } from "@/shared/lib/routes";
 
 interface Album {
@@ -21,8 +22,24 @@ export default function LandingMain() {
     hydrate();
   }, [hydrate]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 768) return;
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, []);
+
   // 환경변수 가져오기
-  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_API_KEY;
+  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
   const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI; // 여기 나중에 서버 URI로 바꿔야함
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
 
@@ -31,6 +48,10 @@ export default function LandingMain() {
 
   // 클릭하면 실행될 함수
   function handleLogin() {
+    trackEvent(
+      { event: "select_content", content_type: "cta", item_id: "landing_kakao_login" },
+      { category: "navigation", action: "click_button", label: "landing_kakao_login" }
+    );
     if (DEBUG_OAUTH) {
       console.groupCollapsed("[OAUTH][KAKAO][01] 로그인 버튼 클릭");
       console.log("JAVASCRIPT_KEY 존재:", Boolean(JAVASCRIPT_KEY));
@@ -74,32 +95,41 @@ export default function LandingMain() {
   }
 
   return (
-    <div className="w-full">
-      
+    <div className="w-full md:overflow-visible overflow-hidden">
+
       {/* Mobile only */}
-      <div className="md:hidden relative w-full">
+      <div className="md:hidden relative w-full h-[100dvh] overflow-hidden flex items-center justify-center">
         <Image
-          src="/images/rightAlbum.png"
+          src="/images/mainMobile.png"
           alt="landing mobile"
-          width={2400}
-          height={2400}
+          width={5000}
+          height={2000}
           priority
-          className="block h-auto"
+          className="w-[150vw] h-auto min-h-[150vh] object-cover"
         />
+
         {/* 오버레이 */}
-        <div className="absolute inset-0 bg-black/30 z-10" />
+        <div className="absolute inset-0 bg-black/15 z-10" />
+
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-6 px-6 text-center">
+          {/* ... 내부 콘텐츠는 그대로 유지 ... */}
           <Image
             src="/images/logoMobile.png"
             alt="노래로 답해줘"
-            width={500}
-            height={260}
+            width={2000}
+            height={2000}
             priority
-            className="h-auto w-[70%] max-w-[360px]"
+            className="h-auto w-[80%] max-w-[420px] -mt-5"
           />
           {isAuthenticated ? (
             <Link
               href={ROUTES.ALBUM.LIST}
+              onClick={() =>
+                trackEvent(
+                  { event: "select_content", content_type: "cta", item_id: "landing_album_list" },
+                  { category: "navigation", action: "click_button", label: "landing_album_list" }
+                )
+              }
               className="
             w-full sm:w-auto
             inline-flex items-center justify-center gap-2
@@ -143,11 +173,6 @@ export default function LandingMain() {
         </div>
       </div>
 
-      
-
-      
-
-
 
       {/* PC */}
       <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 items-center max-w-[1440px] mx-auto py-12 gap-12 lg:gap-8">
@@ -182,6 +207,12 @@ export default function LandingMain() {
           {isAuthenticated ? (
             <Link
               href={ROUTES.ALBUM.LIST}
+              onClick={() =>
+                trackEvent(
+                  { event: "select_content", content_type: "cta", item_id: "landing_album_list" },
+                  { category: "navigation", action: "click_button", label: "landing_album_list" }
+                )
+              }
               className="
             w-full sm:w-auto
             inline-flex items-center justify-center gap-2

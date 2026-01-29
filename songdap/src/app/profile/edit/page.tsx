@@ -6,6 +6,7 @@ import { Header } from "@/shared";
 import { getProfile, updateProfile } from "@/features/profile/api";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import ProfileEditForm from "@/features/profile/components/ProfileEditForm";
+import { trackEvent } from "@/lib/gtag";
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -67,6 +68,12 @@ export default function ProfileEditPage() {
             initialProfileImage={initialProfileImage}
             onSubmit={async (payload) => {
               const updated = await updateProfile(payload);
+
+              // 완료 이벤트 추적
+              trackEvent(
+                { event: "update_profile", field: "nickname" },
+                { category: "profile", action: "edit_complete", label: updated.nickname }
+              );
 
               // UI 캐시(localStorage) 갱신 + zustand 메모리 갱신
               try {

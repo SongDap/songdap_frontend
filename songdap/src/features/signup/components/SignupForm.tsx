@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { updateMe } from "@/shared/api";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { useRef, useState } from "react";
-import * as gtag from "@/lib/gtag";
+import { trackEvent } from "@/lib/gtag";
 
 export function SignupForm() {
     const {
@@ -59,6 +59,10 @@ export function SignupForm() {
 
         setProfileImage(file);
         setProfileImageFile(file);
+        trackEvent(
+            { event: "upload_image", file_size_kb: Math.round(file.size / 1024) },
+            { category: "profile", action: "upload_image", label: "signup_profile_image" }
+        );
     };
 
     async function handleSubmit() {
@@ -75,12 +79,10 @@ export function SignupForm() {
 
             const me = await updateMe(payload);
 
-            gtag.event({
-                action: "sign_up",       // GA4 표준 회원가입 이벤트 이름
-                category: "account",
-                label: "onboarding",     // 추가 정보 (어떤 경로로 가입했는지 등)
-                value: 1
-            });
+            trackEvent(
+                { event: "sign_up", method: "kakao" },
+                { category: "authentication", action: "sign_up", label: "onboarding" }
+            );
 
             // 쿠키 기반이라 accessToken은 비워도 됨
             loginFunction({ accessToken: "", user: me });
@@ -252,7 +254,13 @@ export function SignupForm() {
                 {/* 가입 버튼 */}
                 <button
                     type="button"
-                    onClick={handleSubmit}
+                    onClick={() => {
+                        trackEvent(
+                            { event: "select_content", content_type: "signup_button", item_id: "signup_submit" },
+                            { category: "authentication", action: "sign_up_click", label: "signup_form" }
+                        );
+                        handleSubmit();
+                    }}
                     disabled={!isValid || isSubmitting}
                     className={`w-full h-12 rounded-md text-base font-semibold shadow-sm active:scale-[0.99] ${isValid && !isSubmitting ? "bg-[#006FFF] text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"
                         }`}

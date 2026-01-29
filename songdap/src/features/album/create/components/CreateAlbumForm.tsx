@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ROUTES } from "@/shared/lib/routes";
 import AlbumFormFields, { type AlbumFormData } from "./AlbumFormFields";
 import { createAlbum } from "@/features/album/api";
+import { trackEvent } from "@/lib/gtag";
 import type { AxiosError } from "axios";
 
 type CreateAlbumFormProps = {
@@ -99,6 +100,10 @@ export default function CreateAlbumForm({
       }
       
       console.log("[Album Form] 앨범 UUID:", albumUuid);
+      trackEvent(
+        { event: "create_album", item_id: albumUuid },
+        { category: "album", action: "create", label: albumUuid }
+      );
       
       // 공유 페이지로 이동 (UUID로 API 조회 가능)
       router.push(`${ROUTES.ALBUM.SHARE}?albumId=${albumUuid}`);
@@ -157,6 +162,12 @@ export default function CreateAlbumForm({
         <button
           ref={submitButtonRef}
           type="submit"
+          onClick={() => {
+            trackEvent(
+              { event: "select_content", content_type: "album_create_button", item_id: "album_create_submit" },
+              { category: "album", action: "create_click", label: "album_create_form" }
+            );
+          }}
           className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           disabled={!formData.title.trim() || !formData.description.trim() || !formData.color || isSubmitting}
         >
