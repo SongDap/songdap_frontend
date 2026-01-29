@@ -11,6 +11,7 @@ import { getAlbum } from "@/features/album/api";
 import { addMusicToAlbum, getAlbumMusics } from "@/features/song/api";
 import type { AlbumResponse } from "@/features/album/api";
 import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
+import { trackEvent } from "@/lib/gtag";
 
 type AlbumInfoFromUrl = {
   id: string;
@@ -134,6 +135,10 @@ function AddSongContent() {
         });
       };
       reader.readAsDataURL(file);
+      trackEvent(
+        { event: "upload_song_image", file_size_kb: Math.round(file.size / 1024) },
+        { category: "song", action: "upload_image", label: albumId || "" }
+      );
     }
   };
 
@@ -258,7 +263,14 @@ function AddSongContent() {
               <div className="max-w-2xl mx-auto mt-8">
                 {/* 노래 검색하기 버튼 */}
                 <div className="mb-6">
-                  <SpotifySearchButton />
+                  <SpotifySearchButton
+                    onClick={() =>
+                      trackEvent(
+                        { event: "select_content", content_type: "spotify_search", item_id: albumId || "" },
+                        { category: "song", action: "search_click", label: albumId || "" }
+                      )
+                    }
+                  />
                 </div>
                 
                 <form className="space-y-6">
@@ -330,7 +342,13 @@ function AddSongContent() {
                 <div className="mt-6">
                   <button
                     type="button"
-                    onClick={() => setStep("message")}
+                    onClick={() => {
+                      trackEvent(
+                        { event: "select_content", content_type: "song_add_next", item_id: albumId || "" },
+                        { category: "song", action: "next_step", label: albumId || "" }
+                      );
+                      setStep("message");
+                    }}
                     className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors"
                   >
                     다음
@@ -386,6 +404,12 @@ function AddSongContent() {
                   <button
                     type="button"
                     onClick={async () => {
+                      // 버튼 클릭 추적
+                      trackEvent(
+                        { event: "select_content", content_type: "song_add_submit", item_id: albumId || "" },
+                        { category: "song", action: "add_click", label: albumId || "" }
+                      );
+
                       if (!album?.uuid && !albumId) {
                         alert("앨범 정보를 불러올 수 없습니다.");
                         return;
@@ -409,6 +433,12 @@ function AddSongContent() {
                           writer: messageData.writer.trim() || undefined,
                           imageFile: imageFile || undefined,
                         });
+                        // 완료 이벤트 추적
+                        const songKey = `song:${targetAlbumId}:${songData.title.trim()}-${songData.artist.trim()}`;
+                        trackEvent(
+                          { event: "add_to_cart", items: [{ item_id: songKey }] },
+                          { category: "song", action: "add", label: targetAlbumId }
+                        );
 
                         // 완료 페이지로 이동
                         const qp = new URLSearchParams();

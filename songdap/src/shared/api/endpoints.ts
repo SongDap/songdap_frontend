@@ -14,6 +14,7 @@ export const API_ENDPOINTS = {
   // 사용자
   USER: {
     ME: "/api/v1/users/me",
+    UPDATE: "/api/v1/users/me",
     WITHDRAW: "/api/v1/users",
   },
 

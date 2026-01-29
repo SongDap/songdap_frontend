@@ -32,7 +32,7 @@ export type UpdateMeRequest = {
 export type WithdrawRequest = {
   nickname: string;
   email: string;  
-  profileImage?: string;
+  profileImage?: File;
   reasons: string[];
   reasonDetail?: string;
 };

@@ -8,6 +8,7 @@ import AlbumInfoDisplay, { type AlbumData } from "./AlbumInfoDisplay";
 import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
 import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import { trackEvent } from "@/lib/gtag";
 
 type AlbumShareContentProps = {
   albumData?: AlbumData | null;
@@ -22,6 +23,12 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
   const user = useOauthStore((s) => s.user);
 
   const handleLinkCopy = () => {
+    // 버튼 클릭 추적
+    trackEvent(
+      { event: "select_content", content_type: "album_share_link", item_id: albumData?.uuid || "" },
+      { category: "album", action: "share_link_click", label: albumData?.uuid || "" }
+    );
+
     // 비공개 앨범 체크
     if (!albumData?.isPublic) {
       setShowPrivateModal(true);
@@ -43,11 +50,22 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
     
     navigator.clipboard.writeText(songAddUrl).then(() => {
       setIsLinkCopied(true);
+      // 완료 이벤트 추적
+      trackEvent(
+        { event: "share_album", item_id: albumData.uuid },
+        { category: "album", action: "share", label: albumData.uuid }
+      );
       setTimeout(() => setIsLinkCopied(false), 2000);
     });
   };
 
   const handleKakaoShare = async () => {
+    // 버튼 클릭 추적
+    trackEvent(
+      { event: "select_content", content_type: "album_share_kakao", item_id: albumData?.uuid || "" },
+      { category: "album", action: "share_kakao_click", label: albumData?.uuid || "" }
+    );
+
     // 비공개 앨범 체크
     if (!albumData?.isPublic) {
       setShowPrivateModal(true);
@@ -75,6 +93,11 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
         imageUrl: `${window.location.origin}/images/logo.png`,
         buttonTitle: "노래 추가하기",
       });
+      // 완료 이벤트 추적
+      trackEvent(
+        { event: "share_album", item_id: albumData.uuid },
+        { category: "album", action: "share_kakao", label: albumData.uuid }
+      );
     } catch (err) {
       console.error("카카오 공유 실패:", err);
       alert("카카오 공유에 실패했어요. 링크 복사로 다시 시도해 주세요.");
@@ -125,7 +148,13 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
         {/* 수정 버튼 */}
         <div className="mt-12">
           <button
-            onClick={() => router.push(`${ROUTES.ALBUM.CREATE}?mode=edit`)}
+            onClick={() => {
+              trackEvent(
+                { event: "select_content", content_type: "album_edit_button", item_id: albumData?.uuid || "" },
+                { category: "album", action: "edit_click", label: albumData?.uuid || "" }
+              );
+              router.push(`${ROUTES.ALBUM.CREATE}?mode=edit`);
+            }}
             className="w-full py-3 px-4 border border-gray-300 text-gray-700 rounded-lg text-base font-medium hover:bg-gray-50 active:bg-gray-100 focus:outline-none transition-colors"
           >
             수정
@@ -136,7 +165,13 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
         {onComplete && (
           <div className="mt-3">
             <button
-              onClick={onComplete}
+              onClick={() => {
+                trackEvent(
+                  { event: "select_content", content_type: "album_share_complete", item_id: albumData?.uuid || "" },
+                  { category: "album", action: "share_complete_click", label: albumData?.uuid || "" }
+                );
+                onComplete();
+              }}
               className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors"
             >
               완료

@@ -4,6 +4,7 @@ import { useState } from "react";
 import ProfileImageUploader from "./ProfileImageUploader";
 import { useProfileForm } from "../hooks/useProfileForm";
 import Link from "next/link";
+import { trackEvent } from "@/lib/gtag";
 
 type ProfileEditPayload = {
   nickname: string;
@@ -78,6 +79,12 @@ export default function ProfileEditForm({
         <br />
         <button
           type="submit"
+          onClick={() => {
+            trackEvent(
+              { event: "select_content", content_type: "profile_edit_button", item_id: "profile_edit_submit" },
+              { category: "profile", action: "edit_click", label: "profile_edit_form" }
+            );
+          }}
           disabled={!isDirty || isSubmitting}
           className={`h-12 w-full rounded-md text-base font-semibold shadow-sm active:scale-[0.99] ${isDirty && !isSubmitting
             ? "bg-[#006FFF] text-white"
@@ -86,12 +93,18 @@ export default function ProfileEditForm({
         >
           {isSubmitting ? "처리 중..." : "수정하기"}
         </button>
-          <br/>
-        <Link href="/profile/withdraw">
-          <div className="text-right text-red-600 hover:text-red-700 cursor-pointer">
-            회원탈퇴하기
-          </div>
-        </Link>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <div className="flex">
+          <Link href="/profile/withdraw" className="ml-auto">
+            <span className="text-red-600 hover:text-red-700 cursor-pointer">
+              회원탈퇴하기
+            </span>
+          </Link>
+        </div>
       </div>
     </form>
   );

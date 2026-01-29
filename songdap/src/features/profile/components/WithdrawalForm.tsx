@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { trackEvent } from "@/lib/gtag";
 
 type WithdrawalReason =
     | "HARD_TO_USE"
@@ -161,6 +162,12 @@ export default function WithdrawalForm({ onSubmit }: WithdrawalFormProps) {
                 <div className="mt-6 flex justify-end">
                     <button
                         type="submit"
+                        onClick={() => {
+                            trackEvent(
+                                { event: "select_content", content_type: "withdraw_button", item_id: "withdraw_submit" },
+                                { category: "profile", action: "withdraw_click", label: "withdraw_form" }
+                            );
+                        }}
                         disabled={!isValid || isSubmitting}
                         className={`h-10 rounded-md px-6 text-sm font-semibold ${isValid && !isSubmitting
                                 ? "bg-gray-900 text-white"
