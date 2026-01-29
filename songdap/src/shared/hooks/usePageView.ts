@@ -11,11 +11,10 @@ export function usePageView() {
 
   useEffect(() => {
     if (pathname) {
-      trackEvent({
-        category: "navigation",
-        action: "page_view",
-        label: pathname,
-      });
+      trackEvent(
+        { event: "page_view", page_path: pathname },
+        { category: "navigation", action: "page_view", label: pathname }
+      );
     }
   }, [pathname]);
 }
