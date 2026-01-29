@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/shared/lib/routes";
 import AlbumFormFields, { type AlbumFormData } from "./AlbumFormFields";
+import { trackEvent } from "@/lib/gtag";
 
 type EditAlbumFormProps = {
   albumColor?: string;
@@ -82,7 +83,13 @@ export default function EditAlbumForm({
       <div className="pt-6">
         <button
           type="button"
-          onClick={() => router.push(`${ROUTES.ALBUM.SHARE}?mode=info`)}
+          onClick={() => {
+            trackEvent(
+              { event: "select_content", content_type: "album_edit_cancel", item_id: "album_edit_cancel" },
+              { category: "album", action: "edit_cancel_click", label: "album_edit_form" }
+            );
+            router.push(`${ROUTES.ALBUM.SHARE}?mode=info`);
+          }}
           className="w-full py-3 px-4 border border-gray-300 text-gray-700 rounded-lg text-base font-medium hover:bg-gray-50 active:bg-gray-100 focus:outline-none transition-colors"
         >
           취소
@@ -94,6 +101,12 @@ export default function EditAlbumForm({
         <button
           ref={submitButtonRef}
           type="submit"
+          onClick={() => {
+            trackEvent(
+              { event: "select_content", content_type: "album_edit_button", item_id: "album_edit_submit" },
+              { category: "album", action: "edit_click", label: "album_edit_form" }
+            );
+          }}
           className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           disabled={!formData.title.trim()}
         >

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header, Footer } from "@/shared";
+import { trackEvent } from "@/lib/gtag";
 import Link from "next/link";
 import { ROUTES } from "@/shared/lib";
 import { AlbumCard } from "@/features/album/list/components";
@@ -106,6 +107,18 @@ export default function AlbumListPageClient() {
 
         if (fetchSeqRef.current === seq) {
           setAlbums(enriched);
+        }
+        if (baseItems.length > 0) {
+          trackEvent(
+            {
+              event: "view_item_list",
+              item_list_name: "album_list",
+              items: baseItems
+                .filter((item) => Boolean(item.uuid))
+                .map((item) => ({ item_id: item.uuid })),
+            },
+            { category: "album", action: "view_list", label: String(page) }
+          );
         }
         setTotalElements(pageData.totalElements);
         setTotalPages(pageData.totalPages);
@@ -218,7 +231,15 @@ export default function AlbumListPageClient() {
               </div>
               <div className="flex items-center gap-2 ml-auto">
                 <Link href={ROUTES.ALBUM.CREATE}>
-                  <button className="px-4 py-2 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] transition-colors">
+                  <button
+                    onClick={() =>
+                      trackEvent(
+                        { event: "select_content", content_type: "cta", item_id: "album_create" },
+                        { category: "album", action: "create_click", label: "album_list_pc" }
+                      )
+                    }
+                    className="px-4 py-2 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] transition-colors"
+                  >
                     + 새 앨범 만들기
                   </button>
                 </Link>
@@ -241,7 +262,15 @@ export default function AlbumListPageClient() {
               <p className="text-[15px]">친구들의 노래가 담길 앨범을 만들어보세요.</p>
               <div className="flex justify-end gap-2">
                 <Link href={ROUTES.ALBUM.CREATE}>
-                  <button className="px-4 py-2 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] transition-colors">
+                  <button
+                    onClick={() =>
+                      trackEvent(
+                        { event: "select_content", content_type: "cta", item_id: "album_create" },
+                        { category: "album", action: "create_click", label: "album_list_mobile" }
+                      )
+                    }
+                    className="px-4 py-2 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] transition-colors"
+                  >
                     + 새 앨범 만들기
                   </button>
                 </Link>

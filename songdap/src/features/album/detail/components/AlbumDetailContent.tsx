@@ -15,6 +15,7 @@ import { PageHeader } from "@/shared";
 import { makeAlbumListUrl, parseAlbumListQuery } from "@/features/album/list/lib/albumListQuery";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { AlbumCover } from "@/shared/ui";
+import { trackEvent } from "@/lib/gtag";
 
 import MusicPlayer from "./MusicPlayer";
 
@@ -510,6 +511,10 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                       {isOwner === false && (
                         <button
                           onClick={() => {
+                            trackEvent(
+                              { event: "select_content", content_type: "song_add_from_detail", item_id: albumUuid },
+                              { category: "song", action: "add_click", label: albumUuid }
+                            );
                             const params = new URLSearchParams();
                             params.set("albumId", albumUuid);
                             router.push(`/song/add?${params.toString()}`);

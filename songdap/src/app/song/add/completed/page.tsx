@@ -10,6 +10,7 @@ import { HiLockClosed } from "react-icons/hi";
 import { getAlbum } from "@/features/album/api";
 import type { AlbumResponse } from "@/features/album/api";
 import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
+import { trackEvent } from "@/lib/gtag";
 
 type AlbumInfoFromUrl = {
   id: string;
@@ -94,6 +95,10 @@ function SongAddCompletedContent() {
   const lpSizeMobile = coverSizeMobile * 0.8; // 112
 
   const handleAddMoreSongs = () => {
+    trackEvent(
+      { event: "select_content", content_type: "song_add_more", item_id: albumId || "" },
+      { category: "song", action: "add_more_click", label: albumId || "" }
+    );
     // 다음 노래 추가를 위해 드래프트 초기화
     reset();
     // 노래 추가 페이지로 이동
@@ -104,6 +109,10 @@ function SongAddCompletedContent() {
   };
 
   const handleCreateAlbum = () => {
+    trackEvent(
+      { event: "select_content", content_type: "album_create_from_completed", item_id: "album_create_from_song_completed" },
+      { category: "album", action: "create_click", label: "song_add_completed_page" }
+    );
     // 앨범 생성 페이지로 이동
     router.push("/album/create");
   };
