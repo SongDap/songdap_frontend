@@ -3,15 +3,10 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
+import { HiChevronLeft } from "react-icons/hi";
 import Link from "next/link";
 
-type NavItem = {
-  label: string;
-  href: string;
-};
-
 export default function Header() {
-  const [open, setOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -19,204 +14,308 @@ export default function Header() {
   const logout = useOauthStore((s) => s.logout);
   const isAuthenticated = useOauthStore((s) => s.isAuthenticated);
 
-  // NOTE: 로그인 상태가 아닐 때는 "내 앨범" 메뉴를 navItems에 포함하지 않음
-  const navItems: NavItem[] = [
+  // 페이지 타입 감지
+  const isAlbumListPage = pathname === "/album/list";
+  const isAlbumDetailPage = pathname.startsWith("/album/") && !isAlbumListPage;
+  
+  // 프로필 메뉴 항목
+  const profileMenuItems = [
+    { label: "내 앨범", href: "/album/list" },
     { label: "서비스 소개", href: "/introduceService" },
-    ...(isAuthenticated ? [{ label: "내 앨범", href: "/album/list" }] : []),
+    { label: "프로필 편집", href: "/profile/edit" },
   ];
 
-  const isActive = (href: string) => {
-    if (href === "#") return false;
-    return pathname === href || pathname?.startsWith(href);
+  const handleLogout = () => {
+    setProfileMenuOpen(false);
+    logout();
+    router.replace("/");
   };
 
-  // 메뉴 외부 클릭 시 닫기
-  const handleClickOutside = () => {
+  const handleMenuItemClick = () => {
     setProfileMenuOpen(false);
   };
 
-  return (
-    <header className="w-full bg-white border-b border-gray-200" onClick={handleClickOutside}>
-      {/* top bar */}
-      <div className="h-[95px] px-4 flex items-center justify-between md:px-20 max-w-[1440px] mx-auto relative">
-        {/* Logo */}
-        <Link href="/">
-          <img src="/images/logo.png" alt="logo" className="h-10 md:h-16 w-auto object-contain" />
-        </Link>
+  // ========== PC 헤더 ==========
+  const renderPCHeader = () => {
+    if (isAlbumListPage) {
+      // PC 앨범 리스트 페이지
+      return (
+        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto">
+          {/* 로고 */}
+          <Link href="/">
+            <img src="/images/logo.png" alt="logo" className="h-16 w-auto object-contain" />
+          </Link>
 
-        {/* 모바일에서만 가운데 타이틀 표시 */}
-        {pathname === "/album/list" && (
-          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">
-            내 앨범
-          </h1>
-        )}
-        {pathname === "/song/add" && (
-          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900 md:hidden">
-            노래 추가
-          </h1>
-        )}
+          {/* 내 앨범 */}
+          <span className="text-lg font-semibold text-gray-900">내 앨범</span>
 
-        {/* PC nav */}
-        <nav className="hidden md:flex items-center gap-3 ml-auto">
-          {navItems.map((item, idx) => {
-            const active = isActive(item.href);
-            return (
-              <a
-                key={idx}
-                href={item.href}
-                className={`px-3 py-2 rounded-lg text-base transition ${
-                  active ? "text-white font-medium" : "text-gray-800 hover:bg-gray-100"
-                }`}
-                style={active ? { backgroundColor: "#006FFF" } : undefined}
+          {/* 프로필 + 메뉴 */}
+          <div className="relative">
+            {isAuthenticated ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProfileMenuOpen(!profileMenuOpen);
+                }}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                {item.label}
-              </a>
-            );
-          })}
-        </nav>
+                <img
+                  src={user?.profileImage || "https://placehold.co/40x40"}
+                  alt={user?.nickname || "프로필"}
+                  className="w-10 h-10 rounded-full"
+                />
+                <span className="text-base text-gray-900 max-w-[200px] truncate">
+                  {user?.nickname || "사용자"}
+                </span>
+              </button>
+            ) : (
+              <span className="text-sm text-gray-700">로그인이 필요합니다.</span>
+            )}
 
-        {/* PC user */}
-        <div className="hidden md:flex items-center gap-2 ml-4 relative">
-          {isAuthenticated ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setProfileMenuOpen(!profileMenuOpen);
-              }}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              <img
-                src={user?.profileImage || "https://placehold.co/36x36"}
-                alt={user?.nickname || "프로필"}
-                className="w-9 h-9 rounded-full"
-              />
-              <span
-                className="text-base text-gray-900 max-w-[200px] truncate"
-                title={user?.nickname || "사용자"}
-              >
-                {user?.nickname?.slice(0, 16) || "사용자"}
-                {user?.nickname && user.nickname.length > 16 && "..."}
-              </span>
-            </button>
-          ) : (
-            <span className="text-sm text-gray-700 whitespace-nowrap">로그인이 필요합니다.</span>
-          )}
-
-          {/* PC Profile Dropdown */}
-          {isAuthenticated && profileMenuOpen && (
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-              <div className="py-2">
-                <a
-                  href="/profile/edit"
-                  className="block px-4 py-2 text-base text-gray-800 hover:bg-gray-100 transition-colors hover:text-gray-900"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setProfileMenuOpen(false);
-                  }}
-                >
-                  프로필 편집
-                </a>
-                <button
-                  type="button"
-                  className="w-full text-left px-4 py-2 text-base text-red-600 hover:bg-red-50 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setProfileMenuOpen(false);
-                    logout();
-                    router.replace("/");
-                  }}
-                >
-                  로그아웃
-                </button>
+            {/* 프로필 메뉴 */}
+            {isAuthenticated && profileMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="py-2">
+                  {profileMenuItems.map((item, idx) => (
+                    <a
+                      key={idx}
+                      href={item.href}
+                      className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
+                      onClick={handleMenuItemClick}
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                  <button
+                    type="button"
+                    className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                    onClick={handleLogout}
+                  >
+                    로그아웃
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-
-        {/* Mobile right */}
-        <div className="flex items-center gap-2 md:hidden">
+      );
+    } else if (isAlbumDetailPage) {
+      // PC 앨범 상세 페이지
+      return (
+        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto">
+          {/* 뒤로가기 */}
           <button
-            onClick={() => setOpen(!open)}
-            className="p-2 rounded-lg hover:bg-gray-100"
-            aria-label="menu"
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="뒤로가기"
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 7h16M4 12h16M4 17h16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
+            <HiChevronLeft className="w-6 h-6 text-gray-700" />
           </button>
-        </div>
-      </div>
 
-      {/* Mobile menu */}
-      {open && (
-        <div className="md:hidden border-t border-gray-200 bg-white">
-          <div className="flex flex-col px-4 py-3 gap-1">
-            {/* Mobile profile */}
-            <div className="flex flex-col gap-2 px-3 py-2 mb-2 border-b border-gray-200 pb-2">
-              {isAuthenticated ? (
-                <>
-                  <div className="flex items-center gap-2">
+          {/* 앨범명 + 정보아이콘 */}
+          <span className="text-lg font-semibold text-gray-900">앨범</span>
+
+          {/* 프로필 + 메뉴 */}
+          <div className="relative">
+            {isAuthenticated ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProfileMenuOpen(!profileMenuOpen);
+                }}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
+                <img
+                  src={user?.profileImage || "https://placehold.co/40x40"}
+                  alt={user?.nickname || "프로필"}
+                  className="w-10 h-10 rounded-full"
+                />
+                <span className="text-base text-gray-900 max-w-[200px] truncate">
+                  {user?.nickname || "사용자"}
+                </span>
+              </button>
+            ) : (
+              <span className="text-sm text-gray-700">로그인이 필요합니다.</span>
+            )}
+
+            {/* 프로필 메뉴 */}
+            {isAuthenticated && profileMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="py-2">
+                  {profileMenuItems.map((item, idx) => (
+                    <a
+                      key={idx}
+                      href={item.href}
+                      className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
+                      onClick={handleMenuItemClick}
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                  <button
+                    type="button"
+                    className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                    onClick={handleLogout}
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    } else {
+      return null;
+    }
+  };
+
+  // ========== 모바일 헤더 ==========
+  const renderMobileHeader = () => {
+    if (isAlbumListPage) {
+      // 모바일 앨범 리스트 페이지
+      return (
+        <div className="md:hidden h-[70px] px-4 flex items-center justify-between">
+          <Link href="/">
+            <img src="/images/logo.png" alt="logo" className="h-10 w-auto object-contain" />
+          </Link>
+          <span className="text-lg font-semibold text-gray-900">내 앨범</span>
+          <div className="relative">
+            {isAuthenticated ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProfileMenuOpen(!profileMenuOpen);
+                }}
+                className="flex items-center hover:opacity-80 transition-opacity"
+              >
+                <img
+                  src={user?.profileImage || "https://placehold.co/40x40"}
+                  alt={user?.nickname || "프로필"}
+                  className="w-9 h-9 rounded-full"
+                />
+              </button>
+            ) : (
+              <div className="w-9 h-9" />
+            )}
+            {isAuthenticated && profileMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="py-2">
+                  {/* 모바일에서만 프로필 정보 표시 */}
+                  <div className="px-4 py-2.5 flex items-center gap-2 border-b border-gray-100">
                     <img
                       src={user?.profileImage || "https://placehold.co/36x36"}
                       alt={user?.nickname || "프로필"}
                       className="w-8 h-8 rounded-full"
                     />
-                    <span className="text-base text-gray-900 truncate" title={user?.nickname || "사용자"}>
-                      {user?.nickname?.slice(0, 16) || "사용자"}
-                      {user?.nickname && user.nickname.length > 16 && "..."}
+                    <span className="text-base text-gray-900 truncate">
+                      {user?.nickname || "사용자"}
                     </span>
                   </div>
-                  <a
-                    href="/profile/edit"
-                    className="px-3 py-2 rounded-lg text-base text-gray-800 hover:bg-gray-100"
-                    onClick={() => setOpen(false)}
-                  >
-                    프로필 편집
-                  </a>
+                  {profileMenuItems.map((item, idx) => (
+                    <a
+                      key={idx}
+                      href={item.href}
+                      className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
+                      onClick={handleMenuItemClick}
+                    >
+                      {item.label}
+                    </a>
+                  ))}
                   <button
                     type="button"
-                    className="px-3 py-2 rounded-lg text-base !text-red-600 hover:bg-red-50 text-left"
-                    onClick={() => {
-                      setOpen(false);
-                      logout();
-                      router.replace("/");
-                    }}
+                    className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                    onClick={handleLogout}
                   >
                     로그아웃
                   </button>
-                </>
-              ) : (
-                <div className="text-sm text-gray-700 px-1">로그인이 필요합니다.</div>
-              )}
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex flex-col gap-1">
-              {navItems.map((item, idx) => {
-                const active = isActive(item.href);
-                return (
-                  <a
-                    key={idx}
-                    href={item.href}
-                    className={`px-3 py-2 rounded-lg text-base ${
-                      active ? "text-white font-medium" : "text-gray-800 hover:bg-gray-100"
-                    }`}
-                    style={active ? { backgroundColor: "#006FFF" } : undefined}
-                    onClick={() => setOpen(false)}
-                  >
-                    {item.label}
-                  </a>
-                );
-              })}
-            </nav>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      );
+    } else if (isAlbumDetailPage) {
+      // 모바일 앨범 상세 페이지
+      return (
+        <div className="md:hidden h-[70px] px-4 flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="뒤로가기"
+          >
+            <HiChevronLeft className="w-6 h-6 text-gray-700" />
+          </button>
+          <span className="text-lg font-semibold text-gray-900">앨범</span>
+          <div className="relative">
+            {isAuthenticated ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProfileMenuOpen(!profileMenuOpen);
+                }}
+                className="flex items-center hover:opacity-80 transition-opacity"
+              >
+                <img
+                  src={user?.profileImage || "https://placehold.co/40x40"}
+                  alt={user?.nickname || "프로필"}
+                  className="w-9 h-9 rounded-full"
+                />
+              </button>
+            ) : (
+              <div className="w-9 h-9" />
+            )}
+            {isAuthenticated && profileMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="py-2">
+                  {/* 모바일에서만 프로필 정보 표시 */}
+                  <div className="px-4 py-2.5 flex items-center gap-2 border-b border-gray-100">
+                    <img
+                      src={user?.profileImage || "https://placehold.co/36x36"}
+                      alt={user?.nickname || "프로필"}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <span className="text-base text-gray-900 truncate">
+                      {user?.nickname || "사용자"}
+                    </span>
+                  </div>
+                  {profileMenuItems.map((item, idx) => (
+                    <a
+                      key={idx}
+                      href={item.href}
+                      className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
+                      onClick={handleMenuItemClick}
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                  <button
+                    type="button"
+                    className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                    onClick={handleLogout}
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    } else {
+      return null;
+    }
+  };
+
+  return (
+    <header
+      className="w-full bg-white border-b border-gray-200"
+      onClick={() => {
+        if (profileMenuOpen) setProfileMenuOpen(false);
+      }}
+    >
+      {renderPCHeader()}
+      {renderMobileHeader()}
     </header>
   );
 }

@@ -59,13 +59,14 @@ export default function CreateAlbumForm({
       return;
     }
     
-    if (!trimmedDescription) {
-      alert("앨범 설명을 입력해주세요.");
+    if (!formData.color) {
+      alert("앨범 커버 색상을 선택해주세요.");
       return;
     }
     
-    if (!formData.color) {
-      alert("앨범 커버 색상을 선택해주세요.");
+    // 앨범 정보 수정 방침 확인
+    const confirmed = window.confirm("앨범이 생성되면 공개/비공개 여부만 수정할 수 있습니다.\n계속 진행하시겠습니까?");
+    if (!confirmed) {
       return;
     }
     
@@ -169,7 +170,7 @@ export default function CreateAlbumForm({
             );
           }}
           className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-          disabled={!formData.title.trim() || !formData.description.trim() || !formData.color || isSubmitting}
+          disabled={!formData.title.trim() || !formData.color || isSubmitting}
         >
           {isSubmitting ? "생성 중..." : "완료"}
         </button>

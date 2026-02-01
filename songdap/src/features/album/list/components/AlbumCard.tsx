@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AlbumCover } from "@/shared/ui";
-import { HiLockClosed, HiShare, HiLink } from "react-icons/hi";
+import { HiLockClosed, HiShare, HiLink, HiX, HiLockOpen, HiLockClosed as HiLockClosedIcon } from "react-icons/hi";
 import AlbumCardEditMode from "./AlbumCardEditMode";
 import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
 import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { trackEvent } from "@/lib/gtag";
+import { updateAlbumVisibility, getAlbum } from "@/features/album/api";
 
 type AlbumCardProps = {
   id: string;
@@ -24,6 +25,7 @@ type AlbumCardProps = {
   isEditMode?: boolean;
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onInfoClick?: (id: string) => void;
 };
 
 export default function AlbumCard({
@@ -40,6 +42,7 @@ export default function AlbumCard({
   isEditMode = false,
   onDelete,
   onEdit,
+  onInfoClick,
 }: AlbumCardProps) {
   const router = useRouter();
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -189,6 +192,7 @@ export default function AlbumCard({
               albumName={albumName}
               onDelete={onDelete}
               onEdit={onEdit}
+              onInfoClick={onInfoClick}
             />
           )}
 
