@@ -5,7 +5,7 @@ import { HiLink } from "react-icons/hi";
 import { ROUTES } from "@/shared/lib/routes";
 import { useAlbumData } from "./useAlbumData";
 import AlbumInfoDisplay, { type AlbumData } from "./AlbumInfoDisplay";
-import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
+import { buildAlbumShareUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
 import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 
@@ -29,7 +29,7 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
     }
     if (!albumData?.uuid) return;
 
-    const songAddUrl = buildSongAddUrlFromAlbumInfo({
+    const shareUrl = buildAlbumShareUrlFromAlbumInfo({
       id: albumData.uuid,
       title: albumData.title,
       color: albumColor,
@@ -40,7 +40,7 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
       isPublic: albumData.isPublic,
     });
 
-    navigator.clipboard.writeText(songAddUrl).then(() => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
       setIsLinkCopied(true);
       setTimeout(() => setIsLinkCopied(false), 2000);
     });
@@ -53,7 +53,7 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
       return;
     }
     if (!albumData?.uuid) return;
-    const shareUrl = buildSongAddUrlFromAlbumInfo({
+    const kakaoShareUrl = buildAlbumShareUrlFromAlbumInfo({
       id: albumData.uuid,
       title: albumData.title,
       color: albumColor,
@@ -68,7 +68,7 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
       await shareKakaoFeed({
         title: albumData.title,
         description: `"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
-        url: shareUrl,
+        url: kakaoShareUrl,
         imageUrl: `${window.location.origin}/images/logo.png`,
         buttonTitle: "노래 추가하기",
       });

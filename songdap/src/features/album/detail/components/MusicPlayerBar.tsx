@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FaStepBackward, FaStepForward, FaPlay, FaPause, FaYoutube } from "react-icons/fa";
+import { FaStepBackward, FaStepForward, FaPlay, FaPause } from "react-icons/fa";
 
 // 반응형 크기 계산 상수
 const ICON_SIZE_RATIO = 0.12;
@@ -126,7 +126,16 @@ export default function MusicPlayerBar({
               <div className="absolute inset-0 bg-black/10" />
             </div>
           ) : (
-            <FaYoutube className="text-white" style={iconStyle} />
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="text-red-500"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2" fill="#EF4444" />
+              <polygon points="9,8 9,16 16,12" fill="white" />
+            </svg>
           )}
         </button>
 

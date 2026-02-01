@@ -14,6 +14,7 @@ type MusicPlayerProps = {
   nickname?: string;
   backgroundColor?: string;
   hideUI?: boolean; // 편지 탭 등에서 UI 숨김(오디오는 유지)
+  isOwner?: boolean | null; // 앨범 소유자 여부
   onClose?: () => void; // 플레이어를 닫을 때 호출
   onOpenYouTubeModal?: () => void; // 유튜브 모달 열기
   onPrevious?: () => void; // 이전곡
@@ -31,6 +32,7 @@ export default function MusicPlayer({
   nickname, 
   backgroundColor,
   hideUI = false,
+  isOwner = null,
   onClose,
   onOpenYouTubeModal,
   onPrevious,
@@ -211,6 +213,7 @@ export default function MusicPlayer({
         message={message}
         nickname={nickname}
         backgroundColor={backgroundColor}
+        isOwner={isOwner}
         isPlaying={isPlaying}
         notice={playbackNotice}
         videoId={videoId}

@@ -1,9 +1,6 @@
 /**
- * "노래 추가 링크" 생성 유틸
- * - AlbumCard / AlbumShare / AlbumInfo 등에서 동일한 방식으로 링크를 만들기 위해 공통화
- *
- * 링크 형태:
- *   /song/add?albumId={albumUuid}&albumData={base64(json)}
+ * "앨범 공유 링크" 생성 유틸
+ * - 간단한 형식: /album?id={albumUuid}
  */
 
 export type AlbumInfoForSongAddLink = {
@@ -17,12 +14,27 @@ export type AlbumInfoForSongAddLink = {
   isPublic?: boolean;
 };
 
+export function buildAlbumShareUrl(albumId: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/album?id=${albumId}`;
+}
+
+export function buildAlbumShareUrlFromAlbumInfo(info: AlbumInfoForSongAddLink): string {
+  return buildAlbumShareUrl(info.id);
+}
+
+/**
+ * @deprecated buildSongAddUrlFromAlbumInfo 대신 buildAlbumShareUrlFromAlbumInfo 사용
+ */
 export function encodeAlbumInfoToAlbumDataParam(info: AlbumInfoForSongAddLink): string {
   // UTF-8 문자열을 Base64로 인코딩 (한글 지원)
   const jsonString = JSON.stringify(info);
   return btoa(unescape(encodeURIComponent(jsonString)));
 }
 
+/**
+ * @deprecated buildAlbumShareUrl 사용
+ */
 export function buildSongAddUrl(params: {
   origin: string;
   albumId: string;
@@ -33,9 +45,9 @@ export function buildSongAddUrl(params: {
   )}`;
 }
 
+/**
+ * @deprecated buildAlbumShareUrlFromAlbumInfo 사용
+ */
 export function buildSongAddUrlFromAlbumInfo(info: AlbumInfoForSongAddLink): string {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const albumDataParam = encodeAlbumInfoToAlbumDataParam(info);
-  return buildSongAddUrl({ origin, albumId: info.id, albumDataParam });
+  return buildAlbumShareUrl(info.id);
 }
-
