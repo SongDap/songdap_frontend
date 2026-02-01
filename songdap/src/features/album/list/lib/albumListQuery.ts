@@ -63,11 +63,7 @@ export function makeAlbumListUrl(query?: AlbumListQuery) {
 }
 
 export function makeAlbumDetailUrl(albumUuid: string, query?: AlbumListQuery) {
-  const qp = new URLSearchParams();
-  if (query?.sort) qp.set("sort", query.sort);
-  if (query?.page) qp.set("page", String(query.page));
-  const qs = qp.toString();
   const base = ROUTES.ALBUM.DETAIL(albumUuid);
-  return qs ? `${base}?${qs}` : base;
+  return base;
 }
 

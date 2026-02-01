@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { HiLockClosed } from "react-icons/hi";
 
 type SongLetterProps = {
   nickname?: string;
@@ -11,6 +12,7 @@ type SongLetterProps = {
   date?: string;
   className?: string;
   tapeColor?: string; // 테이프 색상 (앨범 커버 색상)
+  isOwner?: boolean | null; // 앨범 소유자 여부
 };
 
 export default function SongLetter({
@@ -22,6 +24,7 @@ export default function SongLetter({
   date,
   className = "",
   tapeColor,
+  isOwner = null,
 }: SongLetterProps) {
   const [isTitleExpanded, setIsTitleExpanded] = useState(false);
   const [isArtistExpanded, setIsArtistExpanded] = useState(false);
@@ -189,32 +192,35 @@ export default function SongLetter({
       )}
 
       {/* 메시지 */}
-      {message && (
+      {message && isOwner === true && (
         <div className="mb-4 max-w-2xl mx-auto">
           <p className="text-base text-gray-700 leading-relaxed whitespace-pre-line text-center">
             {message}
           </p>
         </div>
       )}
+      {message && isOwner !== true && (
+        <div className="mb-4 max-w-2xl mx-auto">
+          <div className="flex items-center justify-center gap-2 text-gray-500">
+            <HiLockClosed className="w-4 h-4" />
+            <p className="text-base">비공개입니다.</p>
+          </div>
+        </div>
+      )}
 
-      {/* 닉네임과 날짜 */}
-      <div 
-        className="flex items-center justify-between pt-4 border-t"
-        style={{
-          borderColor: getBorderColor(),
-        }}
-      >
-        {nickname && (
+      {/* 닉네임 */}
+      {nickname && (
+        <div 
+          className="pt-4 border-t"
+          style={{
+            borderColor: getBorderColor(),
+          }}
+        >
           <p className="text-sm text-gray-600">
             From. {nickname}
           </p>
-        )}
-        {date && (
-          <p className="text-sm text-gray-500">
-            {date}
-          </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

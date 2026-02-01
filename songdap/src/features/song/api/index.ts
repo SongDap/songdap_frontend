@@ -51,7 +51,7 @@ export interface MusicInfo {
  * 노래 목록 조회 권한 정보
  */
 export interface AlbumMusicsFlag {
-  isOwner: boolean;
+  owner: boolean;
   canDelete: boolean;
   canAdd: boolean;
 }
@@ -312,6 +312,35 @@ export async function getMusicDetail(musicUuid: string): Promise<MusicDetailData
     return data;
   } catch (error: any) {
     console.error("[Song API] 노래 상세 조회 실패:", {
+      musicUuid,
+      url: endpoint,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+    throw error;
+  }
+}
+
+/**
+ * 노래 삭제 API
+ * 
+ * @param musicUuid 삭제할 노래 UUID
+ * @returns 삭제 성공 메시지
+ * 
+ * @throws {AxiosError} API 호출 실패 시
+ */
+export async function deleteMusic(musicUuid: string): Promise<void> {
+  const endpoint = API_ENDPOINTS.MUSIC.DETAIL(musicUuid);
+
+  try {
+    await apiClient.delete(endpoint);
+
+    console.log("[Song API] 노래 삭제 성공:", {
+      musicUuid,
+    });
+  } catch (error: any) {
+    console.error("[Song API] 노래 삭제 실패:", {
       musicUuid,
       url: endpoint,
       status: error.response?.status,

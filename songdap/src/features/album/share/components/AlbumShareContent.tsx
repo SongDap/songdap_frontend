@@ -5,7 +5,7 @@ import { HiLink } from "react-icons/hi";
 import { ROUTES } from "@/shared/lib/routes";
 import { useAlbumData } from "./useAlbumData";
 import AlbumInfoDisplay, { type AlbumData } from "./AlbumInfoDisplay";
-import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
+import { buildAlbumShareUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
 import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { trackEvent } from "@/lib/gtag";
@@ -38,7 +38,7 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
     const albumId = albumData?.uuid;
     if (!albumId) return;
 
-    const songAddUrl = buildSongAddUrlFromAlbumInfo({
+    const songAddUrl = buildAlbumShareUrlFromAlbumInfo({
       id: albumId,
       title: albumData.title,
       color: albumColor,
@@ -76,7 +76,7 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
     const albumId = albumData?.uuid;
     if (!albumId) return;
 
-    const shareUrl = buildSongAddUrlFromAlbumInfo({
+    const shareUrl = buildAlbumShareUrlFromAlbumInfo({
       id: albumId,
       title: albumData.title,
       color: albumColor,
