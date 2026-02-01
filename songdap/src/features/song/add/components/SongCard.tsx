@@ -1,24 +1,25 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { HiPencil, HiTrash } from "react-icons/hi";
 import { FaPlay } from "react-icons/fa";
+import { HiEllipsisVertical } from "react-icons/hi2";
 
 type SongCardProps = {
   title: string;
   artist: string;
   imageUrl?: string | null;
   onEdit?: () => void;
-  onCardClick?: () => void; // 카드 전체 클릭
+  onCardClick?: () => void;
   onPlay?: () => void;
-  onDelete?: () => void; // 삭제 버튼 클릭
-  backgroundOpacity?: number; // 배경 투명도 (기본값: 0.85)
-  fullWidth?: boolean; // 전체 너비 사용 여부 (기본값: false)
-  showPlayButton?: boolean; // 재생 버튼 표시 여부 (기본값: false)
-  showDeleteButton?: boolean; // 삭제 버튼 표시 여부 (기본값: false)
-  isActive?: boolean; // 선택된 노래인지 여부 (기본값: false)
-  showBorder?: boolean; // 테두리 표시 여부 (기본값: true)
-  separatorPlacement?: "none" | "all" | "top" | "bottom" | "topBottom"; // 구분선 위치 (기본값: "all")
-  separatorColor?: string; // 구분선 색상(예: 앨범 커버 색상)
+  onDelete?: () => void;
+  backgroundOpacity?: number;
+  fullWidth?: boolean;
+  showPlayButton?: boolean;
+  isActive?: boolean;
+  showBorder?: boolean;
+  separatorPlacement?: "none" | "all" | "top" | "bottom" | "topBottom";
+  separatorColor?: string;
 };
 
 export default function SongCard({
@@ -32,12 +33,27 @@ export default function SongCard({
   backgroundOpacity = 0.85,
   fullWidth = false,
   showPlayButton = false,
-  showDeleteButton = false,
   isActive = false,
   showBorder = true,
   separatorPlacement = "all",
   separatorColor,
 }: SongCardProps) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMenu]);
+
   const handleEdit = () => {
     if (onEdit) {
       onEdit();
@@ -51,14 +67,18 @@ export default function SongCard({
   };
 
   const handleCardClick = () => {
-    // 기본: 카드 클릭은 선택(하단 바 변경)만
-    // (onCardClick 미지정인 기존 사용처는 하위 호환으로 onPlay 실행)
     if (onCardClick) return onCardClick();
     if (onPlay) return onPlay();
   };
 
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete();
+    }
+    setShowMenu(false);
+  };
+
   const toRgbaIfHex = (color: string, alpha: number) => {
-    // #RRGGBB만 처리
     if (!/^#([0-9a-fA-F]{6})$/.test(color)) return color;
     const r = parseInt(color.slice(1, 3), 16);
     const g = parseInt(color.slice(3, 5), 16);
@@ -121,44 +141,70 @@ export default function SongCard({
           </div>
         </div>
 
-        {/* 재생/삭제 버튼 */}
-        {showPlayButton ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (showDeleteButton && onDelete) {
-                onDelete();
-              } else if (onPlay) {
+        {/* 재생 버튼 및 메뉴 */}
+        <div className="flex items-center gap-2">
+          {showPlayButton && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
                 handlePlay();
-              }
-            }}
-            className={`flex-shrink-0 transition-opacity w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-90 active:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              showDeleteButton
-                ? "bg-red-500 hover:bg-red-600 active:bg-red-700 focus:ring-red-500 opacity-100"
-                : `bg-[#006FFF] hover:bg-[#0056CC] active:bg-[#0044AA] focus:ring-[#006FFF] ${
-                    isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                  }`
-            }`}
-            aria-label={showDeleteButton ? "삭제" : "재생"}
-          >
-            {showDeleteButton ? (
-              <HiTrash className="w-4 h-4 text-white" />
-            ) : (
+              }}
+              className={`flex-shrink-0 w-10 h-10 rounded-full bg-[#006FFF] flex items-center justify-center hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2 transition-opacity ${
+                isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              }`}
+              aria-label="재생"
+            >
               <FaPlay className="w-4 h-4 text-white" />
+            </button>
+          )}
+
+          {/* 3점 메뉴 */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-opacity ${
+                onEdit || onDelete ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              }`}
+              aria-label="메뉴"
+            >
+              <HiEllipsisVertical className="w-5 h-5 text-gray-700" />
+            </button>
+
+            {/* 드롭다운 메뉴 */}
+            {showMenu && (
+              <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                {onEdit && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit();
+                      setShowMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 first:rounded-t-lg"
+                  >
+                    <HiPencil className="w-4 h-4" />
+                    수정
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 last:rounded-b-lg"
+                  >
+                    <HiTrash className="w-4 h-4" />
+                    삭제
+                  </button>
+                )}
+              </div>
             )}
-          </button>
-        ) : onEdit && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit();
-            }}
-            className="flex-shrink-0 transition-opacity w-10 h-10 rounded-full bg-[#006FFF] flex items-center justify-center hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2"
-            aria-label="편집"
-          >
-            <HiPencil className="w-4 h-4 text-white" />
-          </button>
-        )}
+          </div>
+        </div>
       </div>
   );
 

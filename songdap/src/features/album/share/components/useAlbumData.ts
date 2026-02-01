@@ -94,5 +94,32 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
     setTodayDate(`${year}.${month}.${day}`);
   }, [albumId]); // albumId만 dependency로 추적
 
-  return { albumData, albumColor, todayDate, isLoading };
+  const refetch = async () => {
+    const searchParams_local = new URLSearchParams(window.location.search);
+    const albumId_local = searchParams_local.get("albumId");
+    if (!albumId_local) return;
+    
+    setIsLoading(true);
+    try {
+      const album = await getAlbum(albumId_local);
+      const data: AlbumData = {
+        uuid: albumId_local,
+        title: album.title,
+        description: album.description,
+        isPublic: album.isPublic,
+        musicCount: album.musicCount,
+        musicCountLimit: album.musicCountLimit,
+        color: album.color,
+        createdAt: album.createdAt,
+      };
+      setAlbumData(data);
+      setAlbumColor(album.color);
+    } catch (error) {
+      console.error("앨범 새로고침 실패:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { albumData, albumColor, todayDate, isLoading, refetch };
 }

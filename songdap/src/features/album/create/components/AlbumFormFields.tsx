@@ -101,7 +101,7 @@ export default function AlbumFormFields({
       {/* 앨범설명 */}
       <div>
         <label className="block text-base font-medium text-gray-900 mb-2">
-          앨범설명
+          앨범설명 <span className="text-sm font-normal text-gray-500">(선택)</span>
         </label>
         <textarea
           value={formData.description}
@@ -156,7 +156,7 @@ export default function AlbumFormFields({
       <div>
         <div className="flex items-start justify-between mb-2">
           <label className="text-base font-medium text-gray-900 pt-2">
-            곡개수
+            곡개수 <span className="text-sm font-normal text-gray-500">(기본 15곡)</span>
           </label>
           <div className="flex items-center gap-2">
             <button

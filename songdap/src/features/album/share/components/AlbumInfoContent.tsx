@@ -21,15 +21,10 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
   const [showPrivateModal, setShowPrivateModal] = useState<boolean>(false);
   const user = useOauthStore((s) => s.user);
 
-  const handleLinkCopy = () => {
-    // 비공개 앨범 체크
-    if (!albumData?.isPublic) {
-      setShowPrivateModal(true);
-      return;
-    }
-    if (!albumData?.uuid) return;
-
-    const shareUrl = buildAlbumShareUrlFromAlbumInfo({
+  // 공유 URL 생성 헬퍼
+  const buildShareUrl = () => {
+    if (!albumData?.uuid) return null;
+    return buildAlbumShareUrlFromAlbumInfo({
       id: albumData.uuid,
       title: albumData.title,
       color: albumColor,
@@ -39,6 +34,22 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
       createdAt: albumData.createdAt || "",
       isPublic: albumData.isPublic,
     });
+  };
+
+  // 비공개 체크 헬퍼
+  const checkAndSetPrivateModal = () => {
+    if (!albumData?.isPublic) {
+      setShowPrivateModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleLinkCopy = () => {
+    if (!checkAndSetPrivateModal()) return;
+
+    const shareUrl = buildShareUrl();
+    if (!shareUrl) return;
 
     navigator.clipboard.writeText(shareUrl).then(() => {
       setIsLinkCopied(true);
@@ -47,28 +58,17 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
   };
 
   const handleKakaoShare = async () => {
-    // 비공개 앨범 체크
-    if (!albumData?.isPublic) {
-      setShowPrivateModal(true);
-      return;
-    }
-    if (!albumData?.uuid) return;
-    const kakaoShareUrl = buildAlbumShareUrlFromAlbumInfo({
-      id: albumData.uuid,
-      title: albumData.title,
-      color: albumColor,
-      description: albumData.description || "",
-      musicCount: albumData.musicCount ?? 0,
-      musicCountLimit: albumData.musicCountLimit,
-      createdAt: albumData.createdAt || "",
-      isPublic: albumData.isPublic,
-    });
+    if (!checkAndSetPrivateModal()) return;
+
+    const shareUrl = buildShareUrl();
+    if (!shareUrl || !albumData) return;
+
     try {
       const nickname = user?.nickname ?? "누군가";
       await shareKakaoFeed({
         title: albumData.title,
         description: `"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
-        url: kakaoShareUrl,
+        url: shareUrl,
         imageUrl: `${window.location.origin}/images/logo.png`,
         buttonTitle: "노래 추가하기",
       });
@@ -133,19 +133,9 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
           </button>
         </div>
 
-        {/* 수정 버튼 */}
-        <div className="mt-12">
-          <button
-            onClick={() => router.push(`${ROUTES.ALBUM.CREATE}?mode=edit`)}
-            className="w-full py-3 px-4 border border-gray-300 text-gray-700 rounded-lg text-base font-medium hover:bg-gray-50 active:bg-gray-100 focus:outline-none transition-colors"
-          >
-            수정
-          </button>
-        </div>
-
         {/* 완료 버튼 */}
         {onComplete && (
-          <div className="mt-3">
+          <div className="mt-12">
             <button
               onClick={onComplete}
               className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors"

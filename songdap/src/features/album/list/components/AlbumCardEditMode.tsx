@@ -7,6 +7,7 @@ import { BottomConfirmModal } from "@/shared/ui";
 type AlbumCardEditModeProps = {
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onInfoClick?: (id: string) => void;
   id: string;
   albumName: string;
 };
@@ -14,6 +15,7 @@ type AlbumCardEditModeProps = {
 export default function AlbumCardEditMode({
   onDelete,
   onEdit,
+  onInfoClick,
   id,
   albumName,
 }: AlbumCardEditModeProps) {
@@ -61,7 +63,7 @@ export default function AlbumCardEditMode({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (onEdit) onEdit(id);
+            if (onInfoClick) onInfoClick(id);
           }}
           className="px-4 py-1.5 bg-white/70 text-black rounded-lg shadow-md hover:bg-white/80 transition-colors flex items-center gap-1.5 whitespace-nowrap"
           aria-label="앨범 정보"

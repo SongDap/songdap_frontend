@@ -8,7 +8,7 @@ import { ROUTES } from "@/shared/lib/routes";
 import { BottomConfirmModal } from "@/shared/ui";
 
 type PageHeaderProps = {
-  title: string;
+  title: string | ReactNode;
   backButtonText?: string;
   backgroundColor?: string; // 앨범 색상 (배경에 사용)
   hideTextOnMobile?: boolean; // 모바일에서 텍스트 숨김, 아이콘만 표시
@@ -118,11 +118,11 @@ export default function PageHeader({
           )}
 
           {/* 가운데 타이틀 */}
-          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl md:text-[30px] font-bold text-gray-900 truncate max-w-[70%] md:max-w-none flex items-center justify-center gap-2">
+          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-2xl md:text-[30px] font-bold text-gray-900 max-w-[70%] md:max-w-none flex items-center justify-center gap-2">
             {isPublic === false && (
               <HiLockClosed className="w-4 h-4 md:w-5 md:h-5 text-gray-900 flex-shrink-0" />
             )}
-            <span className="truncate">{title}</span>
+            <span className="line-clamp-2 text-center">{title}</span>
           </h1>
 
           {/* 오른쪽 영역 (뒤로가기 버튼이 있는 페이지: rightAction + 프로필 메뉴/안내문구) */}
@@ -281,25 +281,39 @@ export default function PageHeader({
 
               {/* 모바일 메뉴 버튼 */}
               <div className="md:hidden ml-auto">
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 rounded-lg hover:bg-gray-100"
-                  aria-label="menu"
-                >
-                  <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
+                {isAuthenticated ? (
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="p-1 rounded-lg hover:opacity-80 transition-opacity"
+                    aria-label="menu"
                   >
-                    <path
-                      d="M4 7h16M4 12h16M4 17h16"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
+                    <img
+                      src={user?.profileImage || "https://placehold.co/36x36"}
+                      alt={user?.nickname || "프로필"}
+                      className="w-9 h-9 rounded-full"
                     />
-                  </svg>
-                </button>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="p-2 rounded-lg hover:bg-gray-100"
+                    aria-label="menu"
+                  >
+                    <svg
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M4 7h16M4 12h16M4 17h16"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                )}
               </div>
             </>
           )}
