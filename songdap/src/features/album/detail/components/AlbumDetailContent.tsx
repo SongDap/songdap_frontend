@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { HiMail, HiMusicNote } from "react-icons/hi";
-import { HiInformationCircle, HiX, HiChevronDown } from "react-icons/hi";
+import { HiMail, HiMusicNote, HiTrash, HiInformationCircle, HiX, HiChevronDown } from "react-icons/hi";
 
 import { getAlbum } from "@/features/album/api";
-import { getAlbumMusics, getMusicDetail } from "@/features/song/api";
+import { getAlbumMusics, getMusicDetail, deleteMusic } from "@/features/song/api";
 import type { AlbumResponse } from "@/features/album/api";
 import type { MusicInfo, MusicSortOption } from "@/features/song/api";
 import { SongCard } from "@/features/song/add/components";
+import AddSongModal from "@/features/song/add/components/AddSongModal";
 import { SongLetter } from "@/features/song/components";
 import { PageHeader } from "@/shared";
 import { makeAlbumListUrl, parseAlbumListQuery } from "@/features/album/list/lib/albumListQuery";
@@ -40,11 +40,13 @@ function SongLetterItem({
   todayLabel,
   tapeColor,
   enabled,
+  isOwner,
 }: {
   music: MusicInfo;
   todayLabel: string;
   tapeColor: string;
   enabled: boolean;
+  isOwner: boolean | null;
 }) {
   const detailQuery = useQuery({
     queryKey: ["musicDetail", music.uuid],
@@ -65,6 +67,7 @@ function SongLetterItem({
         nickname={detail?.writer ?? music.writer}
         date={todayLabel}
         tapeColor={tapeColor}
+        isOwner={isOwner}
       />
     </div>
   );
@@ -76,8 +79,9 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   const albumUuid = id ?? "";
 
   const [viewMode, setViewMode] = useState<ViewMode>("player");
-  const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [currentSong, setCurrentSong] = useState<CurrentSong | null>(null);
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [isSongAddModalOpen, setIsSongAddModalOpen] = useState(false);
   // 확장뷰 트리거: 기본은 undefined (초기 진입 시 확장뷰 자동 오픈 방지)
   const [expandTrigger, setExpandTrigger] = useState<number | undefined>(undefined);
   const [autoPlayTrigger, setAutoPlayTrigger] = useState<number | undefined>(undefined);
@@ -135,12 +139,9 @@ export default function AlbumDetailContent({ id }: { id: string }) {
     return pages.flatMap((p) => p.items?.content ?? []);
   }, [musicsQuery.data]);
 
-  // musicsQuery 데이터에서 flag 정보 추출
-  useEffect(() => {
-    const firstPageFlag = musicsQuery.data?.pages?.[0]?.flag;
-    if (firstPageFlag) {
-      setIsOwner(firstPageFlag.isOwner);
-    }
+  // 앨범 소유자 여부 판단
+  const isOwner = useMemo(() => {
+    return musicsQuery.data?.pages?.[0]?.flag?.owner ?? null;
   }, [musicsQuery.data?.pages]);
 
   // 무한 스크롤: 스크롤 컨테이너 안의 sentinel이 보이면 다음 페이지
@@ -345,8 +346,10 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   const backHref = makeAlbumListUrl(parseAlbumListQuery(searchParams));
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      {/* 헤더 (고정 영역) */}
+    <div 
+      className="flex flex-col h-screen overflow-hidden"
+      onClick={() => isDeleteMode && setIsDeleteMode(false)}
+    >
       <div className="flex-shrink-0">
         <PageHeader
           title={album.title}
@@ -446,7 +449,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                   <button
                     type="button"
                     onClick={() => setIsAlbumInfoOpen(false)}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-[#006FFF] text-white text-sm font-semibold hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors"
+                    className="w-full py-2.5 px-4 rounded-xl bg-[#006FFF] text-white text-sm font-semibold hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors"
                   >
                     닫기
                   </button>
@@ -507,42 +510,56 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                         </button>
                       </div>
 
-                      {/* 노래 추가 버튼 (비소유자만 표시) */}
-                      {isOwner === false && (
-                        <button
-                          onClick={() => {
-                            trackEvent(
-                              { event: "select_content", content_type: "song_add_from_detail", item_id: albumUuid },
-                              { category: "song", action: "add_click", label: albumUuid }
-                            );
-                            const params = new URLSearchParams();
-                            params.set("albumId", albumUuid);
-                            router.push(`/song/add?${params.toString()}`);
-                          }}
-                          className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-full bg-[#006FFF] text-white hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors flex-shrink-0"
-                          aria-label="노래 추가"
-                        >
-                          + 노래 추가
-                        </button>
-                      )}
-
-                      {/* 노래 목록 정렬 드롭다운 */}
+                      {/* 노래 추가 버튼 및 정렬 드롭다운 */}
                       <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
+                        {/* 노래 추가 버튼 (비소유자만 표시) */}
+                        {isOwner !== true && (
+                          <button
+                            onClick={() => {
+                              trackEvent(
+                                { event: "select_content", content_type: "song_add_from_detail", item_id: albumUuid },
+                                { category: "song", action: "add_click", label: albumUuid }
+                              );
+                              setIsSongAddModalOpen(true);
+                            }}
+                            className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-full bg-[#006FFF] text-white hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors flex-shrink-0"
+                            aria-label="노래 추가"
+                          >
+                            + 노래 추가
+                          </button>
+                        )}
+
+                        {isOwner === true && (
+                          <button
+                            type="button"
+                            onClick={() => setIsDeleteMode(!isDeleteMode)}
+                            className={`px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-full flex items-center gap-1.5 transition-colors flex-shrink-0 ${
+                              isDeleteMode
+                                ? "bg-transparent text-red-500"
+                                : "bg-transparent text-gray-700"
+                            }`}
+                            aria-label="삭제 모드"
+                          >
+                            <HiTrash className="w-4 h-4" />
+                            <span>삭제</span>
+                          </button>
+                        )}
+
                         <div
                           ref={sortMenuRef}
-                          className="relative w-[130px] md:w-[170px] flex-shrink-0"
+                          className="relative w-[100px] md:w-[130px] flex-shrink-0"
                         >
                           <button
                             type="button"
                             onClick={() => setIsSortOpen((v) => !v)}
-                            className="w-full px-3 py-1.5 md:py-2 text-xs md:text-sm rounded-full border border-gray-300 bg-white/90 text-gray-800 flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
+                            className="w-full px-2 py-1.5 md:px-3 md:py-2 text-xs rounded-full border border-gray-300 bg-white/90 text-gray-800 flex items-center justify-between gap-1 focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
                             aria-label="노래 목록 정렬"
                             aria-haspopup="listbox"
                             aria-expanded={isSortOpen}
                           >
-                            <span className="truncate">{currentSortLabel}</span>
+                            <span className="truncate text-xs">{currentSortLabel}</span>
                             <HiChevronDown
-                              className={`w-4 h-4 flex-shrink-0 transition-transform ${
+                              className={`w-3 h-3 flex-shrink-0 transition-transform ${
                                 isSortOpen ? "rotate-180" : ""
                               }`}
                             />
@@ -619,11 +636,30 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                                     backgroundOpacity={0.4}
                                     fullWidth={true}
                                     showPlayButton={true}
+                                    showDeleteButton={isDeleteMode}
                                     isActive={isActive}
                                     separatorPlacement={separatorPlacement}
                                     separatorColor={album.color}
-                                    onCardClick={() => handleSelectSong(music, false)}
-                                    onPlay={() => handleSelectSong(music, true)}
+                                    onCardClick={() => {
+                                      setIsDeleteMode(false);
+                                      handleSelectSong(music, false);
+                                    }}
+                                    onPlay={() => {
+                                      setIsDeleteMode(false);
+                                      handleSelectSong(music, true);
+                                    }}
+                                    onDelete={() => {
+                                      if (confirm("이 노래를 삭제하시겠습니까?")) {
+                                        deleteMusic(music.uuid)
+                                          .then(() => {
+                                            musicsQuery.refetch();
+                                            setCurrentSong(null);
+                                          })
+                                          .catch(() => {
+                                            alert("노래 삭제 중 오류가 발생했습니다.");
+                                          });
+                                      }
+                                    }}
                                   />
                                 </div>
                               );
@@ -652,6 +688,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                                 todayLabel={todayLabel}
                                 tapeColor={album.color}
                                 enabled={viewMode === "letter"}
+                                isOwner={isOwner}
                               />
                             ))}
                           </>
@@ -681,11 +718,24 @@ export default function AlbumDetailContent({ id }: { id: string }) {
           nickname={currentSong.nickname}
           backgroundColor={album.color}
           hideUI={viewMode !== "player"}
+          isOwner={isOwner}
           onClose={() => setCurrentSong(null)}
           onPrevious={handlePrevious}
           onNext={handleNext}
           expandTrigger={expandTrigger}
           autoPlayTrigger={autoPlayTrigger}
+        />
+      )}
+
+      {/* 노래 추가 모달 */}
+      {isSongAddModalOpen && album && (
+        <AddSongModal
+          album={album}
+          isOpen={isSongAddModalOpen}
+          onClose={() => {
+            setIsSongAddModalOpen(false);
+            musicsQuery.refetch();
+          }}
         />
       )}
     </div>

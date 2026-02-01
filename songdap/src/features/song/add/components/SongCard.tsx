@@ -1,6 +1,6 @@
 "use client";
 
-import { HiPencil } from "react-icons/hi";
+import { HiPencil, HiTrash } from "react-icons/hi";
 import { FaPlay } from "react-icons/fa";
 
 type SongCardProps = {
@@ -10,9 +10,11 @@ type SongCardProps = {
   onEdit?: () => void;
   onCardClick?: () => void; // 카드 전체 클릭
   onPlay?: () => void;
+  onDelete?: () => void; // 삭제 버튼 클릭
   backgroundOpacity?: number; // 배경 투명도 (기본값: 0.85)
   fullWidth?: boolean; // 전체 너비 사용 여부 (기본값: false)
   showPlayButton?: boolean; // 재생 버튼 표시 여부 (기본값: false)
+  showDeleteButton?: boolean; // 삭제 버튼 표시 여부 (기본값: false)
   isActive?: boolean; // 선택된 노래인지 여부 (기본값: false)
   showBorder?: boolean; // 테두리 표시 여부 (기본값: true)
   separatorPlacement?: "none" | "all" | "top" | "bottom" | "topBottom"; // 구분선 위치 (기본값: "all")
@@ -26,9 +28,11 @@ export default function SongCard({
   onEdit,
   onCardClick,
   onPlay,
+  onDelete,
   backgroundOpacity = 0.85,
   fullWidth = false,
   showPlayButton = false,
+  showDeleteButton = false,
   isActive = false,
   showBorder = true,
   separatorPlacement = "all",
@@ -92,14 +96,16 @@ export default function SongCard({
       onClick={handleCardClick}
     >
         {/* 노래 이미지 */}
-        <div className="flex-shrink-0 relative overflow-hidden rounded-lg">
-          <img
-            src={imageUrl || "https://placehold.co/56x56"}
-            alt={title || "노래 이미지"}
-            className="w-14 h-14 rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-lg pointer-events-none" />
-        </div>
+        {imageUrl && (
+          <div className="flex-shrink-0 relative overflow-hidden rounded-lg">
+            <img
+              src={imageUrl}
+              alt={title || "노래 이미지"}
+              className="w-14 h-14 rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-lg pointer-events-none" />
+          </div>
+        )}
 
         {/* 노래 정보 */}
         <div className="flex flex-col justify-center items-start gap-1 flex-1 min-w-0">
@@ -115,19 +121,31 @@ export default function SongCard({
           </div>
         </div>
 
-        {/* 호버 시 버튼 (재생 또는 편집) */}
+        {/* 재생/삭제 버튼 */}
         {showPlayButton ? (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handlePlay();
+              if (showDeleteButton && onDelete) {
+                onDelete();
+              } else if (onPlay) {
+                handlePlay();
+              }
             }}
-            className={`flex-shrink-0 transition-opacity w-10 h-10 rounded-full bg-[#006FFF] flex items-center justify-center hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2 ${
-              isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            className={`flex-shrink-0 transition-opacity w-10 h-10 rounded-full flex items-center justify-center hover:bg-opacity-90 active:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              showDeleteButton
+                ? "bg-red-500 hover:bg-red-600 active:bg-red-700 focus:ring-red-500 opacity-100"
+                : `bg-[#006FFF] hover:bg-[#0056CC] active:bg-[#0044AA] focus:ring-[#006FFF] ${
+                    isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  }`
             }`}
-            aria-label="재생"
+            aria-label={showDeleteButton ? "삭제" : "재생"}
           >
-            <FaPlay className="w-4 h-4 text-white" />
+            {showDeleteButton ? (
+              <HiTrash className="w-4 h-4 text-white" />
+            ) : (
+              <FaPlay className="w-4 h-4 text-white" />
+            )}
           </button>
         ) : onEdit && (
           <button
@@ -135,7 +153,7 @@ export default function SongCard({
               e.stopPropagation();
               handleEdit();
             }}
-            className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity w-10 h-10 rounded-full bg-[#006FFF] flex items-center justify-center hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2"
+            className="flex-shrink-0 transition-opacity w-10 h-10 rounded-full bg-[#006FFF] flex items-center justify-center hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2"
             aria-label="편집"
           >
             <HiPencil className="w-4 h-4 text-white" />

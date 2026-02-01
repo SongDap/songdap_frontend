@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { HiChevronDown, HiMail } from "react-icons/hi";
+import { HiChevronDown, HiMail, HiLockClosed } from "react-icons/hi";
 import { FaStepBackward, FaStepForward, FaPlay, FaPause, FaList, FaYoutube } from "react-icons/fa";
 import { LP } from "@/shared/ui";
 
@@ -41,6 +41,7 @@ type MusicPlayerExpandedViewProps = {
   message?: string;
   nickname?: string;
   backgroundColor?: string;
+  isOwner?: boolean | null; // 앨범 소유자 여부
   isPlaying: boolean;
   notice?: string | null;
   videoId?: string;
@@ -61,6 +62,7 @@ export default function MusicPlayerExpandedView({
   message,
   nickname,
   backgroundColor,
+  isOwner = null,
   isPlaying,
   notice,
   videoId,
@@ -267,18 +269,6 @@ export default function MusicPlayerExpandedView({
           } as React.CSSProperties & { scrollbarWidth?: string; msOverflowStyle?: string }}
         >
           <div className="w-full flex flex-col items-center">
-            {/* 날짜 */}
-            <p
-              className="text-white text-center font-bold"
-              style={{ fontSize: DATE_FONT_SIZE, marginBottom: `${spacing.small}px` }}
-            >
-              {new Date().toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-
             {/* 닉네임 */}
             {nickname && (
               <p
@@ -290,7 +280,7 @@ export default function MusicPlayerExpandedView({
             )}
 
             {/* 메시지 */}
-            {message && (
+            {isOwner === true && message ? (
               <div
                 className="rounded-lg w-full"
                 style={{
@@ -315,7 +305,12 @@ export default function MusicPlayerExpandedView({
                   {message}
                 </p>
               </div>
-            )}
+            ) : message && isOwner !== true ? (
+              <div className="flex items-center justify-center gap-2 text-gray-500">
+                <HiLockClosed className="w-5 h-5" />
+                <p style={{ fontSize: MESSAGE_BODY_FONT_SIZE }}>비공개입니다.</p>
+              </div>
+            ) : null}
           </div>
         </div>
         </div>
