@@ -337,6 +337,55 @@ export async function deleteAlbum(albumUuid: string): Promise<void> {
     throw error;
   }
 }
+
+/**
+ * 앨범 공개 여부 수정
+ * @param albumUuid - 앨범 UUID
+ * @param isPublic - 공개 여부
+ * @returns 수정된 앨범의 공개 여부
+ */
+export async function updateAlbumVisibility(
+  albumUuid: string,
+  isPublic: boolean
+): Promise<{ isPublic: boolean }> {
+  try {
+    const endpoint = `/api/v1/albums/${albumUuid}/visibility`;
+    
+    const response = await apiClient.patch<ApiResponse<{ isPublic: boolean }>>(
+      endpoint,
+      { isPublic },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    
+    const responseData = extractDataFromResponse<{ isPublic: boolean }>(response.data);
+    
+    if (!responseData) {
+      throw new Error("유효하지 않은 응답");
+    }
+    
+    console.log("[Album API] 앨범 공개 여부 수정 성공:", {
+      albumUuid,
+      isPublic: responseData.isPublic,
+      code: response.data?.code,
+    });
+    
+    return responseData;
+  } catch (error: any) {
+    console.error("[Album API] 앨범 공개 여부 수정 실패:", {
+      albumUuid,
+      isPublic,
+      url: `/api/v1/albums/${albumUuid}/visibility`,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+    throw error;
+  }
+}
 // ============================================================================
 // 노래(Music) 관련 타입 및 API는 @/features/song/api로 이동됨
 // ============================================================================

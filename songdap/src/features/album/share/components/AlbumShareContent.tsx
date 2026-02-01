@@ -22,24 +22,11 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
   const [showPrivateModal, setShowPrivateModal] = useState<boolean>(false);
   const user = useOauthStore((s) => s.user);
 
-  const handleLinkCopy = () => {
-    // 버튼 클릭 추적
-    trackEvent(
-      { event: "select_content", content_type: "album_share_link", item_id: albumData?.uuid || "" },
-      { category: "album", action: "share_link_click", label: albumData?.uuid || "" }
-    );
-
-    // 비공개 앨범 체크
-    if (!albumData?.isPublic) {
-      setShowPrivateModal(true);
-      return;
-    }
-
-    const albumId = albumData?.uuid;
-    if (!albumId) return;
-
-    const songAddUrl = buildAlbumShareUrlFromAlbumInfo({
-      id: albumId,
+  // 공유 URL 생성 헬퍼
+  const buildShareUrl = () => {
+    if (!albumData?.uuid) return null;
+    return buildAlbumShareUrlFromAlbumInfo({
+      id: albumData.uuid,
       title: albumData.title,
       color: albumColor,
       description: albumData.description || "",
@@ -48,44 +35,48 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
       createdAt: albumData.createdAt || "",
       isPublic: albumData.isPublic,
     });
-    
-    navigator.clipboard.writeText(songAddUrl).then(() => {
+  };
+
+  // 비공개 체크 헬퍼
+  const checkAndSetPrivateModal = () => {
+    if (!albumData?.isPublic) {
+      setShowPrivateModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleLinkCopy = () => {
+    trackEvent(
+      { event: "select_content", content_type: "album_share_link", item_id: albumData?.uuid || "" },
+      { category: "album", action: "share_link_click", label: albumData?.uuid || "" }
+    );
+
+    if (!checkAndSetPrivateModal()) return;
+
+    const shareUrl = buildShareUrl();
+    if (!shareUrl) return;
+
+    navigator.clipboard.writeText(shareUrl).then(() => {
       setIsLinkCopied(true);
-      // 완료 이벤트 추적
       trackEvent(
-        { event: "share_album", item_id: albumId },
-        { category: "album", action: "share", label: albumId }
+        { event: "share_album", item_id: albumData?.uuid || "" },
+        { category: "album", action: "share", label: albumData?.uuid || "" }
       );
       setTimeout(() => setIsLinkCopied(false), 2000);
     });
   };
 
   const handleKakaoShare = async () => {
-    // 버튼 클릭 추적
     trackEvent(
       { event: "select_content", content_type: "album_share_kakao", item_id: albumData?.uuid || "" },
       { category: "album", action: "share_kakao_click", label: albumData?.uuid || "" }
     );
+    if (!checkAndSetPrivateModal()) return;
 
-    // 비공개 앨범 체크
-    if (!albumData?.isPublic) {
-      setShowPrivateModal(true);
-      return;
-    }
+    const shareUrl = buildShareUrl();
+    if (!shareUrl || !albumData) return;
 
-    const albumId = albumData?.uuid;
-    if (!albumId) return;
-
-    const shareUrl = buildAlbumShareUrlFromAlbumInfo({
-      id: albumId,
-      title: albumData.title,
-      color: albumColor,
-      description: albumData.description || "",
-      musicCount: albumData.musicCount ?? 0,
-      musicCountLimit: albumData.musicCountLimit,
-      createdAt: albumData.createdAt || "",
-      isPublic: albumData.isPublic,
-    });
     try {
       const nickname = user?.nickname ?? "누군가";
       await shareKakaoFeed({
@@ -95,10 +86,9 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
         imageUrl: `${window.location.origin}/images/logo.png`,
         buttonTitle: "노래 추가하기",
       });
-      // 완료 이벤트 추적
       trackEvent(
-        { event: "share_album", item_id: albumId },
-        { category: "album", action: "share_kakao", label: albumId }
+        { event: "share_album", item_id: albumData?.uuid || "" },
+        { category: "album", action: "share_kakao", label: albumData?.uuid || "" }
       );
     } catch (err) {
       console.error("카카오 공유 실패:", err);
@@ -147,25 +137,9 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
           </button>
         </div>
 
-        {/* 수정 버튼 */}
-        <div className="mt-12">
-          <button
-            onClick={() => {
-              trackEvent(
-                { event: "select_content", content_type: "album_edit_button", item_id: albumData?.uuid || "" },
-                { category: "album", action: "edit_click", label: albumData?.uuid || "" }
-              );
-              router.push(`${ROUTES.ALBUM.CREATE}?mode=edit`);
-            }}
-            className="w-full py-3 px-4 border border-gray-300 text-gray-700 rounded-lg text-base font-medium hover:bg-gray-50 active:bg-gray-100 focus:outline-none transition-colors"
-          >
-            수정
-          </button>
-        </div>
-
         {/* 완료 버튼 */}
         {onComplete && (
-          <div className="mt-3">
+          <div className="mt-12">
             <button
               onClick={() => {
                 trackEvent(
