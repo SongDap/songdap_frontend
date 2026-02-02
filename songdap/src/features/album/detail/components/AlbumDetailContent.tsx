@@ -370,28 +370,24 @@ export default function AlbumDetailContent({ id }: { id: string }) {
     >
       <div className="flex-shrink-0">
         <PageHeader
-          title={
-            <div className="flex items-center gap-2">
-              <span>{album.title}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSortOpen(false);
-                  setIsAlbumInfoOpen(true);
-                }}
-                className="p-1 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors flex-shrink-0"
-                aria-label="앨범 정보"
-              >
-                <HiInformationCircle className="w-5 h-5 text-gray-800" />
-              </button>
-            </div>
-          }
-          backButtonText="내 앨범"
-          backgroundColor={album.color}
-          hideTextOnMobile={true}
+          title={album.title}
           isPublic={album.isPublic}
           showBackButton={true}
           backHref={backHref}
+          backgroundColor={album.color}
+          rightAction={
+            <button
+              type="button"
+              onClick={() => {
+                setIsSortOpen(false);
+                setIsAlbumInfoOpen(true);
+              }}
+              className="p-1 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors flex-shrink-0"
+              aria-label="앨범 정보"
+            >
+              <HiInformationCircle className="w-5 h-5 text-gray-800" />
+            </button>
+          }
         />
       </div>
 

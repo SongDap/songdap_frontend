@@ -111,3 +111,8 @@
   animation: lp-rotate 25s linear infinite;
 }
 
+.animate-lp-rotate-paused {
+  animation: lp-rotate 25s linear infinite;
+  animation-play-state: paused;
+}
+
