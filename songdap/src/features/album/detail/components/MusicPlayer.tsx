@@ -52,13 +52,8 @@ export default function MusicPlayer({
   const prevExpandTriggerRef = useRef<number | undefined>(undefined);
   const prevAutoPlayTriggerRef = useRef<number | undefined>(undefined);
 
-  // 곡이 변경되면 상태 리셋 (익스팬드뷰는 expandTrigger로만 제어)
-  // NOTE: useEffect로 두면 "다음 곡 → 즉시 재생 클릭" 타이밍에서
-  // 사용자의 setIsPlaying(true)가 뒤늦게 도는 리셋(setIsPlaying(false))에 의해 덮일 수 있음.
-  // useLayoutEffect로 바꿔서 사용자 클릭 전에 리셋이 완료되도록 함.
+  // 곡이 변경되면 상태 리셋
   useLayoutEffect(() => {
-    // "다음 곡"에서 항상 유튜브 아이콘으로 돌아가야 해서
-    // 곡 변경 판단 기준에 videoId까지 포함 (title/artist만 쓰면 일부 케이스에서 리셋이 안 될 수 있음)
     const songKey = `${title}||${artist}||${videoId ?? ""}`;
     const isSongChanged = prevSongKeyRef.current !== songKey;
 
@@ -71,25 +66,22 @@ export default function MusicPlayer({
     prevSongKeyRef.current = songKey;
   }, [title, artist, videoId]);
 
-  // 카드의 "재생" 버튼 등에서 확장뷰를 열면서 자동 재생까지 이어주기 위한 트리거
-  // NOTE: songKey 리셋(useLayoutEffect) 이후에 동작해야 하므로, 같은 useLayoutEffect 체인에서 뒤에 둠.
+  // 카드의 "재생" 버튼에서 확장뷰를 열고 자동 재생을 트리거하기 위한 로직
   useLayoutEffect(() => {
     if (hideUI) {
       prevAutoPlayTriggerRef.current = autoPlayTrigger;
       return;
     }
 
-    // 최초 마운트에서는 트리거를 소비하지 않음
-    if (prevAutoPlayTriggerRef.current === undefined) {
+    // 초기 마운트 시 autoPlayTrigger가 undefined이면 무시
+    if (prevAutoPlayTriggerRef.current === undefined && autoPlayTrigger === undefined) {
       prevAutoPlayTriggerRef.current = autoPlayTrigger;
       return;
     }
 
-    if (
-      autoPlayTrigger !== undefined &&
-      autoPlayTrigger !== prevAutoPlayTriggerRef.current
-    ) {
-      // 유튜브 videoId가 없으면 자동 재생 불가 → 안내만 표시
+    // autoPlayTrigger가 변경되거나 초기 마운트에서 값이 있으면 처리
+    if (autoPlayTrigger !== undefined && autoPlayTrigger !== prevAutoPlayTriggerRef.current) {
+      // 유튜브 videoId가 없으면 재생 불가 → 안내만 표시
       if (!videoId || videoId.trim().length === 0) {
         setPlaybackNotice("유튜브 링크가 없어요.");
         if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
@@ -120,12 +112,13 @@ export default function MusicPlayer({
 
   // expandTrigger가 변경되면 익스팬드뷰 열기 (같은 곡을 클릭해도 열기)
   useEffect(() => {
-    // 최초 마운트 시점에는 "이미 처리된 값"으로 간주하고 열지 않음
-    if (prevExpandTriggerRef.current === undefined) {
+    // 초기 마운트 시 expandTrigger가 undefined이면 무시
+    if (prevExpandTriggerRef.current === undefined && expandTrigger === undefined) {
       prevExpandTriggerRef.current = expandTrigger;
       return;
     }
 
+    // expandTrigger가 변경되거나 초기 마운트에서 값이 있으면 처리
     if (expandTrigger !== undefined && expandTrigger !== prevExpandTriggerRef.current) {
       setIsOpening(true);
       setIsExpanded(true);
@@ -179,7 +172,9 @@ export default function MusicPlayer({
         if (next) setHasPlayedOnce(true);
       }}
       onPlaybackBlocked={showPlaybackBlockedNotice}
-      onEnded={() => setIsPlaying(false)}
+      onEnded={() => {
+        setIsPlaying(false);
+      }}
     />
   );
 
