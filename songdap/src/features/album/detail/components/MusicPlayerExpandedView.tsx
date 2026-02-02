@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { HiChevronDown, HiMail, HiLockClosed } from "react-icons/hi";
-import { FaStepBackward, FaStepForward, FaPlay, FaPause, FaList, FaYoutube } from "react-icons/fa";
+import { FaStepBackward, FaStepForward, FaPlay, FaPause, FaList } from "react-icons/fa";
 import { LP } from "@/shared/ui";
 
 // 상수
@@ -254,7 +254,7 @@ export default function MusicPlayerExpandedView({
             <LP 
               size={lpSize} 
               imageUrl={resolvedLpImageUrl}
-              className={isPlaying ? 'animate-lp-rotate' : ''}
+              className={isPlaying ? 'animate-lp-rotate' : 'animate-lp-rotate-paused'}
             />
           </div>
         </div>
@@ -359,7 +359,16 @@ export default function MusicPlayerExpandedView({
               <div className="absolute inset-0 bg-black/10" />
             </div>
           ) : (
-            <FaYoutube className="text-white" style={iconStyle} />
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="text-red-500"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2" fill="#EF4444" />
+              <polygon points="9,8 9,16 16,12" fill="white" />
+            </svg>
           )}
         </button>
 

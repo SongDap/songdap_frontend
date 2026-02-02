@@ -25,6 +25,19 @@ export default function Header() {
     { label: "프로필 편집", href: "/profile/edit" },
   ];
 
+  // 카카오 로그인 URL
+  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
+  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
+  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+
+  const handleLogin = () => {
+    if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
+      alert("로그인 설정 누락");
+      return;
+    }
+    window.location.assign(kakaoURL);
+  };
+
   const handleLogout = () => {
     setProfileMenuOpen(false);
     logout();
@@ -40,14 +53,14 @@ export default function Header() {
     if (isAlbumListPage) {
       // PC 앨범 리스트 페이지
       return (
-        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto">
+        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto relative">
           {/* 로고 */}
           <Link href="/">
             <img src="/images/logo.png" alt="logo" className="h-16 w-auto object-contain" />
           </Link>
 
-          {/* 내 앨범 */}
-          <span className="text-lg font-semibold text-gray-900">내 앨범</span>
+          {/* 내 앨범 (절대 가운데 정렬) */}
+          <span className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900">내 앨범</span>
 
           {/* 프로필 + 메뉴 */}
           <div className="relative">
@@ -69,7 +82,12 @@ export default function Header() {
                 </span>
               </button>
             ) : (
-              <span className="text-sm text-gray-700">로그인이 필요합니다.</span>
+              <button
+                onClick={handleLogin}
+                className="px-4 py-2 text-base text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+              >
+                로그인이 필요합니다.
+              </button>
             )}
 
             {/* 프로필 메뉴 */}
@@ -102,7 +120,7 @@ export default function Header() {
     } else if (isAlbumDetailPage) {
       // PC 앨범 상세 페이지
       return (
-        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto">
+        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto relative">
           {/* 뒤로가기 */}
           <button
             onClick={() => router.back()}
@@ -112,8 +130,8 @@ export default function Header() {
             <HiChevronLeft className="w-6 h-6 text-gray-700" />
           </button>
 
-          {/* 앨범명 + 정보아이콘 */}
-          <span className="text-lg font-semibold text-gray-900">앨범</span>
+          {/* 앨범명 (절대 가운데 정렬) */}
+          <span className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900">앨범</span>
 
           {/* 프로필 + 메뉴 */}
           <div className="relative">
@@ -135,7 +153,12 @@ export default function Header() {
                 </span>
               </button>
             ) : (
-              <span className="text-sm text-gray-700">로그인이 필요합니다.</span>
+              <button
+                onClick={handleLogin}
+                className="px-4 py-2 text-base text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+              >
+                로그인이 필요합니다.
+              </button>
             )}
 
             {/* 프로필 메뉴 */}
@@ -196,7 +219,12 @@ export default function Header() {
                 />
               </button>
             ) : (
-              <div className="w-9 h-9" />
+              <button
+                onClick={handleLogin}
+                className="px-2 py-1.5 text-xs text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+              >
+                로그인
+              </button>
             )}
             {isAuthenticated && profileMenuOpen && (
               <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
@@ -263,7 +291,12 @@ export default function Header() {
                 />
               </button>
             ) : (
-              <div className="w-9 h-9" />
+              <button
+                onClick={handleLogin}
+                className="px-2 py-1.5 text-xs text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+              >
+                로그인
+              </button>
             )}
             {isAuthenticated && profileMenuOpen && (
               <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50">

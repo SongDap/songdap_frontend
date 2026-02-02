@@ -156,6 +156,33 @@ apiClient.interceptors.response.use(
           { __skipAuthRefresh: true } as any
         );
 
+        // 토큰 리프레쉬 후 사용자 정보 동기화 필요
+        // (Zustand 상태가 유효한지 확인하고 필요시 업데이트)
+        if (typeof window !== 'undefined') {
+          try {
+            const { useOauthStore } = await import('@/features/oauth/model/useOauthStore');
+            const currentUser = useOauthStore.getState().user;
+            
+            // 로그인 상태인데 사용자 정보가 없으면 다시 가져오기
+            if (currentUser) {
+              // 사용자 정보 재검증 (백엔드에서 토큰이 정말 유효한지 확인)
+              const { getMe } = await import('./userApi');
+              try {
+                const freshUser = await getMe();
+                useOauthStore.getState().login({ 
+                  accessToken: '',  // 쿠키 기반이므로 빈 값
+                  user: freshUser 
+                });
+              } catch (meError) {
+                // getMe 실패 시 로그인 정보 유지 (쿠키는 정상이므로)
+                console.log('[AUTH] Token reissued but failed to refresh user info, keeping current state');
+              }
+            }
+          } catch (stateError) {
+            console.log('[AUTH] Token reissued but failed to sync state:', stateError);
+          }
+        }
+
         // 대기 중인 요청들 재시도
         processQueue(null, null);
 
