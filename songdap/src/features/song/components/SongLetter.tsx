@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { HiLockClosed } from "react-icons/hi";
 
 type SongLetterProps = {
   nickname?: string;
@@ -192,19 +191,11 @@ export default function SongLetter({
       )}
 
       {/* 메시지 */}
-      {message && isOwner === true && (
+      {message && (
         <div className="mb-4 max-w-2xl mx-auto">
           <p className="text-base text-gray-700 leading-relaxed whitespace-pre-line text-center">
             {message}
           </p>
-        </div>
-      )}
-      {message && isOwner !== true && (
-        <div className="mb-4 max-w-2xl mx-auto">
-          <div className="flex items-center justify-center gap-2 text-gray-500">
-            <HiLockClosed className="w-4 h-4" />
-            <p className="text-base">비공개입니다.</p>
-          </div>
         </div>
       )}
 
