@@ -366,11 +366,9 @@ export default function AlbumListPageClient() {
                       onInfoClick={(id) => {
                         setSelectedAlbumId(id);
                         setIsAlbumInfoOpen(true);
-                        // 선택된 앨범의 공개 여부로 초기화
+                        // 선택된 앨범의 공개 여부로 초기화 (값이 없으면 비공개로 처리)
                         const selectedAlbum = albums.find(a => a.uuid === id);
-                        if (selectedAlbum?.isPublic !== undefined) {
-                          setTempIsPublic(selectedAlbum.isPublic);
-                        }
+                        setTempIsPublic(selectedAlbum?.isPublic ?? false);
                       }}
                     />
                   ))
@@ -590,7 +588,7 @@ export default function AlbumListPageClient() {
                               type="button"
                               onClick={() => {
                                 setIsAlbumInfoEditMode(true);
-                                setTempIsPublic(album.isPublic || true);
+                                setTempIsPublic(album.isPublic ?? false);
                               }}
                               className="w-full py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-900 text-sm font-semibold transition-colors"
                             >
@@ -682,7 +680,7 @@ export default function AlbumListPageClient() {
                               type="button"
                               onClick={() => {
                                 setIsAlbumInfoEditMode(false);
-                                setTempIsPublic(album.isPublic || true);
+                                setTempIsPublic(album.isPublic ?? false);
                               }}
                               disabled={isVisibilityUpdating}
                               className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 text-sm font-semibold transition-colors"

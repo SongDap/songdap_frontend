@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { HiChevronDown, HiMail, HiLockClosed } from "react-icons/hi";
+import { HiChevronDown, HiMail } from "react-icons/hi";
 import { FaStepBackward, FaStepForward, FaPlay, FaPause, FaList } from "react-icons/fa";
 import { LP } from "@/shared/ui";
 
@@ -280,7 +280,7 @@ export default function MusicPlayerExpandedView({
             )}
 
             {/* 메시지 */}
-            {isOwner === true && message ? (
+            {message ? (
               <div
                 className="rounded-lg w-full"
                 style={{
@@ -304,11 +304,6 @@ export default function MusicPlayerExpandedView({
                 >
                   {message}
                 </p>
-              </div>
-            ) : message && isOwner !== true ? (
-              <div className="flex items-center justify-center gap-2 text-gray-500">
-                <HiLockClosed className="w-5 h-5" />
-                <p style={{ fontSize: MESSAGE_BODY_FONT_SIZE }}>비공개입니다.</p>
               </div>
             ) : null}
           </div>
