@@ -522,7 +522,9 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                         </div>
                       </div>
                       <p className="text-sm text-gray-500 text-left">
-                        다른 사용자에게 앨범이 공개되지 않도록 설정할 수 있어요.
+                        {tempIsPublic
+                          ? "현재는 공개 상태입니다."
+                          : "현재는 비공개 상태입니다."}
                       </p>
                     </div>
 
@@ -539,7 +541,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                         type="button"
                         onClick={() => {
                           setIsAlbumInfoEditMode(false);
-                          setTempIsPublic(false);
+                          setTempIsPublic(album.isPublic);
                         }}
                         disabled={isVisibilityUpdating}
                         className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 text-sm font-semibold transition-colors"
