@@ -48,7 +48,6 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
           hasLoadedRef.current = true;
         })
         .catch((error) => {
-          console.error("앨범 조회 실패:", error);
           hasLoadedRef.current = true;
         })
         .finally(() => {
@@ -115,7 +114,7 @@ export function useAlbumData(initialAlbumData?: AlbumData | null, options?: UseA
       setAlbumData(data);
       setAlbumColor(album.color);
     } catch (error) {
-      console.error("앨범 새로고침 실패:", error);
+      // 앨범 새로고침 실패
     } finally {
       setIsLoading(false);
     }

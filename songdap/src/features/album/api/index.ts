@@ -146,7 +146,7 @@ function transformAlbumData(albumData: AlbumData): AlbumResponse {
  * @throws {AxiosError} API 호출 실패 시
  */
 export async function createAlbum(data: CreateAlbumRequest): Promise<AlbumResponse> {
-  const endpoint = API_ENDPOINTS.ALBUM.BASE;
+  const endpoint = API_ENDPOINTS.ALBUM.CREATE;
 
   try {
     const response = await apiClient.post<any>(endpoint, data);
@@ -210,11 +210,6 @@ export async function createAlbum(data: CreateAlbumRequest): Promise<AlbumRespon
     
     return transformAlbumData(albumData);
   } catch (error: any) {
-    console.error("[Album API] 앨범 생성 실패:", {
-      endpoint,
-      status: error.response?.status,
-      message: error.message,
-    });
     throw error;
   }
 }
@@ -248,11 +243,6 @@ export async function getAlbum(albumUuid: string): Promise<AlbumResponse> {
     
     return transformAlbumData(albumData);
   } catch (error: any) {
-    console.error("[Album API] 앨범 상세 조회 실패:", {
-      albumUuid,
-      status: error.response?.status,
-      message: error.message,
-    });
     throw error;
   }
 }
@@ -293,13 +283,6 @@ export async function getAlbums(
     
     throw new Error("앨범 목록 응답 구조를 파싱할 수 없습니다.");
   } catch (error: any) {
-    console.error("[Album API] 앨범 목록 조회 실패:", {
-      sort,
-      page,
-      size,
-      status: error.response?.status,
-      message: error.message,
-    });
     throw error;
   }
 }
@@ -313,7 +296,7 @@ export async function getAlbums(
  * @throws {AxiosError} API 호출 실패 시
  */
 export async function deleteAlbum(albumUuid: string): Promise<void> {
-  const endpoint = API_ENDPOINTS.ALBUM.DETAIL(albumUuid);
+  const endpoint = API_ENDPOINTS.ALBUM.DELETE(albumUuid);
 
   try {
     const response = await apiClient.delete<ApiResponse<{}>>(endpoint);
@@ -321,21 +304,8 @@ export async function deleteAlbum(albumUuid: string): Promise<void> {
     // 응답 구조: { code, message, data: {} }
     const responseData = extractDataFromResponse<{}>(response.data);
     
-    console.log("[Album API] 앨범 삭제 성공:", {
-      albumUuid,
-      code: response.data?.code,
-      message: response.data?.message,
-    });
-    
     // 삭제는 void를 반환하므로 데이터는 사용하지 않음
   } catch (error: any) {
-    console.error("[Album API] 앨범 삭제 실패:", {
-      albumUuid,
-      url: endpoint,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
     throw error;
   }
 }
@@ -351,7 +321,7 @@ export async function updateAlbumVisibility(
   isPublic: boolean
 ): Promise<{ isPublic: boolean }> {
   try {
-    const endpoint = `/api/v1/albums/${albumUuid}/visibility`;
+    const endpoint = API_ENDPOINTS.ALBUM.UPDATE_VISIBILITY(albumUuid);
     
     const response = await apiClient.patch<ApiResponse<{ isPublic: boolean }>>(
       endpoint,
@@ -369,22 +339,8 @@ export async function updateAlbumVisibility(
       throw new Error("유효하지 않은 응답");
     }
     
-    console.log("[Album API] 앨범 공개 여부 수정 성공:", {
-      albumUuid,
-      isPublic: responseData.isPublic,
-      code: response.data?.code,
-    });
-    
     return responseData;
   } catch (error: any) {
-    console.error("[Album API] 앨범 공개 여부 수정 실패:", {
-      albumUuid,
-      isPublic,
-      url: `/api/v1/albums/${albumUuid}/visibility`,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
     throw error;
   }
 }

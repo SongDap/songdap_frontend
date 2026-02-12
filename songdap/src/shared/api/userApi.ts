@@ -10,9 +10,6 @@ import type { AxiosError } from "axios";
  */
 export async function getMe() {
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
-  if (DEBUG_OAUTH) {
-    console.log("[OAUTH][USER][API] GET", API_ENDPOINTS.USER.ME);
-  }
   const res = await apiClient.get<any>(API_ENDPOINTS.USER.ME, {
     withCredentials: true,
   });
@@ -43,13 +40,6 @@ export type WithdrawRequest = {
  */
 export async function updateMe(payload: UpdateMeRequest) {
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
-  if (DEBUG_OAUTH) {
-    console.log("[OAUTH][USER][API] PATCH", API_ENDPOINTS.USER.ME, {
-      nicknameLength: payload.nickname?.length ?? 0,
-      hasEmail: Boolean(payload.email),
-      hasProfileImage: Boolean(payload.profileImageFile),
-    });
-  }
 
   // 백엔드 형식에 맞게 항상 FormData 사용
   const formData = new FormData();
@@ -68,7 +58,7 @@ export async function updateMe(payload: UpdateMeRequest) {
     formData.append("file", payload.profileImageFile);
   }
 
-  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, formData, {
+  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.UPDATE_ME, formData, {
     withCredentials: true,
   });
   const data = extractDataFromResponse<UserInfo>(res.data);
@@ -82,9 +72,6 @@ export async function updateMe(payload: UpdateMeRequest) {
  */
 export async function withdrawUser() {
   const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
-  if (DEBUG_OAUTH) {
-    console.log("[OAUTH][USER][API] DELETE", API_ENDPOINTS.USER.WITHDRAW);
-  }
 
   // 백엔드 스펙: DELETE /api/v1/users (파라미터/바디 없음)
   const res = await apiClient.delete<any>(API_ENDPOINTS.USER.WITHDRAW, {

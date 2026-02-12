@@ -91,7 +91,6 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
         { category: "album", action: "share_kakao", label: albumData?.uuid || "" }
       );
     } catch (err) {
-      console.error("카카오 공유 실패:", err);
       alert("카카오 공유에 실패했어요. 링크 복사로 다시 시도해 주세요.");
     }
   };

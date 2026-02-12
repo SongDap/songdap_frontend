@@ -28,7 +28,7 @@ export async function updateProfile(payload: UpdateProfileRequest): Promise<Prof
     formData.append("file", payload.profileImageFile);
   }
   
-  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.ME, formData, {
+  const res = await apiClient.patch<any>(API_ENDPOINTS.USER.UPDATE_ME, formData, {
     withCredentials: true,
   });
   const data = extractDataFromResponse<ProfileResponse>(res.data);

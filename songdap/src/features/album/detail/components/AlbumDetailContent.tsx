@@ -216,7 +216,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
       await albumQuery.refetch();
       setIsAlbumInfoEditMode(false);
     } catch (error) {
-      console.error("앨범 공개 여부 수정 실패:", error);
+      // 공개 여부 수정 실패
     } finally {
       setIsVisibilityUpdating(false);
     }
@@ -766,6 +766,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                                       if (confirm(`${music.artist}의 "${music.title}"을 삭제하시겠습니까?`)) {
                                         deleteMusic(music.uuid)
                                           .then(() => {
+                                            albumQuery.refetch();
                                             musicsQuery.refetch();
                                             setCurrentSong(null);
                                           })
@@ -848,6 +849,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
           isOpen={isSongAddModalOpen}
           onClose={() => {
             setIsSongAddModalOpen(false);
+            albumQuery.refetch();
             musicsQuery.refetch();
           }}
         />

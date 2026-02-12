@@ -50,7 +50,7 @@ function AddSongContent() {
             createdAt: albumInfo.createdAt,
           });
         } catch (error) {
-          console.error("[Song Add] URL에서 앨범 정보 디코딩 실패:", error);
+          // URL에서 앨범 정보 디코딩 실패
         }
       }
 
@@ -70,7 +70,6 @@ function AddSongContent() {
           setIsOwner(musicsData.flag.owner);
         })
         .catch((error) => {
-          console.warn("[Song Add] 앨범 정보 조회 실패:", error);
           setAlbum({
             uuid: albumId,
             title: "앨범",

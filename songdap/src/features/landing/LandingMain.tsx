@@ -52,19 +52,8 @@ export default function LandingMain() {
       { event: "select_content", content_type: "cta", item_id: "landing_kakao_login" },
       { category: "navigation", action: "click_button", label: "landing_kakao_login" }
     );
-    if (DEBUG_OAUTH) {
-      console.groupCollapsed("[OAUTH][KAKAO][01] 로그인 버튼 클릭");
-      console.log("JAVASCRIPT_KEY 존재:", Boolean(JAVASCRIPT_KEY));
-      console.log("REDIRECT_URI:", REDIRECT_URI);
-      console.log("authorize URL:", kakaoURL);
-      console.groupEnd();
-    }
     // 1. 환경변수 미설정 체크
     if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
-      console.error("환경변수가 설정되지 않았습니다", {
-        JAVASCRIPT_KEY,
-        REDIRECT_URI
-      });
       alert("로그인 설정 누락")
       return;
     }
@@ -79,18 +68,14 @@ export default function LandingMain() {
       }
 
     } catch (error) {
-      console.error("Redirect URI 검증 실패", error);
       return;
     }
 
     // 3. Redirect 실패 처리
     try {
-      if (DEBUG_OAUTH) {
-        console.info("[OAUTH][KAKAO][02] 카카오 authorize로 이동합니다");
-      }
       window.location.assign(kakaoURL); // 현재 페이지를 kakaoURL에 담긴 주소로 이동시켜라
     } catch (error) {
-      console.error("Login Redirect 오류", error)
+      // Redirect 실패 처리
     }
   }
 

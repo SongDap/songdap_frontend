@@ -160,7 +160,7 @@ export async function addMusicToAlbum(
   albumUuid: string,
   data: AddMusicRequest
 ): Promise<MusicResponse> {
-  const endpoint = API_ENDPOINTS.ALBUM.ADD_MUSIC(albumUuid);
+  const endpoint = API_ENDPOINTS.MUSIC.ADD(albumUuid);
 
   try {
     // FormData 구성: request (JSON 문자열) + file (이미지 파일)
@@ -189,14 +189,6 @@ export async function addMusicToAlbum(
       },
     });
     
-    console.log("[Song API] 노래 추가 성공:", {
-      albumUuid,
-      title: data.title,
-      artist: data.artist,
-      code: response.data?.code,
-      message: response.data?.message,
-    });
-    
     // 응답: { code: 200, message: "노래 등록 성공", data: null }
     // 성공한 경우 요청 데이터를 반환
     return {
@@ -207,13 +199,6 @@ export async function addMusicToAlbum(
       writer: data.writer,
     };
   } catch (error: any) {
-    console.error("[Song API] 노래 추가 실패:", {
-      albumUuid,
-      url: endpoint,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
     throw error;
   }
 }
@@ -236,7 +221,7 @@ export async function getAlbumMusics(
   } = {}
 ): Promise<AlbumMusicsData> {
   const { sort = "LATEST", page = 0, size = 10 } = options;
-  const endpoint = API_ENDPOINTS.ALBUM.DETAIL(albumUuid) + "/musics";
+  const endpoint = API_ENDPOINTS.MUSIC.LIST(albumUuid);
 
   try {
     const response = await apiClient.get<ApiResponse<AlbumMusicsData>>(endpoint, {
@@ -263,16 +248,6 @@ export async function getAlbumMusics(
 
     return responseData;
   } catch (error: any) {
-    console.error("[Song API] 노래 목록 조회 실패:", {
-      albumUuid,
-      sort,
-      page,
-      size,
-      url: endpoint,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
     throw error;
   }
 }
@@ -304,21 +279,8 @@ export async function getMusicDetail(musicUuid: string): Promise<MusicDetailData
       throw new Error("노래 데이터를 파싱할 수 없습니다.");
     }
     
-    console.log("[Song API] 노래 상세 조회 성공:", {
-      musicUuid,
-      title: data.musics.title,
-      artist: data.musics.artist,
-    });
-    
     return data;
   } catch (error: any) {
-    console.error("[Song API] 노래 상세 조회 실패:", {
-      musicUuid,
-      url: endpoint,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
     throw error;
   }
 }
@@ -332,22 +294,11 @@ export async function getMusicDetail(musicUuid: string): Promise<MusicDetailData
  * @throws {AxiosError} API 호출 실패 시
  */
 export async function deleteMusic(musicUuid: string): Promise<void> {
-  const endpoint = API_ENDPOINTS.MUSIC.DETAIL(musicUuid);
+  const endpoint = API_ENDPOINTS.MUSIC.DELETE(musicUuid);
 
   try {
     await apiClient.delete(endpoint);
-
-    console.log("[Song API] 노래 삭제 성공:", {
-      musicUuid,
-    });
   } catch (error: any) {
-    console.error("[Song API] 노래 삭제 실패:", {
-      musicUuid,
-      url: endpoint,
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
     throw error;
   }
 }
