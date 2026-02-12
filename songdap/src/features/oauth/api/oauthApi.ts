@@ -36,15 +36,6 @@ export async function loginWithKakao(code: string): Promise<AuthResponse & { new
   // 백엔드는 redirectUri를 받지 않으므로 authorizationCode만 전송
   const payload: KakaoLoginRequest = { authorizationCode: code };
 
-  if (DEBUG_OAUTH) {
-    console.groupCollapsed("[OAUTH][KAKAO][API] POST 교환 요청");
-    console.log("exchangePath:", exchangePath);
-    console.log("authorizationCode(head):", code.slice(0, 8) + "...");
-    console.log("baseURL:", process.env.NEXT_PUBLIC_API_URL || '(설정 안 됨)');
-    console.log("예상 전체 URL:", `${process.env.NEXT_PUBLIC_API_URL || ''}${exchangePath}`);
-    console.groupEnd();
-  }
-
   try {
     const res = await apiClient.post<ApiResponse<KakaoLoginResponseData>>(exchangePath, payload, {
       withCredentials: true,
@@ -55,12 +46,6 @@ export async function loginWithKakao(code: string): Promise<AuthResponse & { new
     
     if (!responseData) {
       throw new Error("카카오 로그인 응답 구조를 파싱할 수 없습니다.");
-    }
-    
-    if (DEBUG_OAUTH) {
-      console.log("[OAUTH][KAKAO][API] 백엔드 응답 수신:", res.data);
-      console.log("[OAUTH][KAKAO][API] 추출된 데이터:", responseData);
-      console.log("[OAUTH][KAKAO][API] Access Token과 Refresh Token이 HttpOnly Cookie로 자동 설정됨");
     }
 
     // Access Token과 Refresh Token은 HttpOnly Cookie로 자동 설정됨
@@ -77,39 +62,8 @@ export async function loginWithKakao(code: string): Promise<AuthResponse & { new
       newMember: responseData.newMember,
     };
 
-    if (DEBUG_OAUTH) {
-      console.log("[OAUTH][KAKAO][API] 변환된 AuthResponse:", authResponse);
-    }
-
     return authResponse;
   } catch (error: any) {
-    // 에러 발생 시 상세 정보 로깅
-    if (DEBUG_OAUTH || process.env.NODE_ENV === 'production') {
-      const errorData = error?.response?.data;
-      console.error("[OAUTH][KAKAO][API] 카카오 로그인 API 호출 실패:", {
-        exchangePath,
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '(설정 안 됨)',
-        fullUrl: `${process.env.NEXT_PUBLIC_API_URL || ''}${exchangePath}`,
-        status: error?.response?.status,
-        statusText: error?.response?.statusText,
-        errorMessage: error?.message,
-        requestPayload: payload,
-        headers: error?.config?.headers,
-      });
-      
-      // errorData를 별도로 로깅하여 객체 내용을 펼쳐서 볼 수 있도록 함
-      if (errorData && typeof errorData === 'object') {
-        console.error("[OAUTH][KAKAO][API] 에러 응답 데이터:", errorData);
-        // 에러 메시지가 있으면 별도로 표시
-        const errorObj = errorData as { message?: string; code?: string | number };
-        if (errorObj.message) {
-          console.error("[OAUTH][KAKAO][API] 에러 메시지:", errorObj.message);
-        }
-        if (errorObj.code) {
-          console.error("[OAUTH][KAKAO][API] 에러 코드:", errorObj.code);
-        }
-      }
-    }
     throw error;
   }
 }

@@ -73,7 +73,6 @@ export default function AlbumInfoContent({ albumData: initialAlbumData, onComple
         buttonTitle: "노래 추가하기",
       });
     } catch (err) {
-      console.error("카카오 공유 실패:", err);
       alert("카카오 공유에 실패했어요. 링크 복사로 다시 시도해 주세요.");
     }
   };

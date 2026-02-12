@@ -20,7 +20,7 @@ const normalizeBaseURL = (url: string | undefined): string => {
   
   // 프로덕션에서 HTTPS 강제
   if (process.env.NODE_ENV === 'production' && cleaned.startsWith('http://')) {
-    console.warn('[Security] HTTPS를 사용해야 합니다. HTTP는 프로덕션에서 안전하지 않습니다.');
+    // HTTPS 필요
   }
   
   return cleaned;
@@ -98,18 +98,6 @@ apiClient.interceptors.request.use(
     
     // 디버그 모드에서 요청 정보 로깅
     const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
-    if (DEBUG_OAUTH && typeof window !== 'undefined') {
-      const fullUrl = config.baseURL 
-        ? `${config.baseURL}${config.url}` 
-        : config.url;
-      console.log(`[API][REQUEST] ${config.method?.toUpperCase()} ${fullUrl}`, {
-        baseURL: config.baseURL || '(없음)',
-        url: config.url,
-        fullURL: fullUrl,
-        withCredentials: config.withCredentials,
-        isFormData: config.data instanceof FormData,
-      });
-    }
 
     return config;
   },
@@ -176,11 +164,10 @@ apiClient.interceptors.response.use(
                 });
               } catch (meError) {
                 // getMe 실패 시 로그인 정보 유지 (쿠키는 정상이므로)
-                console.log('[AUTH] Token reissued but failed to refresh user info, keeping current state');
               }
             }
           } catch (stateError) {
-            console.log('[AUTH] Token reissued but failed to sync state:', stateError);
+            // 상태 동기화 실패
           }
         }
 
@@ -234,31 +221,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status >= 500) {
       const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
       if (DEBUG_OAUTH || process.env.NODE_ENV === 'production') {
-        const errorData = error.response.data;
-        console.error('[API][ERROR] 서버 에러 발생:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          url: error.config?.url,
-          baseURL: error.config?.baseURL,
-          fullUrl: error.config?.baseURL 
-            ? `${error.config.baseURL}${error.config.url}` 
-            : error.config?.url,
-          method: error.config?.method,
-          requestData: error.config?.data,
-        });
-        
-        // errorData를 별도로 로깅하여 객체 내용을 펼쳐서 볼 수 있도록 함
-        if (errorData && typeof errorData === 'object') {
-          console.error('[API][ERROR] 에러 응답 데이터:', errorData);
-          // 에러 메시지가 있으면 별도로 표시
-          const errorObj = errorData as { message?: string; code?: string | number };
-          if (errorObj.message) {
-            console.error('[API][ERROR] 에러 메시지:', errorObj.message);
-          }
-          if (errorObj.code) {
-            console.error('[API][ERROR] 에러 코드:', errorObj.code);
-          }
-        }
+        // 서버 에러 처리
       }
     }
 

@@ -125,7 +125,6 @@ export default function AlbumListPageClient() {
 
       setIsLoading(false);
     } catch (error: any) {
-      console.error("[Album List] 앨범 삭제 실패:", error);
       setIsLoading(false);
       alert("앨범 삭제에 실패했습니다. 다시 시도해주세요.");
     }
@@ -179,7 +178,6 @@ export default function AlbumListPageClient() {
           setCurrentPage(page);
         }
       } catch (err: any) {
-        console.error("[Album List] 앨범 목록 조회 실패:", err);
         setAlbums([]);
         setTotalElements(0);
         setTotalPages(0);
@@ -562,7 +560,7 @@ export default function AlbumListPageClient() {
                                     buttonTitle: "노래 추가하기",
                                   });
                                 } catch (err) {
-                                  console.error("카카오 공유 실패:", err);
+                                  // 공유 실패 처리
                                 }
                               }}
                               className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#FEE500] rounded-lg text-sm text-gray-900 hover:bg-[#FDD835] active:bg-[#FBC02D] transition-colors font-medium"
@@ -664,9 +662,9 @@ export default function AlbumListPageClient() {
                                     )
                                   );
                                   setIsAlbumInfoEditMode(false);
-                                  setIsEditMode(false); // 수정 후 편집 모드 해제
+                                  setIsEditMode(false);
                                 } catch (error) {
-                                  console.error("앨범 공개 여부 수정 실패:", error);
+                                  // 공개 여부 수정 실패 처리
                                 } finally {
                                   setIsVisibilityUpdating(false);
                                 }
