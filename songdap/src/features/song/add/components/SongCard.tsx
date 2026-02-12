@@ -9,10 +9,6 @@ type SongCardProps = {
   title: string;
   artist: string;
   imageUrl?: string | null;
-  onEdit?: () => void;
-  onCardClick?: () => void;
-  onPlay?: () => void;
-  onDelete?: () => void;
   backgroundOpacity?: number;
   fullWidth?: boolean;
   showPlayButton?: boolean;
@@ -20,16 +16,16 @@ type SongCardProps = {
   showBorder?: boolean;
   separatorPlacement?: "none" | "all" | "top" | "bottom" | "topBottom";
   separatorColor?: string;
+  onEdit?: () => void;
+  onCardClick?: () => void;
+  onPlay?: () => void;
+  onDelete?: () => void;
 };
 
 export default function SongCard({
   title,
   artist,
   imageUrl,
-  onEdit,
-  onCardClick,
-  onPlay,
-  onDelete,
   backgroundOpacity = 0.85,
   fullWidth = false,
   showPlayButton = false,
@@ -37,6 +33,10 @@ export default function SongCard({
   showBorder = true,
   separatorPlacement = "all",
   separatorColor,
+  onEdit,
+  onCardClick,
+  onPlay,
+  onDelete,
 }: SongCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -55,26 +55,19 @@ export default function SongCard({
   }, [showMenu]);
 
   const handleEdit = () => {
-    if (onEdit) {
-      onEdit();
-    }
+    onEdit?.();
   };
 
   const handlePlay = () => {
-    if (onPlay) {
-      onPlay();
-    }
+    onPlay?.();
   };
 
   const handleCardClick = () => {
-    if (onCardClick) return onCardClick();
-    if (onPlay) return onPlay();
+    onCardClick?.() ?? onPlay?.();
   };
 
   const handleDelete = () => {
-    if (onDelete) {
-      onDelete();
-    }
+    onDelete?.();
     setShowMenu(false);
   };
 
@@ -156,50 +149,51 @@ export default function SongCard({
         )}
 
         {/* 3점 메뉴 */}
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowMenu(!showMenu);
-            }}
-            className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-opacity ${onEdit || onDelete ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-              }`}
-            aria-label="메뉴"
-          >
-            <HiEllipsisVertical className="w-5 h-5 text-gray-700" />
-          </button>
+        {(onEdit || onDelete) && (
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-opacity"
+              aria-label="메뉴"
+            >
+              <HiEllipsisVertical className="w-5 h-5 text-gray-700" />
+            </button>
 
-          {/* 드롭다운 메뉴 */}
-          {showMenu && (
-            <div className="absolute right-0 mt-1 min-w-[120px] bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-              {onEdit && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit();
-                    setShowMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 first:rounded-t-lg"
-                >
-                  <HiPencil className="w-4 h-4" />
-                  수정
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete();
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 last:rounded-b-lg"
-                >
-                  <HiTrash className="w-4 h-4" />
-                  삭제
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+            {/* 드롭다운 메뉴 */}
+            {showMenu && (
+              <div className="absolute right-0 mt-1 min-w-[120px] bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
+                {onEdit && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit();
+                      setShowMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 first:rounded-t-lg"
+                  >
+                    <HiPencil className="w-4 h-4" />
+                    수정
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete();
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 last:rounded-b-lg"
+                  >
+                    <HiTrash className="w-4 h-4" />
+                    삭제
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
