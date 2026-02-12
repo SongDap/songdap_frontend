@@ -54,6 +54,9 @@ export interface AlbumResponse {
   color: string;
   createdAt?: string;
   updatedAt?: string;
+  // 권한 필드
+  canAdd?: boolean; // 노래 추가 가능 여부
+  owner?: boolean; // 앨범 소유자 여부
 }
 
 /**
@@ -130,6 +133,9 @@ function transformAlbumData(albumData: AlbumData): AlbumResponse {
     musicCountLimit: albumData.musicCountLimit,
     color: albumData.color,
     createdAt: albumData.createdAt,
+    // 권한 필드 (백엔드에서 반환하면 포함)
+    ...(('canAdd' in albumData) && { canAdd: (albumData as any).canAdd }),
+    ...(('owner' in albumData) && { owner: (albumData as any).owner }),
   };
 }
 
