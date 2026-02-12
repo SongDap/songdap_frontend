@@ -5,7 +5,7 @@ import { HiX, HiLockClosed } from "react-icons/hi";
 import { FiImage } from "react-icons/fi";
 import { AlbumCover } from "@/shared/ui";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
-import { addMusicToAlbum } from "@/features/song/api";
+import { addMusicToAlbum, getAlbum } from "@/features/song/api";
 import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
 import { trackEvent } from "@/lib/gtag";
 import type { AlbumResponse } from "@/features/album/api";
@@ -363,6 +363,14 @@ export default function AddSongModal({
                       setIsSubmitting(true);
 
                       try {
+                        // 앨범 정보 다시 조회해서 canAdd 최신값 확인
+                        const updatedAlbum = await getAlbum(albumId);
+                        if (!updatedAlbum.canAdd) {
+                          alert("앨범의 곡 개수가 초과되어 노래를 추가할 수 없습니다.");
+                          setIsSubmitting(false);
+                          return;
+                        }
+
                         // 노래 추가 API 호출
                         await addMusicToAlbum(albumId, {
                           title: songData.title,
