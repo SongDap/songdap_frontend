@@ -49,6 +49,7 @@ declare module "axios" {
   export interface InternalAxiosRequestConfig {
     _retry?: boolean;
     __skipAuthRefresh?: boolean;
+    __skipAuthExpired?: boolean;
   }
 }
 
@@ -216,13 +217,17 @@ apiClient.interceptors.response.use(
     // 이미 한 번 재시도했는데도 401이면 (혹시 재발급이 반영되지 않았거나, 쿠키 삭제됨)
     // 사용자에게 재로그인/홈 선택을 제공
     if (error.response?.status === 401 && originalRequest?._retry) {
-      handleAuthExpired();
+      if (!originalRequest.__skipAuthExpired) {
+        handleAuthExpired();
+      }
     }
 
     // 일부 API는 인증이 없을 때 403으로 내려올 수 있음(권한 없음/미인증).
     // 이 경우에도 동일하게 재로그인/홈 선택 제공.
     if (error.response?.status === 403) {
-      handleAuthExpired();
+      if (!originalRequest.__skipAuthExpired) {
+        handleAuthExpired();
+      }
     }
 
     // 500 에러 등 기타 에러에 대한 상세 로깅 (프로덕션에서도)

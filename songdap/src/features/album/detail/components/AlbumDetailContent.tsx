@@ -81,7 +81,6 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   const [viewMode, setViewMode] = useState<ViewMode>("player");
   const [currentSong, setCurrentSong] = useState<CurrentSong | null>(null);
   const [isSongAddModalOpen, setIsSongAddModalOpen] = useState(false);
-  // 확장뷰 트리거: 기본은 undefined (초기 진입 시 확장뷰 자동 오픈 방지)
   const [expandTrigger, setExpandTrigger] = useState<number | undefined>(undefined);
   const [autoPlayTrigger, setAutoPlayTrigger] = useState<number | undefined>(undefined);
 
@@ -97,18 +96,20 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   const album = albumQuery.data ?? null;
 
   const [musicSort, setMusicSort] = useState<MusicSortOption>("LATEST");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isAlbumInfoOpen, setIsAlbumInfoOpen] = useState(false);
+  const [isAlbumInfoEditMode, setIsAlbumInfoEditMode] = useState(false);
+  const [tempIsPublic, setTempIsPublic] = useState(false);
+  const [isVisibilityUpdating, setIsVisibilityUpdating] = useState(false);
+
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
+
   const MUSIC_SORT_OPTIONS = [
     { label: "최신순", value: "LATEST" as MusicSortOption },
     { label: "오래된순", value: "OLDEST" as MusicSortOption },
     { label: "제목순", value: "TITLE" as MusicSortOption },
     { label: "아티스트순", value: "ARTIST" as MusicSortOption },
   ];
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const sortMenuRef = useRef<HTMLDivElement | null>(null);
-  const [isAlbumInfoOpen, setIsAlbumInfoOpen] = useState(false);
-  const [isAlbumInfoEditMode, setIsAlbumInfoEditMode] = useState(false);
-  const [tempIsPublic, setTempIsPublic] = useState(false);
-  const [isVisibilityUpdating, setIsVisibilityUpdating] = useState(false);
 
   const currentSortLabel = MUSIC_SORT_OPTIONS.find((o) => o.value === musicSort)?.label ?? "정렬";
   const musicsQuery = useInfiniteQuery({
@@ -366,7 +367,27 @@ export default function AlbumDetailContent({ id }: { id: string }) {
     );
   }
 
-  // 리스트에서 넘어온 정렬/페이지를 유지해서 되돌아갈 수 있도록 backHref 구성
+  // 비공개 앨범이고 비소유자인 경우 접근 차단
+  if (!album.isPublic && isOwner !== true) {
+    return (
+      <>
+        <PageHeader title="비공개 앨범" showLogo={true} showBackButton={false} />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <HiLockClosed className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-xl font-semibold text-gray-800 mb-2">비공개 앨범입니다.</p>
+            <p className="text-gray-600 mb-8">앨범 주인만 접근할 수 있습니다.</p>
+            <button
+              onClick={() => router.push("/")}
+              className="px-6 py-3 bg-[#006FFF] text-white font-semibold rounded-xl hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors"
+            >
+              홈으로 가기
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
   const backHref = makeAlbumListUrl(parseAlbumListQuery(searchParams));
 
   return (
@@ -377,21 +398,24 @@ export default function AlbumDetailContent({ id }: { id: string }) {
         <PageHeader
           title={album.title}
           isPublic={album.isPublic}
-          showBackButton={true}
+          showBackButton={isOwner === true}
+          showLogo={isOwner !== true}
           backHref={backHref}
           backgroundColor={album.color}
           rightAction={
-            <button
-              type="button"
-              onClick={() => {
-                setIsSortOpen(false);
-                setIsAlbumInfoOpen(true);
-              }}
-              className="p-1 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors flex-shrink-0"
-              aria-label="앨범 정보"
-            >
-              <HiInformationCircle className="w-5 h-5 text-gray-800" />
-            </button>
+            isOwner === true && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSortOpen(false);
+                  setIsAlbumInfoOpen(true);
+                }}
+                className="p-1 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors flex-shrink-0"
+                aria-label="앨범 정보"
+              >
+                <HiInformationCircle className="w-5 h-5 text-gray-800" />
+              </button>
+            )
           }
         />
       </div>
