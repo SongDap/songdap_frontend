@@ -231,7 +231,9 @@ export async function getAlbum(albumUuid: string): Promise<AlbumResponse> {
   const endpoint = API_ENDPOINTS.ALBUM.DETAIL(albumUuid);
 
   try {
-    const response = await apiClient.get<any>(endpoint);
+    const response = await apiClient.get<any>(endpoint, {
+      __skipAuthExpired: true,
+    } as any);
     
     // 응답 구조: { code, message, data: { uuid, title, ... } }
     const albumData = extractDataFromResponse<AlbumData>(response.data);

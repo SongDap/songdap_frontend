@@ -21,6 +21,7 @@ type PageHeaderProps = {
   backHref?: string; // 뒤로가기 시 이동할 경로
   rightAction?: ReactNode; // 헤더 우측 액션(예: 앨범 정보 버튼)
   backgroundColor?: string; // 앨범 색상 (배경에 사용)
+  showLogo?: boolean; // 로고 표시 여부 (클릭하면 홈으로 이동)
 };
 
 export default function PageHeader({
@@ -30,6 +31,7 @@ export default function PageHeader({
   backHref,
   rightAction,
   backgroundColor,
+  showLogo = false,
 }: PageHeaderProps) {
   const router = useRouter();
   const user = useOauthStore((s) => s.user);
@@ -114,7 +116,7 @@ export default function PageHeader({
           } : undefined}
         >
         {/* PC 헤더 */}
-        {showBackButton && (
+        {showBackButton && !showLogo && (
           <div className="hidden md:flex h-[95px] px-20 items-center max-w-[1440px] mx-auto relative">
             {/* 뒤로가기 */}
             <button
@@ -208,8 +210,96 @@ export default function PageHeader({
           </div>
         )}
 
+        {/* PC 헤더 - 로고 버튼 */}
+        {showLogo && (
+          <div className="hidden md:flex h-[95px] px-20 items-center max-w-[1440px] mx-auto relative">
+            {/* 로고 버튼 */}
+            <button
+              onClick={() => router.push("/")}
+              className="hover:opacity-80 transition-opacity absolute left-20"
+              aria-label="홈으로 이동"
+            >
+              <img
+                src="/images/logo.png"
+                alt="로고"
+                className="h-10 object-contain"
+              />
+            </button>
+
+            {/* 타이틀 (절대 가운데 정렬) */}
+            <h1 className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-900 flex items-center justify-center gap-2 max-w-[50%]">
+              {isPublic === false && (
+                <HiLockClosed className="w-5 h-5 text-gray-900 flex-shrink-0" />
+              )}
+              <span className="line-clamp-2 text-center">{title}</span>
+            </h1>
+
+            {/* 오른쪽: rightAction + 프로필 */}
+            <div className="flex items-center gap-2 absolute right-20">
+              {rightAction}
+
+              <div className="relative" ref={profileMenuRef}>
+                {isAuthenticated ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProfileMenuOpen(!profileMenuOpen);
+                    }}
+                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  >
+                    <img
+                      src={user?.profileImage || "https://placehold.co/40x40"}
+                      alt={user?.nickname || "프로필"}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <span className="text-base text-gray-900 max-w-[200px] truncate">
+                      {user?.nickname || "사용자"}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLogin}
+                    className="px-4 py-2 text-base text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+                  >
+                    로그인이 필요합니다.
+                  </button>
+                )}
+
+                {/* 프로필 메뉴 */}
+                {isAuthenticated && profileMenuOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div className="py-2">
+                      {profileMenuItems.map((item, idx) => (
+                        <a
+                          key={idx}
+                          href={item.href}
+                          className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
+                          onClick={handleMenuItemClick}
+                        >
+                          {item.label}
+                        </a>
+                      ))}
+                      <button
+                        type="button"
+                        className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          logout();
+                          router.replace("/");
+                        }}
+                      >
+                        로그아웃
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 모바일 헤더 */}
-        {showBackButton && (
+        {showBackButton && !showLogo && (
           <div className="md:hidden h-[70px] px-4 flex items-center relative">
             {/* 뒤로가기 */}
             <button
@@ -279,6 +369,101 @@ export default function PageHeader({
                           className="w-8 h-8 rounded-full"
                         />
                         <span className="text-base text-gray-900 truncate">
+                          {user?.nickname || "사용자"}
+                        </span>
+                      </div>
+                      {profileMenuItems.map((item, idx) => (
+                        <a
+                          key={idx}
+                          href={item.href}
+                          className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
+                          onClick={handleMenuItemClick}
+                        >
+                          {item.label}
+                        </a>
+                      ))}
+                      <button
+                        type="button"
+                        className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          logout();
+                          router.replace("/");
+                        }}
+                      >
+                        로그아웃
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 모바일 헤더 - 로고 버튼 */}
+        {showLogo && (
+          <div className="md:hidden h-[70px] px-4 flex items-center relative">
+            {/* 로고 버튼 */}
+            <button
+              onClick={() => router.push("/")}
+              className="hover:opacity-80 transition-opacity absolute left-4"
+              aria-label="홈으로 이동"
+            >
+              <img
+                src="/images/logo.png"
+                alt="로고"
+                className="h-8 object-contain"
+              />
+            </button>
+
+            {/* 타이틀 (가운데 정렬) */}
+            <h1 className="absolute left-1/2 transform -translate-x-1/2 top-1/2 -translate-y-1/2 text-lg font-semibold text-gray-900 flex items-center justify-center gap-2 max-w-[60%]">
+              {isPublic === false && (
+                <HiLockClosed className="w-4 h-4 text-gray-900 flex-shrink-0" />
+              )}
+              <span className="line-clamp-2 text-center">{title}</span>
+            </h1>
+
+            {/* 오른쪽: rightAction + 프로필 */}
+            <div className="flex items-center gap-1 absolute right-4">
+              {rightAction}
+
+              <div className="relative" ref={profileMenuRef}>
+                {isAuthenticated ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProfileMenuOpen(!profileMenuOpen);
+                    }}
+                    className="flex items-center hover:opacity-80 transition-opacity"
+                  >
+                    <img
+                      src={user?.profileImage || "https://placehold.co/40x40"}
+                      alt={user?.nickname || "프로필"}
+                      className="w-10 h-10 rounded-full"
+                    />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLogin}
+                    className="p-2 text-sm text-gray-700 hover:text-[#006FFF] transition-colors"
+                  >
+                    로그인
+                  </button>
+                )}
+
+                {/* 프로필 메뉴 */}
+                {isAuthenticated && profileMenuOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div className="py-2">
+                      <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                        <img
+                          src={user?.profileImage || "https://placehold.co/40x40"}
+                          alt={user?.nickname || "프로필"}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <span className="text-sm text-gray-900">
                           {user?.nickname || "사용자"}
                         </span>
                       </div>
