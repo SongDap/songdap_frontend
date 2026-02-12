@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlbumCover } from "@/shared/ui";
 import { HiLockClosed, HiShare, HiLink, HiX, HiLockOpen, HiLockClosed as HiLockClosedIcon } from "react-icons/hi";
 import AlbumCardEditMode from "./AlbumCardEditMode";
-import { buildSongAddUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
+import { buildAlbumShareUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
 import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { trackEvent } from "@/lib/gtag";
@@ -71,7 +71,7 @@ export default function AlbumCard({
     }
     if (typeof window === "undefined") return;
     
-    const songAddUrl = buildSongAddUrlFromAlbumInfo({
+    const songAddUrl = buildAlbumShareUrlFromAlbumInfo({
       id,
       title: albumName,
       color: albumColor,
@@ -103,7 +103,7 @@ export default function AlbumCard({
     }
     if (typeof window === "undefined") return;
     
-    const shareUrl = buildSongAddUrlFromAlbumInfo({
+    const shareUrl = buildAlbumShareUrlFromAlbumInfo({
       id,
       title: albumName,
       color: albumColor,
@@ -127,7 +127,6 @@ export default function AlbumCard({
         { category: "album", action: "share_kakao", label: id }
       );
     } catch (err) {
-      console.error("카카오 공유 실패:", err);
       // 최소 fallback: 링크 복사
       try {
         await navigator.clipboard.writeText(shareUrl);

@@ -87,11 +87,7 @@ export default function CreateAlbumForm({
         color: formData.color,
       };
 
-      console.log("[Album Form] 전송 데이터:", albumData);
-
       const createdAlbum = await createAlbum(albumData);
-      
-      console.log("[Album Form] 생성된 앨범 응답:", createdAlbum);
       
       // 새로운 API 응답 구조: data.uuid가 반드시 있음
       const albumUuid = createdAlbum?.uuid;
@@ -100,7 +96,6 @@ export default function CreateAlbumForm({
         throw new Error("앨범 UUID를 받을 수 없습니다.");
       }
       
-      console.log("[Album Form] 앨범 UUID:", albumUuid);
       trackEvent(
         { event: "create_album", item_id: albumUuid },
         { category: "album", action: "create", label: albumUuid }
@@ -109,8 +104,6 @@ export default function CreateAlbumForm({
       // 공유 페이지로 이동 (UUID로 API 조회 가능)
       router.push(`${ROUTES.ALBUM.SHARE}?albumId=${albumUuid}`);
     } catch (error) {
-      console.error("[Album] 앨범 생성 실패:", error);
-      
       const errorMessage = error instanceof Error ? error.message : String(error);
       
       // 앨범 생성은 성공했지만 UUID를 받을 수 없는 경우
