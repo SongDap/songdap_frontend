@@ -141,6 +141,11 @@ export default function AlbumDetailContent({ id }: { id: string }) {
     return musicsQuery.data?.pages?.[0]?.flag?.owner ?? null;
   }, [musicsQuery.data?.pages]);
 
+  // 노래 추가 가능 여부 판단
+  const canAdd = useMemo(() => {
+    return musicsQuery.data?.pages?.[0]?.flag?.canAdd ?? null;
+  }, [musicsQuery.data?.pages]);
+
   // 무한 스크롤: 스크롤 컨테이너 안의 sentinel이 보이면 다음 페이지
   useEffect(() => {
     const container = playerListRef.current;
@@ -609,8 +614,8 @@ export default function AlbumDetailContent({ id }: { id: string }) {
 
                       {/* 노래 추가 버튼 및 정렬 드롭다운 */}
                       <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
-                        {/* 노래 추가 버튼 (비소유자만 표시) */}
-                        {isOwner !== true && (
+                        {/* 노래 추가 버튼 (비소유자 && canAdd가 true일 때만 표시) */}
+                        {isOwner !== true && canAdd === true && (
                           <button
                             onClick={() => {
                               trackEvent(
@@ -626,21 +631,11 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                           </button>
                         )}
 
-                        {isOwner === true && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              trackEvent(
-                                { event: "select_content", content_type: "song_add_from_detail", item_id: albumUuid },
-                                { category: "song", action: "add_click", label: albumUuid }
-                              );
-                              setIsSongAddModalOpen(true);
-                            }}
-                            className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-full bg-[#006FFF] text-white hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors flex-shrink-0"
-                            aria-label="노래 추가"
-                          >
-                            + 노래 추가
-                          </button>
+                        {/* 곡 개수 초과 메시지 (비소유자 && canAdd가 false일 때 표시) */}
+                        {isOwner !== true && canAdd === false && (
+                          <span className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-full bg-gray-100 text-gray-600 flex-shrink-0">
+                            앨범의 곡 개수를 초과하였습니다.
+                          </span>
                         )}
 
                         <div
