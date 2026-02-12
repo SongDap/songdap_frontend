@@ -364,15 +364,31 @@ export default function AddSongModal({
                       setIsSubmitting(true);
 
                       try {
-                        // 앨범 정보 다시 조회해서 canAdd 최신값 확인
-                        const updatedAlbum = await getAlbum(albumId);
+                        // 앨범 정보 다시 조회해서 최신값 확인
+                        let updatedAlbum;
+                        try {
+                          updatedAlbum = await getAlbum(albumId);
+                        } catch (error) {
+                          alert("앨범 정보를 불러올 수 없습니다. 다시 시도해주세요.");
+                          setIsSubmitting(false);
+                          return;
+                        }
+                        
+                        // 1. 공개/비공개 여부 확인 (우선순위 높음)
+                        if (updatedAlbum.isPublic === false) {
+                          alert("앨범이 비공개로 전환되어 노래를 추가할 수 없습니다.");
+                          setIsSubmitting(false);
+                          return;
+                        }
+
+                        // 2. 곡 개수 초과 확인
                         if (updatedAlbum.canAdd === false) {
                           alert("앨범의 곡 개수가 초과되어 노래를 추가할 수 없습니다.");
                           setIsSubmitting(false);
                           return;
                         }
 
-                        // 노래 추가 API 호출
+                        // 3. 노래 추가 API 호출
                         await addMusicToAlbum(albumId, {
                           title: songData.title,
                           artist: songData.artist,

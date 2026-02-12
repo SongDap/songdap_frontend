@@ -137,9 +137,18 @@ function AddSongContent() {
             onClose={() => {
               router.back();
             }}
-            onSuccess={() => {
+            onSuccess={async () => {
+              // 앨범 정보 다시 조회해서 최신 상태 반영
+              if (album?.uuid) {
+                try {
+                  const updatedAlbum = await getAlbum(album.uuid);
+                  setAlbum(updatedAlbum);
+                } catch (error) {
+                  // 조회 실패 시 무시
+                }
+              }
               const qp = new URLSearchParams();
-              qp.set("albumId", album.uuid);
+              qp.set("albumId", album?.uuid || "");
               if (albumDataParam) qp.set("albumData", albumDataParam);
               router.push(`/song/add/completed?${qp.toString()}`);
             }}
