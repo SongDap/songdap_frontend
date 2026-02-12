@@ -491,20 +491,22 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                     )}
 
                     <div className="mt-5 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAlbumInfoEditMode(true);
-                          setTempIsPublic(album.isPublic);
-                        }}
-                        className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-900 text-sm font-semibold transition-colors"
-                      >
-                        수정하기
-                      </button>
+                      {isOwner === true && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAlbumInfoEditMode(true);
+                            setTempIsPublic(album.isPublic);
+                          }}
+                          className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-900 text-sm font-semibold transition-colors"
+                        >
+                          수정하기
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => setIsAlbumInfoOpen(false)}
-                        className="flex-1 py-2.5 px-4 rounded-xl bg-[#006FFF] text-white text-sm font-semibold hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors"
+                        className={`py-2.5 px-4 rounded-xl bg-[#006FFF] text-white text-sm font-semibold hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors ${isOwner === true ? "flex-1" : "w-full"}`}
                       >
                         닫기
                       </button>
