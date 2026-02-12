@@ -5,7 +5,7 @@ import { HiX, HiLockClosed } from "react-icons/hi";
 import { FiImage } from "react-icons/fi";
 import { AlbumCover } from "@/shared/ui";
 import { SpotifySearchButton, SongCard } from "@/features/song/add/components";
-import { addMusicToAlbum } from "@/features/song/api";
+import { addMusicToAlbum, getAlbumMusics } from "@/features/song/api";
 import { getAlbum } from "@/features/album/api";
 import { useSongAddDraft } from "@/features/song/add/hooks/useSongAddDraft";
 import { trackEvent } from "@/lib/gtag";
@@ -16,6 +16,7 @@ interface AddSongModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onRefresh?: () => void; // 앨범 정보 다시 로드
 }
 
 export default function AddSongModal({
@@ -23,6 +24,7 @@ export default function AddSongModal({
   isOpen,
   onClose,
   onSuccess,
+  onRefresh,
 }: AddSongModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -44,11 +46,10 @@ export default function AddSongModal({
     }
   }, [songData.title, songData.artist, songData.imageUrl]);
 
-  // PC: 180x180, 모바일: 140x140
   const coverSizePC = 180;
   const coverSizeMobile = 140;
-  const lpSizePC = coverSizePC * 0.8; // 144
-  const lpSizeMobile = coverSizeMobile * 0.8; // 112
+  const lpSizePC = coverSizePC * 0.8;
+  const lpSizeMobile = coverSizeMobile * 0.8;
 
   const handleSongDataChange = (field: "title" | "artist", value: string) => {
     setSong({ [field]: value });
@@ -364,31 +365,44 @@ export default function AddSongModal({
                       setIsSubmitting(true);
 
                       try {
-                        // 앨범 정보 다시 조회해서 최신값 확인
-                        let updatedAlbum;
+                        // 앨범 상태 검증 및 노래 추가
+                        let updatedAlbum = album;
+                        let canAdd = true;
+
+                        // 1. 앨범 정보 조회
                         try {
                           updatedAlbum = await getAlbum(albumId);
+                        } catch (error) {
+                          // 실패 시 기존값 사용
+                        }
+                        
+                        // 2. 비공개 여부 확인
+                        if (updatedAlbum.isPublic === false) {
+                          alert("비공개 앨범에는 노래를 추가할 수 없습니다.");
+                          if (onRefresh) onRefresh();
+                          setIsSubmitting(false);
+                          return;
+                        }
+
+                        // 3. 음악 목록 조회
+                        try {
+                          const musicsData = await getAlbumMusics(albumId, { page: 0, size: 1 });
+                          canAdd = musicsData.flag?.canAdd ?? true;
                         } catch (error) {
                           alert("앨범 정보를 불러올 수 없습니다. 다시 시도해주세요.");
                           setIsSubmitting(false);
                           return;
                         }
-                        
-                        // 1. 공개/비공개 여부 확인 (우선순위 높음)
-                        if (updatedAlbum.isPublic === false) {
-                          alert("앨범이 비공개로 전환되어 노래를 추가할 수 없습니다.");
-                          setIsSubmitting(false);
-                          return;
-                        }
 
-                        // 2. 곡 개수 초과 확인
-                        if (updatedAlbum.canAdd === false) {
+                        // 4. 곡 개수 초과 확인
+                        if (canAdd === false) {
                           alert("앨범의 곡 개수가 초과되어 노래를 추가할 수 없습니다.");
+                          if (onRefresh) onRefresh();
                           setIsSubmitting(false);
                           return;
                         }
 
-                        // 3. 노래 추가 API 호출
+                        // 5. 노래 추가 API 호출
                         await addMusicToAlbum(albumId, {
                           title: songData.title,
                           artist: songData.artist,
@@ -398,18 +412,14 @@ export default function AddSongModal({
                         });
 
                         // 완료 이벤트 추적
-                        const songKey = `song:${albumId}:${songData.title.trim()}-${songData.artist.trim()}`;
                         trackEvent(
-                          { event: "add_to_cart", items: [{ item_id: songKey }] },
+                          { event: "add_to_cart", items: [{ item_id: `song:${albumId}:${songData.title.trim()}-${songData.artist.trim()}` }] },
                           { category: "song", action: "add", label: albumId }
                         );
 
                         // 성공 콜백
                         handleClose();
-                        if (onSuccess) {
-                          onSuccess();
-                        }
-
+                        if (onSuccess) onSuccess();
                         alert("노래가 추가되었습니다!");
 
                       } finally {
