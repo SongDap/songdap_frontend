@@ -403,19 +403,17 @@ export default function AlbumDetailContent({ id }: { id: string }) {
           backHref={backHref}
           backgroundColor={album.color}
           rightAction={
-            isOwner === true && (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSortOpen(false);
-                  setIsAlbumInfoOpen(true);
-                }}
-                className="p-1 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors flex-shrink-0"
-                aria-label="앨범 정보"
-              >
-                <HiInformationCircle className="w-5 h-5 text-gray-800" />
-              </button>
-            )
+            <button
+              type="button"
+              onClick={() => {
+                setIsSortOpen(false);
+                setIsAlbumInfoOpen(true);
+              }}
+              className="p-1 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors flex-shrink-0"
+              aria-label="앨범 정보"
+            >
+              <HiInformationCircle className="w-5 h-5 text-gray-800" />
+            </button>
           }
         />
       </div>
@@ -657,8 +655,8 @@ export default function AlbumDetailContent({ id }: { id: string }) {
 
                         {/* 곡 개수 초과 메시지 (비소유자 && canAdd가 false일 때 표시) */}
                         {isOwner !== true && canAdd === false && (
-                          <span className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-full bg-gray-100 text-gray-600 flex-shrink-0">
-                            앨범의 곡 개수를 초과하였습니다.
+                          <span className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold rounded-full bg-gray-100 text-gray-600 flex-shrink-0 max-w-[150px] md:max-w-none text-center">
+                            앨범의 곡 개수를<br className="md:hidden" /> 초과하였습니다.
                           </span>
                         )}
 
@@ -762,7 +760,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                                     onPlay={() => {
                                       handleSelectSong(music, true);
                                     }}
-                                    onDelete={() => {
+                                    onDelete={isOwner === true ? () => {
                                       if (confirm(`${music.artist}의 "${music.title}"을 삭제하시겠습니까?`)) {
                                         deleteMusic(music.uuid)
                                           .then(() => {
@@ -773,7 +771,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                                             alert("노래 삭제 중 오류가 발생했습니다.");
                                           });
                                       }
-                                    }}
+                                    } : undefined}
                                   />
                                 </div>
                               );
