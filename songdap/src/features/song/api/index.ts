@@ -241,7 +241,8 @@ export async function getAlbumMusics(
   try {
     const response = await apiClient.get<ApiResponse<AlbumMusicsData>>(endpoint, {
       params: { sort, page, size },
-    });
+      __skipAuthExpired: true,
+    } as any);
 
     // 응답 구조: { success, message, data: { flag, items } }
     const responseData = extractDataFromResponse<AlbumMusicsData>(response.data);
