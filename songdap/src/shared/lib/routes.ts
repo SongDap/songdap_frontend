@@ -19,11 +19,6 @@ export const ROUTES = {
     SHARE: "/album/share",
     DETAIL: (id: number | string) => `/album?id=${id}`,
   },
-
-  // 노래
-  SONG: {
-    ADD: "/song/add",
-  },
 } as const;
 
 /**

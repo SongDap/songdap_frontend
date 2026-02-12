@@ -357,11 +357,9 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   if (!album) {
     return (
       <>
-        <PageHeader title="앨범을 찾을 수 없습니다" />
+        <PageHeader title="앨범을 찾을 수 없습니다" showLogo={true} showBackButton={false} />
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-700">
-            {albumQuery.isError ? "앨범을 불러오는데 실패했습니다." : "앨범을 찾을 수 없습니다."}
-          </p>
+          <p className="text-gray-700">삭제된 앨범입니다.</p>
         </div>
       </>
     );
@@ -849,6 +847,10 @@ export default function AlbumDetailContent({ id }: { id: string }) {
           isOpen={isSongAddModalOpen}
           onClose={() => {
             setIsSongAddModalOpen(false);
+            albumQuery.refetch();
+            musicsQuery.refetch();
+          }}
+          onRefresh={() => {
             albumQuery.refetch();
             musicsQuery.refetch();
           }}
