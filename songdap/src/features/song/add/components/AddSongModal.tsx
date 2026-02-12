@@ -366,7 +366,7 @@ export default function AddSongModal({
                       try {
                         // 앨범 정보 다시 조회해서 canAdd 최신값 확인
                         const updatedAlbum = await getAlbum(albumId);
-                        if (!updatedAlbum.canAdd) {
+                        if (updatedAlbum.canAdd === false) {
                           alert("앨범의 곡 개수가 초과되어 노래를 추가할 수 없습니다.");
                           setIsSubmitting(false);
                           return;
