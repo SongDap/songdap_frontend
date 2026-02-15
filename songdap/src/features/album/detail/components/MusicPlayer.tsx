@@ -22,10 +22,14 @@ type MusicPlayerProps = {
   onNextAndPlay?: () => void; // 다음 곡으로 넘기고 자동 재생 (연속 재생 모드에서 재생 끝났을 때)
   onAutoPlayNextFailed?: () => void; // 연속 재생 중 다음 곡 재생 실패 시 (모달 등 처리)
   autoPlayNext?: boolean; // 연속 재생 모드 여부
-  isPlayButtonDisabled?: boolean; // 3초 대기 중 등 재생 버튼 비활성화
+  isPlayButtonDisabled?: boolean; // 재생 대기 중 등 재생 버튼 비활성화
+  onPlayPending?: (pending: boolean) => void; // 재생 대기 시작/해제 시 부모에 알림 (재생 버튼 비활성화용)
+  playDelayMs?: number; // 재생 대기 시간 (연속 재생 시 1000, 그 외 500 등)
   expandTrigger?: number; // 익스팬드뷰를 강제로 열기 위한 트리거
   autoPlayTrigger?: number; // 특정 액션(카드 재생 버튼 등)으로 자동재생 트리거
 };
+
+const DEFAULT_PLAY_DELAY_MS = 500;
 
 export default function MusicPlayer({ 
   title, 
@@ -45,6 +49,8 @@ export default function MusicPlayer({
   onAutoPlayNextFailed,
   autoPlayNext = false,
   isPlayButtonDisabled = false,
+  onPlayPending,
+  playDelayMs = DEFAULT_PLAY_DELAY_MS,
   expandTrigger,
   autoPlayTrigger,
 }: MusicPlayerProps) {
@@ -56,23 +62,31 @@ export default function MusicPlayer({
   const [playbackNotice, setPlaybackNotice] = useState<string | null>(null);
   const [hasPlayedOnce, setHasPlayedOnce] = useState(false);
   const noticeTimerRef = useRef<number | null>(null);
+  const playDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevSongKeyRef = useRef<string>("");
   const prevExpandTriggerRef = useRef<number | undefined>(undefined);
   const prevAutoPlayTriggerRef = useRef<number | undefined>(undefined);
 
-  // 곡이 변경되면 상태 리셋
+  // 곡이 변경되면 상태 리셋 + 재생 대기 타이머 정리
+  // (연속 재생으로 곡만 바뀌고 곧 autoPlayTrigger effect가 돌면 pending을 유지하기 위해, trigger가 이번 렌더에서 안 바뀐 경우에만 onPlayPending(false) 호출)
   useLayoutEffect(() => {
     const songKey = `${title}||${artist}||${videoId ?? ""}`;
     const isSongChanged = prevSongKeyRef.current !== songKey;
 
     if (isSongChanged || (prevSongKeyRef.current === "" && songKey !== "")) {
-      // 곡이 변경되었거나 처음 로드될 때 재생 상태만 리셋
+      if (playDelayTimerRef.current) {
+        clearTimeout(playDelayTimerRef.current);
+        playDelayTimerRef.current = null;
+        if (autoPlayTrigger === prevAutoPlayTriggerRef.current) {
+          onPlayPending?.(false);
+        }
+      }
       setIsPlaying(false);
       setPlaybackNotice(null);
       setHasPlayedOnce(false);
     }
     prevSongKeyRef.current = songKey;
-  }, [title, artist, videoId]);
+  }, [title, artist, videoId, autoPlayTrigger, onPlayPending]);
 
   // 카드의 "재생" 버튼에서 확장뷰를 열고 자동 재생을 트리거하기 위한 로직
   useLayoutEffect(() => {
@@ -99,20 +113,32 @@ export default function MusicPlayer({
           noticeTimerRef.current = window.setTimeout(() => setPlaybackNotice(null), 2500);
         }
       } else {
-        setIsPlaying(true);
+        // 재생 대기 후 재생 (playDelayMs)
+        onPlayPending?.(true);
+        if (playDelayTimerRef.current) clearTimeout(playDelayTimerRef.current);
+        playDelayTimerRef.current = setTimeout(() => {
+          playDelayTimerRef.current = null;
+          onPlayPending?.(false);
+          setIsPlaying(true);
+        }, playDelayMs);
       }
       prevAutoPlayTriggerRef.current = autoPlayTrigger;
       return;
     }
 
     prevAutoPlayTriggerRef.current = autoPlayTrigger;
-  }, [autoPlayTrigger, videoId, hideUI]);
+  }, [autoPlayTrigger, videoId, hideUI, onPlayPending, playDelayMs]);
 
   useEffect(() => {
     return () => {
       if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
+      if (playDelayTimerRef.current) {
+        clearTimeout(playDelayTimerRef.current);
+        playDelayTimerRef.current = null;
+        onPlayPending?.(false);
+      }
     };
-  }, []);
+  }, [onPlayPending]);
 
   const showPlaybackBlockedNotice = () => {
     if (autoPlayNext && onAutoPlayNextFailed) {
@@ -155,7 +181,12 @@ export default function MusicPlayer({
       noticeTimerRef.current = window.setTimeout(() => setPlaybackNotice(null), 2500);
       return;
     }
-    setIsPlaying(!isPlaying);
+    if (isPlaying) {
+      setIsPlaying(false);
+    } else {
+      // 같은 곡에서 재생 버튼만 누른 경우 → 대기 없이 바로 재생 (새 곡일 때만 autoPlayTrigger에서 delay 적용)
+      setIsPlaying(true);
+    }
   };
 
   const handleToggleExpand = () => {
