@@ -5,13 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { HiChevronLeft } from "react-icons/hi";
 import Link from "next/link";
-
-// 프로필 메뉴 항목
-const PROFILE_MENU_ITEMS = [
-  { label: "내 앨범", href: "/album/list" },
-  { label: "서비스 소개", href: "/introduceService" },
-  { label: "프로필 편집", href: "/profile/edit" },
-];
+import { PROFILE_MENU_ITEMS, getKakaoLoginUrl } from "@/shared/lib/kakaoLogin";
 
 // 프로필 메뉴 컴포넌트
 function ProfileMenu({
@@ -125,17 +119,13 @@ export default function Header() {
   const isProfileEditPage = pathname === "/profile/edit";
   const isWithdrawPage = pathname === "/profile/withdraw";
 
-  // 카카오 로그인 URL
-  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
-  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
-  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
-
   const handleLogin = () => {
-    if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
+    const url = getKakaoLoginUrl();
+    if (!url) {
       alert("로그인 설정 누락");
       return;
     }
-    window.location.assign(kakaoURL);
+    window.location.assign(url);
   };
 
   const handleLogout = () => {

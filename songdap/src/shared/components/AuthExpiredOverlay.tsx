@@ -3,18 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { hideAuthExpired, useAuthUiStore } from "@/features/oauth/model/authUiStore";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
-
-function buildKakaoAuthorizeUrl(): string | null {
-  const clientId = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
-  const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
-  if (!clientId || !redirectUri) return null;
-
-  const url = new URL("https://kauth.kakao.com/oauth/authorize");
-  url.searchParams.set("client_id", clientId);
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("response_type", "code");
-  return url.toString();
-}
+import { getKakaoLoginUrl } from "@/shared/lib/kakaoLogin";
 
 export default function AuthExpiredOverlay() {
   const authExpired = useAuthUiStore((s) => s.authExpired);
@@ -51,7 +40,7 @@ export default function AuthExpiredOverlay() {
 
   if (!authExpired) return null;
 
-  const kakaoUrl = buildKakaoAuthorizeUrl();
+  const kakaoUrl = getKakaoLoginUrl();
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-end justify-center md:items-center">

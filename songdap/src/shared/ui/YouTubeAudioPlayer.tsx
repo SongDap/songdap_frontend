@@ -112,27 +112,21 @@ export default function YouTubeAudioPlayer({
     if (!playerHostRef.current) return;
     if (playerRef.current) return;
 
-    const origin =
-      typeof window !== "undefined" && window.location?.origin
-        ? window.location.origin
-        : undefined;
-
+    // origin을 playerVars에 넣으면 YouTube iframe postMessage와 충돌해
+    // "Unable to post message to https://www.youtube.com. Recipient has origin https://..." 콘솔 에러가 날 수 있음.
+    // YouTube API가 iframe src에 origin을 자동으로 붙이므로 여기서는 생략.
     playerRef.current = new window.YT.Player(playerHostRef.current, {
       height: "1",
       width: "1",
       videoId: videoId || undefined,
       playerVars: {
         autoplay: 0,
-        // 바텀시트(영상 보기)에서는 컨트롤이 필요해서 항상 on
         controls: 1,
         disablekb: 1,
         fs: 0,
         modestbranding: 1,
         rel: 0,
         playsinline: 1,
-        // 위젯/iframe 내부 postMessage 대상 origin을 현재 사이트로 고정
-        // (dev에서 localhost로 실행 시 "target origin mismatch" 오류 방지)
-        ...(origin ? { origin } : {}),
       },
       events: {
         onStateChange: (e: any) => {

@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { trackEvent } from "@/lib/gtag";
 import { ROUTES } from "@/shared/lib/routes";
+import { getKakaoLoginUrl } from "@/shared/lib/kakaoLogin";
 
 interface Album {
   id: number;
@@ -38,45 +39,17 @@ export default function LandingMain() {
     };
   }, []);
 
-  // 환경변수 가져오기
-  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
-  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI; // 여기 나중에 서버 URI로 바꿔야함
-  const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
-
-  // 카카오 로그인 주소 조합하기
-  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
-
-  // 클릭하면 실행될 함수
   function handleLogin() {
     trackEvent(
       { event: "select_content", content_type: "cta", item_id: "landing_kakao_login" },
       { category: "navigation", action: "click_button", label: "landing_kakao_login" }
     );
-    // 1. 환경변수 미설정 체크
-    if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
-      alert("로그인 설정 누락")
+    const url = getKakaoLoginUrl();
+    if (!url) {
+      alert("로그인 설정 누락");
       return;
     }
-
-    // 2. URL 유효성 체크
-    try {
-      // redirect uri가 진짜 url인지 검증
-      new URL(REDIRECT_URI);
-      // kakaoURL이 정상 문자열인지 최소 검증
-      if (!kakaoURL.startsWith("https://kauth.kakao.com/oauth/authorize")) {
-        throw new Error("Kakao authorize URL 생성 실패");
-      }
-
-    } catch (error) {
-      return;
-    }
-
-    // 3. Redirect 실패 처리
-    try {
-      window.location.assign(kakaoURL); // 현재 페이지를 kakaoURL에 담긴 주소로 이동시켜라
-    } catch (error) {
-      // Redirect 실패 처리
-    }
+    window.location.assign(url);
   }
 
   return (

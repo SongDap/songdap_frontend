@@ -232,27 +232,23 @@ export default function AlbumDetailContent({ id }: { id: string }) {
     []
   );
 
-  const extractYouTubeVideoId = useCallback((url: string): string | undefined => {
+  // 백엔드에서 주는 유튜브 URL에서 video ID만 추출 (재생은 이 ID로 함)
+  const getVideoIdFromUrl = useCallback((url: string): string | undefined => {
+    if (!url?.trim()) return undefined;
     try {
-      const u = new URL(url);
+      const u = new URL(url.trim());
       const host = u.hostname.replace("www.", "");
 
-      // youtu.be/{id}
       if (host === "youtu.be") {
         const id = u.pathname.split("/").filter(Boolean)[0];
         return id || undefined;
       }
 
       if (host === "youtube.com" || host === "m.youtube.com") {
-        // /watch?v={id}
         const v = u.searchParams.get("v");
         if (v) return v;
-
-        // /shorts/{id}
         const parts = u.pathname.split("/").filter(Boolean);
         if (parts[0] === "shorts" && parts[1]) return parts[1];
-
-        // /embed/{id}
         if (parts[0] === "embed" && parts[1]) return parts[1];
       }
     } catch {
@@ -262,7 +258,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   }, []);
 
   const toCurrentSong = useCallback((music: MusicInfo): CurrentSong => {
-    const videoId = music.url ? extractYouTubeVideoId(music.url) : undefined;
+    const videoId = music.url ? getVideoIdFromUrl(music.url) : undefined;
     return {
       uuid: music.uuid,
       title: music.title,
@@ -273,7 +269,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
       message: music.message ?? undefined,
       nickname: music.writer,
     };
-  }, [extractYouTubeVideoId]);
+  }, [getVideoIdFromUrl]);
 
   const handleSelectSong = useCallback(
     (music: MusicInfo, openExpanded = true) => {
