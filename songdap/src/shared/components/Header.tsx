@@ -163,23 +163,14 @@ export default function Header() {
 
             {/* 프로필 메뉴 */}
             {isAuthenticated && profileMenuOpen && (
-              <div 
-                className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                 <div className="py-2">
                   {profileMenuItems.map((item, idx) => (
                     <Link
                       key={idx}
                       href={item.href}
                       className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setProfileMenuOpen(false);
-                        router.push(item.href);
-                      }}
+                      onClick={handleMenuItemClick}
                     >
                       {item.label}
                     </Link>
@@ -187,10 +178,7 @@ export default function Header() {
                   <button
                     type="button"
                     className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleLogout();
-                    }}
+                    onClick={handleLogout}
                   >
                     로그아웃
                   </button>
