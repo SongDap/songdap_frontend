@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { HiMail, HiMusicNote, HiTrash, HiInformationCircle, HiX, HiChevronDown, HiLockOpen, HiLockClosed } from "react-icons/hi";
 
@@ -18,6 +18,42 @@ import { AlbumCover } from "@/shared/ui";
 import { trackEvent } from "@/lib/gtag";
 
 import MusicPlayer from "./MusicPlayer";
+
+/** 앨범 상세 헤더용: (노래개수/허용개수) + 앨범명, 2줄일 때 앨범명 글자 크기 축소 */
+function AlbumDetailHeaderTitle({
+  musicCount,
+  musicCountLimit,
+  title,
+}: {
+  musicCount: number;
+  musicCountLimit: number;
+  title: string;
+}) {
+  const titleRef = useRef<HTMLSpanElement>(null);
+  const [isTwoLines, setIsTwoLines] = useState(false);
+
+  useLayoutEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    const lineHeight = parseFloat(getComputedStyle(el).lineHeight);
+    const height = el.getBoundingClientRect().height;
+    setIsTwoLines(height > lineHeight * 1.3);
+  }, [title]);
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-0.5">
+      <span className="text-xs text-gray-600">
+        ({musicCount}/{musicCountLimit})
+      </span>
+      <span
+        ref={titleRef}
+        className={`line-clamp-2 text-center ${isTwoLines ? "text-base md:text-xl" : ""}`}
+      >
+        {title}
+      </span>
+    </div>
+  );
+}
 
 type ViewMode = "player" | "letter";
 
@@ -427,17 +463,12 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   }
   const backHref = makeAlbumListUrl(parseAlbumListQuery(searchParams));
 
-  const currentSongIndex = currentSong
-    ? musics.findIndex((m) => m.uuid === currentSong.uuid) + 1
-    : 0;
-  const totalSongCount = album.musicCount ?? 0;
   const headerTitle = (
-    <div className="flex flex-col items-center justify-center gap-0.5">
-      <span className="text-xs text-gray-600">
-        ({currentSongIndex}/{totalSongCount})
-      </span>
-      <span className="line-clamp-2 text-center">{album.title}</span>
-    </div>
+    <AlbumDetailHeaderTitle
+      musicCount={album.musicCount ?? 0}
+      musicCountLimit={album.musicCountLimit ?? 15}
+      title={album.title}
+    />
   );
 
   return (
@@ -983,11 +1014,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
         <AddSongModal
           album={album}
           isOpen={isSongAddModalOpen}
-          onClose={() => {
-            setIsSongAddModalOpen(false);
-            albumQuery.refetch();
-            musicsQuery.refetch();
-          }}
+          onClose={() => setIsSongAddModalOpen(false)}
           onRefresh={() => {
             albumQuery.refetch();
             musicsQuery.refetch();

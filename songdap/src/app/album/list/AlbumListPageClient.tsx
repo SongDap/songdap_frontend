@@ -84,11 +84,10 @@ export default function AlbumListPageClient() {
       setTotalPages(pageData.totalPages);
       setIsEditMode(false);
 
-      // 페이지가 비어있으면 이전 페이지로 이동
+      // 페이지가 비어있으면 1페이지로 한 번에 이동 (연속 API 호출 방지)
       if (pageData.content.length === 0 && currentPageNum > 1) {
-        const prevPage = currentPageNum - 1;
-        setCurrentPage(prevPage);
-        await fetchAlbums(prevPage);
+        setCurrentPage(1);
+        await fetchAlbums(1);
       }
 
       setIsLoading(false);
@@ -131,11 +130,10 @@ export default function AlbumListPageClient() {
         setTotalElements(pageData.totalElements);
         setTotalPages(pageData.totalPages);
 
-        // 페이지가 비어있고 첫 페이지가 아니면 이전 페이지로 이동
+        // 페이지가 비어있고 첫 페이지가 아니면 1페이지로 한 번에 이동 (연속 API 호출 방지)
         if (pageData.content.length === 0 && page > 1) {
-          const prevPage = page - 1;
-          setCurrentPage(prevPage);
-          await fetchAlbums(prevPage);
+          setCurrentPage(1);
+          await fetchAlbums(1);
           return;
         }
 
