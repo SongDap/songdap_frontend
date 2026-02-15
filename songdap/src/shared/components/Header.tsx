@@ -331,10 +331,7 @@ export default function Header() {
                     onClick={(e) => {
                       e.stopPropagation();
                       handleLogout();
-                    }
-                    type="button"
-                    className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                    onClick={handleLogout}
+                    }}
                   >
                     로그아웃
                   </button>
