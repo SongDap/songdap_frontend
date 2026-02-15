@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { trackEvent } from "@/lib/gtag";
 
 type WithdrawalReason =
@@ -21,6 +22,7 @@ type WithdrawalFormProps = {
 };
 
 export default function WithdrawalForm({ onSubmit }: WithdrawalFormProps) {
+    const router = useRouter();
     const [reasons, setReasons] = useState<WithdrawalReason[]>([]);
     const [reasonDetail, setReasonDetail] = useState("");
     const [email, setEmail] = useState("");
@@ -159,7 +161,14 @@ export default function WithdrawalForm({ onSubmit }: WithdrawalFormProps) {
                     주의사항을 모두 확인하였습니다.
                 </label>
 
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-end gap-3">
+                    <button
+                        type="button"
+                        onClick={() => router.push("/profile/edit")}
+                        className="h-10 rounded-md border border-gray-300 bg-white px-6 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                        취소
+                    </button>
                     <button
                         type="submit"
                         onClick={() => {
