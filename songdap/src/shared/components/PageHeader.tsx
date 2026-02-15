@@ -2,6 +2,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { HiLockClosed } from "react-icons/hi";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
@@ -31,95 +32,6 @@ const BackIcon = () => (
   </svg>
 );
 
-// 프로필 메뉴 컴포넌트
-function ProfileMenuContent({
-  isAuthenticated,
-  profileMenuOpen,
-  user,
-  showProfileInfo,
-  onMenuClick,
-  onLogout,
-  onLogin,
-}: {
-  isAuthenticated: boolean;
-  profileMenuOpen: boolean;
-  user: any;
-  showProfileInfo?: boolean;
-  onMenuClick: () => void;
-  onLogout: () => void;
-  onLogin: () => void;
-}) {
-  const menuWidth = showProfileInfo ? "w-52" : "w-56";
-
-  return (
-    <div className="relative">
-      {isAuthenticated ? (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            // Menu toggle handled by parent
-          }}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
-          <img
-            src={user?.profileImage || "https://placehold.co/40x40"}
-            alt={user?.nickname || "프로필"}
-            className="w-10 h-10 rounded-full"
-          />
-          {!showProfileInfo && (
-            <span className="text-base text-gray-900 max-w-[200px] truncate">
-              {user?.nickname || "사용자"}
-            </span>
-          )}
-        </button>
-      ) : (
-        <button
-          onClick={onLogin}
-          className="px-4 py-2 text-base text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
-        >
-          로그인이 필요합니다.
-        </button>
-      )}
-
-      {isAuthenticated && profileMenuOpen && (
-        <div className={`absolute top-full right-0 mt-2 ${menuWidth} bg-white border border-gray-200 rounded-lg shadow-lg z-50`}>
-          <div className="py-2">
-            {showProfileInfo && (
-              <div className="px-4 py-2.5 flex items-center gap-2 border-b border-gray-100">
-                <img
-                  src={user?.profileImage || "https://placehold.co/40x40"}
-                  alt={user?.nickname || "프로필"}
-                  className="w-8 h-8 rounded-full"
-                />
-                <span className="text-sm text-gray-900">
-                  {user?.nickname || "사용자"}
-                </span>
-              </div>
-            )}
-            {PROFILE_MENU_ITEMS.map((item, idx) => (
-              <Link
-                key={idx}
-                href={item.href}
-                className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
-                onClick={onMenuClick}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <button
-              type="button"
-              className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-              onClick={onLogout}
-            >
-              로그아웃
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 type PageHeaderProps = {
   title: string | ReactNode;
   isPublic?: boolean;
@@ -145,8 +57,15 @@ export default function PageHeader({
   const isAuthenticated = useOauthStore((s) => s.isAuthenticated);
   const [showModal, setShowModal] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const profileMenuRefPcBack = useRef<HTMLDivElement>(null);
+  const profileMenuRefPcLogo = useRef<HTMLDivElement>(null);
+  const profileMenuRefMobBack = useRef<HTMLDivElement>(null);
+  const profileMenuRefMobLogo = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const resolvedBackHref = backHref || ROUTES.ALBUM.LIST;
+
+  const allProfileRefs = [profileMenuRefPcBack, profileMenuRefPcLogo, profileMenuRefMobBack, profileMenuRefMobLogo];
 
   // 카카오 로그인 URL
   const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
@@ -161,10 +80,13 @@ export default function PageHeader({
     window.location.assign(kakaoURL);
   };
 
-  // 메뉴 외부 클릭 시 닫기
+  // 메뉴 외부 클릭 시 닫기 (4개 영역 + 드롭다운 포털 모두 확인)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isInsideProfile = allProfileRefs.some((ref) => ref.current?.contains(target));
+      const isInsideDropdown = dropdownRef.current?.contains(target);
+      if (!isInsideProfile && !isInsideDropdown) {
         setProfileMenuOpen(false);
       }
     };
@@ -176,6 +98,29 @@ export default function PageHeader({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, [profileMenuOpen]);
+
+  // 드롭다운 위치 계산 (보이는 프로필 영역 기준) + 포털용
+  useEffect(() => {
+    if (!profileMenuOpen || typeof document === "undefined") {
+      setDropdownPosition(null);
+      return;
+    }
+    const DROPDOWN_WIDTH = 224;
+    const GAP = 8;
+    for (const ref of allProfileRefs) {
+      const el = ref.current;
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      if (rect.height > 0 && rect.top >= 0 && rect.top < 300) {
+        setDropdownPosition({
+          top: rect.bottom + GAP,
+          left: Math.min(rect.right - DROPDOWN_WIDTH, window.innerWidth - DROPDOWN_WIDTH - 16),
+        });
+        return;
+      }
+    }
+    setDropdownPosition(null);
   }, [profileMenuOpen]);
 
   const handleBackClick = () => {
@@ -242,51 +187,31 @@ export default function PageHeader({
 
               <div className="flex items-center gap-2 absolute right-20">
                 {rightAction}
-                <div ref={profileMenuRef}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setProfileMenuOpen(!profileMenuOpen);
-                    }}
-                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                  >
-                    <img
-                      src={user?.profileImage || "https://placehold.co/40x40"}
-                      alt={user?.nickname || "프로필"}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    {isAuthenticated && (
+                <div ref={profileMenuRefPcBack}>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProfileMenuOpen(!profileMenuOpen);
+                      }}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                    >
+                      <img
+                        src={user?.profileImage || "https://placehold.co/40x40"}
+                        alt={user?.nickname || "프로필"}
+                        className="w-10 h-10 rounded-full"
+                      />
                       <span className="text-base text-gray-900 max-w-[200px] truncate">
                         {user?.nickname || "사용자"}
                       </span>
-                    )}
-                  </button>
-                  {isAuthenticated && profileMenuOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                      <div className="py-2">
-                        {PROFILE_MENU_ITEMS.map((item, idx) => (
-                          <Link
-                            key={idx}
-                            href={item.href}
-                            className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
-                            onClick={handleMenuItemClick}
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
-                        <button
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                          onClick={() => {
-                            setProfileMenuOpen(false);
-                            logout();
-                            router.replace("/");
-                          }}
-                        >
-                          로그아웃
-                        </button>
-                      </div>
-                    </div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLogin}
+                      className="px-4 py-2 text-base text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+                    >
+                      로그인이 필요합니다.
+                    </button>
                   )}
                 </div>
               </div>
@@ -317,51 +242,31 @@ export default function PageHeader({
 
               <div className="flex items-center gap-2 absolute right-20">
                 {rightAction}
-                <div ref={profileMenuRef}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setProfileMenuOpen(!profileMenuOpen);
-                    }}
-                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                  >
-                    <img
-                      src={user?.profileImage || "https://placehold.co/40x40"}
-                      alt={user?.nickname || "프로필"}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    {isAuthenticated && (
+                <div ref={profileMenuRefPcLogo}>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProfileMenuOpen(!profileMenuOpen);
+                      }}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                    >
+                      <img
+                        src={user?.profileImage || "https://placehold.co/40x40"}
+                        alt={user?.nickname || "프로필"}
+                        className="w-10 h-10 rounded-full"
+                      />
                       <span className="text-base text-gray-900 max-w-[200px] truncate">
                         {user?.nickname || "사용자"}
                       </span>
-                    )}
-                  </button>
-                  {isAuthenticated && profileMenuOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                      <div className="py-2">
-                        {PROFILE_MENU_ITEMS.map((item, idx) => (
-                          <Link
-                            key={idx}
-                            href={item.href}
-                            className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
-                            onClick={handleMenuItemClick}
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
-                        <button
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                          onClick={() => {
-                            setProfileMenuOpen(false);
-                            logout();
-                            router.replace("/");
-                          }}
-                        >
-                          로그아웃
-                        </button>
-                      </div>
-                    </div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLogin}
+                      className="px-4 py-2 text-base text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+                    >
+                      로그인이 필요합니다.
+                    </button>
                   )}
                 </div>
               </div>
@@ -388,56 +293,28 @@ export default function PageHeader({
 
               <div className="flex items-center gap-1 absolute right-4">
                 {rightAction}
-                <div ref={profileMenuRef}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setProfileMenuOpen(!profileMenuOpen);
-                    }}
-                    className="flex items-center hover:opacity-80 transition-opacity"
-                  >
-                    <img
-                      src={user?.profileImage || "https://placehold.co/40x40"}
-                      alt={user?.nickname || "프로필"}
-                      className="w-9 h-9 rounded-full"
-                    />
-                  </button>
-                  {isAuthenticated && profileMenuOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                      <div className="py-2">
-                        <div className="px-4 py-2.5 flex items-center gap-2 border-b border-gray-100">
-                          <img
-                            src={user?.profileImage || "https://placehold.co/36x36"}
-                            alt={user?.nickname || "프로필"}
-                            className="w-8 h-8 rounded-full"
-                          />
-                          <span className="text-base text-gray-900 truncate">
-                            {user?.nickname || "사용자"}
-                          </span>
-                        </div>
-                        {PROFILE_MENU_ITEMS.map((item, idx) => (
-                          <Link
-                            key={idx}
-                            href={item.href}
-                            className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
-                            onClick={handleMenuItemClick}
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
-                        <button
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                          onClick={() => {
-                            setProfileMenuOpen(false);
-                            logout();
-                            router.replace("/");
-                          }}
-                        >
-                          로그아웃
-                        </button>
-                      </div>
-                    </div>
+                <div ref={profileMenuRefMobBack}>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProfileMenuOpen(!profileMenuOpen);
+                      }}
+                      className="flex items-center hover:opacity-80 transition-opacity"
+                    >
+                      <img
+                        src={user?.profileImage || "https://placehold.co/40x40"}
+                        alt={user?.nickname || "프로필"}
+                        className="w-9 h-9 rounded-full"
+                      />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLogin}
+                      className="px-2 py-1.5 text-xs text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+                    >
+                      로그인
+                    </button>
                   )}
                 </div>
               </div>
@@ -468,56 +345,28 @@ export default function PageHeader({
 
               <div className="flex items-center gap-1 absolute right-4">
                 {rightAction}
-                <div ref={profileMenuRef}>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setProfileMenuOpen(!profileMenuOpen);
-                    }}
-                    className="flex items-center hover:opacity-80 transition-opacity"
-                  >
-                    <img
-                      src={user?.profileImage || "https://placehold.co/40x40"}
-                      alt={user?.nickname || "프로필"}
-                      className="w-10 h-10 rounded-full"
-                    />
-                  </button>
-                  {isAuthenticated && profileMenuOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                      <div className="py-2">
-                        <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                          <img
-                            src={user?.profileImage || "https://placehold.co/40x40"}
-                            alt={user?.nickname || "프로필"}
-                            className="w-8 h-8 rounded-full"
-                          />
-                          <span className="text-sm text-gray-900">
-                            {user?.nickname || "사용자"}
-                          </span>
-                        </div>
-                        {PROFILE_MENU_ITEMS.map((item, idx) => (
-                          <Link
-                            key={idx}
-                            href={item.href}
-                            className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
-                            onClick={handleMenuItemClick}
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
-                        <button
-                          type="button"
-                          className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                          onClick={() => {
-                            setProfileMenuOpen(false);
-                            logout();
-                            router.replace("/");
-                          }}
-                        >
-                          로그아웃
-                        </button>
-                      </div>
-                    </div>
+                <div ref={profileMenuRefMobLogo}>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProfileMenuOpen(!profileMenuOpen);
+                      }}
+                      className="flex items-center hover:opacity-80 transition-opacity"
+                    >
+                      <img
+                        src={user?.profileImage || "https://placehold.co/40x40"}
+                        alt={user?.nickname || "프로필"}
+                        className="w-10 h-10 rounded-full"
+                      />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLogin}
+                      className="px-2 py-1.5 text-xs text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
+                    >
+                      로그인
+                    </button>
                   )}
                 </div>
               </div>
@@ -525,6 +374,42 @@ export default function PageHeader({
           )}
         </div>
       </header>
+
+      {/* 프로필 드롭다운 포털 (overflow 등으로 잘리지 않도록 body에 렌더) */}
+      {profileMenuOpen &&
+        isAuthenticated &&
+        dropdownPosition &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] py-2"
+            style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+          >
+            {PROFILE_MENU_ITEMS.map((item, idx) => (
+              <Link
+                key={idx}
+                href={item.href}
+                className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
+                onClick={handleMenuItemClick}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <button
+              type="button"
+              className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+              onClick={() => {
+                setProfileMenuOpen(false);
+                logout();
+                router.replace("/");
+              }}
+            >
+              로그아웃
+            </button>
+          </div>,
+          document.body
+        )}
 
       <BottomConfirmModal
         isOpen={showModal}

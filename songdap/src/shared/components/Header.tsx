@@ -122,6 +122,8 @@ export default function Header() {
   // 페이지 타입 감지
   const isAlbumListPage = pathname === "/album/list";
   const isAlbumDetailPage = pathname.startsWith("/album/") && !isAlbumListPage;
+  const isProfileEditPage = pathname === "/profile/edit";
+  const isWithdrawPage = pathname === "/profile/withdraw";
 
   // 카카오 로그인 URL
   const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
@@ -191,6 +193,44 @@ export default function Header() {
           />
         </div>
       );
+    } else if (isProfileEditPage) {
+      return (
+        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto relative">
+          <Link href="/">
+            <img src="/images/logo.png" alt="logo" className="h-16 w-auto object-contain" />
+          </Link>
+          <span className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900">프로필 편집</span>
+          <ProfileMenu
+            isAuthenticated={isAuthenticated}
+            profileMenuOpen={profileMenuOpen}
+            setProfileMenuOpen={setProfileMenuOpen}
+            user={user}
+            onMenuClick={handleMenuItemClick}
+            onLogout={handleLogout}
+            onLogin={handleLogin}
+            variant="pc"
+          />
+        </div>
+      );
+    } else if (isWithdrawPage) {
+      return (
+        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto relative">
+          <Link href="/">
+            <img src="/images/logo.png" alt="logo" className="h-16 w-auto object-contain" />
+          </Link>
+          <span className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900">회원 탈퇴</span>
+          <ProfileMenu
+            isAuthenticated={isAuthenticated}
+            profileMenuOpen={profileMenuOpen}
+            setProfileMenuOpen={setProfileMenuOpen}
+            user={user}
+            onMenuClick={handleMenuItemClick}
+            onLogout={handleLogout}
+            onLogin={handleLogin}
+            variant="pc"
+          />
+        </div>
+      );
     }
     return null;
   };
@@ -227,6 +267,44 @@ export default function Header() {
             <HiChevronLeft className="w-6 h-6 text-gray-700" />
           </button>
           <span className="text-lg font-semibold text-gray-900">앨범</span>
+          <ProfileMenu
+            isAuthenticated={isAuthenticated}
+            profileMenuOpen={profileMenuOpen}
+            setProfileMenuOpen={setProfileMenuOpen}
+            user={user}
+            onMenuClick={handleMenuItemClick}
+            onLogout={handleLogout}
+            onLogin={handleLogin}
+            variant="mobile"
+          />
+        </div>
+      );
+    } else if (isProfileEditPage) {
+      return (
+        <div className="md:hidden h-[70px] px-4 flex items-center justify-between">
+          <Link href="/">
+            <img src="/images/logo.png" alt="logo" className="h-10 w-auto object-contain" />
+          </Link>
+          <span className="text-lg font-semibold text-gray-900">프로필 편집</span>
+          <ProfileMenu
+            isAuthenticated={isAuthenticated}
+            profileMenuOpen={profileMenuOpen}
+            setProfileMenuOpen={setProfileMenuOpen}
+            user={user}
+            onMenuClick={handleMenuItemClick}
+            onLogout={handleLogout}
+            onLogin={handleLogin}
+            variant="mobile"
+          />
+        </div>
+      );
+    } else if (isWithdrawPage) {
+      return (
+        <div className="md:hidden h-[70px] px-4 flex items-center justify-between">
+          <Link href="/">
+            <img src="/images/logo.png" alt="logo" className="h-10 w-auto object-contain" />
+          </Link>
+          <span className="text-lg font-semibold text-gray-900">회원 탈퇴</span>
           <ProfileMenu
             isAuthenticated={isAuthenticated}
             profileMenuOpen={profileMenuOpen}
