@@ -380,7 +380,7 @@ export default function MusicPlayerExpandedView({
             )}
           </button>
           {isPlaying && (
-            <span className="text-[10px] md:text-xs text-white/80 whitespace-nowrap">
+            <span className="text-[10px] text-white/80 whitespace-nowrap">
               유튜브 동영상 재생 중
             </span>
           )}
