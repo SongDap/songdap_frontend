@@ -299,7 +299,10 @@ export default function Header() {
                 className="px-2 py-1.5 text-xs text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
               >
                 로그인
-              </button> onClick={(e) => e.stopPropagation()}>
+              </button>
+            )}
+            {isAuthenticated && profileMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50" onClick={(e) => e.stopPropagation()}>
                 <div className="py-2">
                   {/* 모바일에서만 프로필 정보 표시 */}
                   <div className="px-4 py-2.5 flex items-center gap-2 border-b border-gray-100">
