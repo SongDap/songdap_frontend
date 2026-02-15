@@ -7,14 +7,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { HiLockClosed } from "react-icons/hi";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { ROUTES } from "@/shared/lib/routes";
+import { PROFILE_MENU_ITEMS, getKakaoLoginUrl } from "@/shared/lib/kakaoLogin";
 import { BottomConfirmModal } from "@/shared/ui";
-
-// 프로필 메뉴 항목
-const PROFILE_MENU_ITEMS = [
-  { label: "내 앨범", href: "/album/list" },
-  { label: "서비스 소개", href: "/introduceService" },
-  { label: "프로필 편집", href: "/profile/edit" },
-];
 
 // 뒤로가기 아이콘 SVG
 const BackIcon = () => (
@@ -69,20 +63,15 @@ export default function PageHeader({
 
   const allProfileRefs = [profileMenuRefPcBack, profileMenuRefPcLogo, profileMenuRefMobBack, profileMenuRefMobLogo];
 
-  // 로그인 후 돌아올 URL (앨범 상세 등 현재 페이지 유지)
   const returnPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
 
-  // 카카오 로그인 URL (state에 복귀 경로 전달)
-  const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
-  const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
-  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code&state=${encodeURIComponent(returnPath)}`;
-
   const handleLogin = () => {
-    if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
+    const url = getKakaoLoginUrl(returnPath);
+    if (!url) {
       alert("로그인 설정 누락");
       return;
     }
-    window.location.assign(kakaoURL);
+    window.location.assign(url);
   };
 
   // 메뉴 외부 클릭 시 닫기 (4개 영역 + 드롭다운 포털 모두 확인)
