@@ -95,14 +95,14 @@ export default function Header() {
               <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                 <div className="py-2">
                   {profileMenuItems.map((item, idx) => (
-                    <a
+                    <Link
                       key={idx}
                       href={item.href}
                       className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
                       onClick={handleMenuItemClick}
                     >
                       {item.label}
-                    </a>
+                    </Link>
                   ))}
                   <button
                     type="button"
@@ -163,22 +163,25 @@ export default function Header() {
 
             {/* 프로필 메뉴 */}
             {isAuthenticated && profileMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50" onClick={(e) => e.stopPropagation()}>
                 <div className="py-2">
                   {profileMenuItems.map((item, idx) => (
-                    <a
+                    <Link
                       key={idx}
                       href={item.href}
                       className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
                       onClick={handleMenuItemClick}
                     >
                       {item.label}
-                    </a>
+                    </Link>
                   ))}
                   <button
                     type="button"
                     className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
-                    onClick={handleLogout}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLogout();
+                    }}
                   >
                     로그아웃
                   </button>
@@ -241,14 +244,14 @@ export default function Header() {
                     </span>
                   </div>
                   {profileMenuItems.map((item, idx) => (
-                    <a
+                    <Link
                       key={idx}
                       href={item.href}
                       className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
                       onClick={handleMenuItemClick}
                     >
                       {item.label}
-                    </a>
+                    </Link>
                   ))}
                   <button
                     type="button"
@@ -296,10 +299,7 @@ export default function Header() {
                 className="px-2 py-1.5 text-xs text-gray-900 hover:text-[#006FFF] transition-colors cursor-pointer"
               >
                 로그인
-              </button>
-            )}
-            {isAuthenticated && profileMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              </button> onClick={(e) => e.stopPropagation()}>
                 <div className="py-2">
                   {/* 모바일에서만 프로필 정보 표시 */}
                   <div className="px-4 py-2.5 flex items-center gap-2 border-b border-gray-100">
@@ -313,16 +313,22 @@ export default function Header() {
                     </span>
                   </div>
                   {profileMenuItems.map((item, idx) => (
-                    <a
+                    <Link
                       key={idx}
                       href={item.href}
                       className="block px-4 py-2.5 text-base text-gray-800 hover:bg-gray-50 transition-colors"
                       onClick={handleMenuItemClick}
                     >
                       {item.label}
-                    </a>
+                    </Link>
                   ))}
                   <button
+                    type="button"
+                    className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleLogout();
+                    }
                     type="button"
                     className="w-full text-left px-4 py-2.5 text-base text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
                     onClick={handleLogout}
