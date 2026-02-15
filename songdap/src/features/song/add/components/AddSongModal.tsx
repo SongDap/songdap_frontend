@@ -51,8 +51,32 @@ export default function AddSongModal({
   const lpSizePC = coverSizePC * 0.8;
   const lpSizeMobile = coverSizeMobile * 0.8;
 
+  const [toast, setToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const SONG_TITLE_MAX_LENGTH = 128;
+  const ARTIST_MAX_LENGTH = 36;
+
   const handleSongDataChange = (field: "title" | "artist", value: string) => {
-    setSong({ [field]: value });
+    if (field === "title") {
+      if (value.length > SONG_TITLE_MAX_LENGTH) {
+        setToast("노래 제목이 너무 깁니다.");
+        setSong({ title: value.slice(0, SONG_TITLE_MAX_LENGTH) });
+      } else {
+        setSong({ title: value });
+      }
+    } else {
+      if (value.length > ARTIST_MAX_LENGTH) {
+        setToast("아티스트명이 너무 깁니다.");
+        setSong({ artist: value.slice(0, ARTIST_MAX_LENGTH) });
+      } else {
+        setSong({ artist: value });
+      }
+    }
   };
 
   const handleMessageDataChange = (field: "writer" | "message", value: string) => {
@@ -90,6 +114,15 @@ export default function AddSongModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
+      {toast && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 bottom-24 z-[80] px-4 py-2.5 rounded-full bg-gray-900/90 text-white text-sm font-medium shadow-lg"
+          role="status"
+          aria-live="polite"
+        >
+          {toast}
+        </div>
+      )}
       {/* 모달 배경 클릭 시 닫기 */}
       <div
         className="absolute inset-0"
@@ -317,18 +350,24 @@ export default function AddSongModal({
               {/* 닉네임 및 메시지 입력 */}
               <div className="mt-8">
                 <form className="space-y-6">
-                  {/* 닉네임 */}
+                  {/* 닉네임 (최대 16자) */}
                   <div>
                     <label className="block text-base font-medium text-gray-900 mb-2">
                       닉네임 <span className="text-sm font-normal text-gray-500">(선택)</span>
                     </label>
-                    <input
-                      type="text"
-                      value={messageData.writer}
-                      onChange={(e) => handleMessageDataChange("writer", e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
-                      placeholder="닉네임을 입력하지 않으면 익명으로 표시됩니다"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={messageData.writer}
+                        onChange={(e) => handleMessageDataChange("writer", e.target.value)}
+                        maxLength={16}
+                        className="w-full px-4 py-2 pr-14 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
+                        placeholder="닉네임을 입력하지 않으면 익명으로 표시됩니다"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                        {messageData.writer.length}/16
+                      </span>
+                    </div>
                   </div>
 
                   {/* 전하고 싶은 메시지 */}

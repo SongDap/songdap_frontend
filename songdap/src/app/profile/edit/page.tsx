@@ -95,7 +95,7 @@ export default function ProfileEditPage() {
                 isAuthenticated: true,
               }));
 
-              router.replace("/album/list");
+              // 수정 완료 후 프로필 편집 페이지에 그대로 머무름
             }}
           />
         )}

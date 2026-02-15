@@ -29,6 +29,8 @@ export default function ProfileEditForm({
     profileImageDataUrl,
     profileImageFile,
     setProfileImage,
+    setProfileImageToDefault,
+    useDefaultProfileImage,
     isDirty,
   } = useProfileForm({
     initialNickname,
@@ -44,7 +46,8 @@ export default function ProfileEditForm({
     try {
       await onSubmit({
         nickname: nickname.trim(),
-        profileImageFile: profileImageFile || undefined,
+        // 기본 이미지로 설정이면 파일 없이 전송 (회원가입 시 미설정과 동일)
+        profileImageFile: useDefaultProfileImage ? undefined : (profileImageFile || undefined),
       });
     } finally {
       setIsSubmitting(false);
@@ -54,8 +57,10 @@ export default function ProfileEditForm({
   return (
     <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-md flex-col items-center gap-8">
       <ProfileImageUploader
-        imageUrl={profileImageDataUrl || initialProfileImage}
+        imageUrl={useDefaultProfileImage ? "" : (profileImageDataUrl || initialProfileImage)}
         onChange={setProfileImage}
+        onSetDefault={setProfileImageToDefault}
+        isDefaultImage={useDefaultProfileImage}
         disabled={false}
       />
 
