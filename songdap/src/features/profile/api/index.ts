@@ -22,8 +22,8 @@ export async function updateProfile(payload: UpdateProfileRequest): Promise<Prof
     email: payload.email,
   });
   formData.append("request", requestJson);
-  
-  // file 파트: 프로필 이미지 파일 (있는 경우만)
+
+  // file 파트: 프로필 이미지 파일 (있을 때만, 없으면 회원가입 시처럼 기본 이미지)
   if (payload.profileImageFile) {
     formData.append("file", payload.profileImageFile);
   }

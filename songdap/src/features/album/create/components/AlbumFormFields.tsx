@@ -1,6 +1,8 @@
 "use client";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { HiLockOpen, HiLockClosed } from "react-icons/hi";
+
+const ALBUM_TITLE_MAX_LENGTH = 128;
 import { HiMinus, HiPlus, HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import { PRESET_COLORS } from "@/shared/lib/colors";
 
@@ -29,6 +31,14 @@ export default function AlbumFormFields({
   colorScrollRef,
   submitButtonRef,
 }: AlbumFormFieldsProps) {
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   // 선택된 색상으로 스크롤
   useEffect(() => {
     if (colorScrollRef.current) {
@@ -71,7 +81,7 @@ export default function AlbumFormFields({
 
   return (
     <>
-      {/* 앨범명 */}
+      {/* 앨범명 (최대 128자) */}
       <div>
         <label className="block text-base font-medium text-gray-900 mb-2">
           앨범명
@@ -79,7 +89,15 @@ export default function AlbumFormFields({
         <input
           type="text"
           value={formData.title}
-          onChange={(e) => onFormDataChange("title", e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v.length > ALBUM_TITLE_MAX_LENGTH) {
+              setToast("앨범명이 너무 깁니다.");
+              onFormDataChange("title", v.slice(0, ALBUM_TITLE_MAX_LENGTH));
+            } else {
+              onFormDataChange("title", v);
+            }
+          }}
           onBlur={() => {
             if (formData.title.trim() && submitButtonRef?.current) {
               setTimeout(() => {
@@ -96,6 +114,15 @@ export default function AlbumFormFields({
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
           placeholder="앨범명을 입력하세요"
         />
+        {toast && (
+          <div
+            className="fixed left-1/2 -translate-x-1/2 bottom-24 z-[100] px-4 py-2.5 rounded-full bg-gray-900/90 text-white text-sm font-medium shadow-lg"
+            role="status"
+            aria-live="polite"
+          >
+            {toast}
+          </div>
+        )}
       </div>
 
       {/* 앨범설명 */}

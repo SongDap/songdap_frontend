@@ -13,12 +13,14 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
   const [profileImageDataUrl, setProfileImageDataUrl] = useState(options.initialProfileImage || "");
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [isProfileImageChanged, setIsProfileImageChanged] = useState(false);
+  const [useDefaultProfileImage, setUseDefaultProfileImage] = useState(false);
 
   const setProfileImage = useCallback((file: File | null) => {
     if (!file) {
       setProfileImageDataUrl(options.initialProfileImage || "");
       setProfileImageFile(null);
       setIsProfileImageChanged(false);
+      setUseDefaultProfileImage(false);
       return;
     }
 
@@ -26,17 +28,26 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
       setProfileImageDataUrl(options.initialProfileImage || "");
       setProfileImageFile(null);
       setIsProfileImageChanged(false);
+      setUseDefaultProfileImage(false);
       return;
     }
 
     setIsProfileImageChanged(true);
     setProfileImageFile(file);
+    setUseDefaultProfileImage(false);
     const reader = new FileReader();
     reader.onloadend = () => {
       setProfileImageDataUrl(typeof reader.result === "string" ? reader.result : "");
     };
     reader.readAsDataURL(file);
   }, [options.initialProfileImage]);
+
+  const setProfileImageToDefault = useCallback(() => {
+    setProfileImageDataUrl("");
+    setProfileImageFile(null);
+    setIsProfileImageChanged(true);
+    setUseDefaultProfileImage(true);
+  }, []);
 
   const isNicknameOk = useMemo(() => isNicknameValid(nickname), [nickname]);
   const isProfileImageOk = true;
@@ -57,6 +68,8 @@ export function useProfileForm(options: UseProfileFormOptions = {}) {
     profileImageDataUrl,
     profileImageFile,
     setProfileImage,
+    setProfileImageToDefault,
+    useDefaultProfileImage,
     isNicknameOk,
     isProfileImageOk,
     isValid,
