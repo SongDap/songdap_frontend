@@ -54,6 +54,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
     isAlbumInfoOpen,
     setIsAlbumInfoOpen,
     isAlbumInfoEditMode,
+    setIsAlbumInfoEditMode,
     tempIsPublic,
     setTempIsPublic,
     isVisibilityUpdating,
