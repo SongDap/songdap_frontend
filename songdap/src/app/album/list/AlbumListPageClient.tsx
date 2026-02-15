@@ -8,7 +8,7 @@ import Link from "next/link";
 import { ROUTES } from "@/shared/lib";
 import { AlbumCard } from "@/features/album/list/components";
 import { HiChevronLeft, HiChevronRight, HiPencil, HiX, HiLockOpen, HiLockClosed, HiLink } from "react-icons/hi";
-import { getAlbums, deleteAlbum, updateAlbumVisibility, type AlbumListItem } from "@/features/album/api";
+import { getAlbums, getAlbum, deleteAlbum, updateAlbumVisibility, type AlbumListItem, type AlbumResponse } from "@/features/album/api";
 import { AlbumCover } from "@/shared/ui";
 import { buildAlbumShareUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
 import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
@@ -50,6 +50,8 @@ export default function AlbumListPageClient() {
   const [isVisibilityUpdating, setIsVisibilityUpdating] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [showPrivateModal, setShowPrivateModal] = useState(false);
+  const [modalAlbumDetail, setModalAlbumDetail] = useState<AlbumResponse | null>(null);
+  const [modalAlbumLoading, setModalAlbumLoading] = useState(false);
   const user = useOauthStore((s) => s.user);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
@@ -156,6 +158,27 @@ export default function AlbumListPageClient() {
     fetchAlbums();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortApi, currentPage]);
+
+  // 앨범 정보 모달: 앨범 상세 조회 API로 데이터 로드
+  useEffect(() => {
+    if (!isAlbumInfoOpen || !selectedAlbumId) {
+      setModalAlbumDetail(null);
+      return;
+    }
+    setModalAlbumLoading(true);
+    setModalAlbumDetail(null);
+    getAlbum(selectedAlbumId)
+      .then((res) => {
+        setModalAlbumDetail(res);
+        setTempIsPublic(res.isPublic);
+      })
+      .catch(() => {
+        setModalAlbumDetail(null);
+      })
+      .finally(() => {
+        setModalAlbumLoading(false);
+      });
+  }, [isAlbumInfoOpen, selectedAlbumId]);
 
   // 스와이프 감지 함수
   const minSwipeDistance = 50;
@@ -327,9 +350,6 @@ export default function AlbumListPageClient() {
                       onInfoClick={(id) => {
                         setSelectedAlbumId(id);
                         setIsAlbumInfoOpen(true);
-                        // 선택된 앨범의 공개 여부로 초기화 (값이 없으면 비공개로 처리)
-                        const selectedAlbum = albums.find(a => a.uuid === id);
-                        setTempIsPublic(selectedAlbum?.isPublic ?? false);
                       }}
                     />
                   ))
@@ -386,7 +406,7 @@ export default function AlbumListPageClient() {
         </div>
       </div>
       
-      {/* 앨범 정보 모달 */}
+      {/* 앨범 정보 모달 (앨범 상세 조회 API 사용, 상세 페이지 모달과 동일 구성) */}
       {isAlbumInfoOpen && selectedAlbumId && (
         <>
           {/* 백드롭 */}
@@ -413,245 +433,230 @@ export default function AlbumListPageClient() {
               </div>
 
               <div className="p-5">
-                {!isAlbumInfoEditMode ? (
+                {modalAlbumLoading ? (
+                  <p className="text-gray-700">앨범 정보를 불러오는 중...</p>
+                ) : !modalAlbumDetail ? (
+                  <p className="text-gray-700">앨범 정보를 불러올 수 없습니다.</p>
+                ) : !isAlbumInfoEditMode ? (
                   <>
-                    {(() => {
-                      const album = albums.find(a => a.uuid === selectedAlbumId);
-                      if (!album) return null;
-                      
-                      return (
-                        <>
-                          <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0">
-                              <AlbumCover
-                                size={92}
-                                backgroundColorHex={album.color || "#808080"}
-                                imageUrl={undefined}
-                                lpSize={92 * 0.8}
-                              />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span
-                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                                    album.isPublic
-                                      ? "bg-blue-50 text-blue-700 border-blue-200"
-                                      : "bg-gray-100 text-gray-700 border-gray-300"
-                                  }`}
-                                >
-                                  {album.isPublic ? "공개" : "비공개"}
-                                </span>
-                                <span className="text-sm text-gray-600">
-                                  {album.musicCount || 0}/{album.musicCountLimit || 15}곡
-                                </span>
-                              </div>
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        <AlbumCover
+                          size={92}
+                          backgroundColorHex={modalAlbumDetail.color}
+                          imageUrl={undefined}
+                          lpSize={92 * 0.8}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                              modalAlbumDetail.isPublic
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : "bg-gray-100 text-gray-700 border-gray-300"
+                            }`}
+                          >
+                            {modalAlbumDetail.isPublic ? "공개" : "비공개"}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {modalAlbumDetail.musicCount}/{modalAlbumDetail.musicCountLimit}곡
+                          </span>
+                        </div>
 
-                              <div className="mt-2 text-lg font-bold text-gray-900 break-words">
-                                {album.title}
-                              </div>
+                        <div className="mt-2 text-lg font-bold text-gray-900 break-words">
+                          {modalAlbumDetail.title}
+                        </div>
 
-                              {album.createdAt && (
-                                <div className="mt-1 text-xs text-gray-500">
-                                  {String(album.createdAt).slice(0, 10)}
-                                </div>
-                              )}
-                            </div>
+                        {modalAlbumDetail.createdAt && (
+                          <div className="mt-1 text-xs text-gray-500">
+                            {String(modalAlbumDetail.createdAt).slice(0, 10)}
                           </div>
+                        )}
+                      </div>
+                    </div>
 
-                          {album.description && (
-                            <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700 leading-relaxed max-h-40 overflow-y-auto scrollbar-hide">
-                              {album.description}
-                            </div>
-                          )}
+                    {modalAlbumDetail.description && (
+                      <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-700 leading-relaxed max-h-40 overflow-y-auto scrollbar-hide">
+                        {modalAlbumDetail.description}
+                      </div>
+                    )}
 
-                          {/* 공유 버튼 */}
-                          <div className="mt-5 flex items-center justify-center gap-3">
-                            {/* 링크 복사하기 */}
-                            <button
-                              onClick={() => {
-                                // 비공개 앨범 체크
-                                if (!album.isPublic) {
-                                  setShowPrivateModal(true);
-                                  return;
-                                }
-                                const shareUrl = buildAlbumShareUrlFromAlbumInfo({
-                                  id: album.uuid,
-                                  title: album.title || "",
-                                  color: album.color || "#808080",
-                                  description: album.description || "",
-                                  musicCount: album.musicCount || 0,
-                                  musicCountLimit: album.musicCountLimit || 15,
-                                  createdAt: album.createdAt || "",
-                                  isPublic: album.isPublic || true,
-                                });
-                                navigator.clipboard.writeText(shareUrl).then(() => {
-                                  setIsLinkCopied(true);
-                                  setTimeout(() => setIsLinkCopied(false), 2000);
-                                });
-                              }}
-                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                            >
-                              <HiLink className="w-4 h-4" />
-                              <span>{isLinkCopied ? "복사됨!" : "복사"}</span>
-                            </button>
+                    {/* 링크 복사 / 카카오 공유 */}
+                    <div className="mt-5 flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!modalAlbumDetail.isPublic) {
+                            setShowPrivateModal(true);
+                            return;
+                          }
+                          const shareUrl = buildAlbumShareUrlFromAlbumInfo({
+                            id: modalAlbumDetail.uuid,
+                            title: modalAlbumDetail.title || "",
+                            color: modalAlbumDetail.color || "#808080",
+                            description: modalAlbumDetail.description || "",
+                            musicCount: modalAlbumDetail.musicCount || 0,
+                            musicCountLimit: modalAlbumDetail.musicCountLimit || 15,
+                            createdAt: modalAlbumDetail.createdAt || "",
+                            isPublic: modalAlbumDetail.isPublic,
+                          });
+                          navigator.clipboard.writeText(shareUrl).then(() => {
+                            setIsLinkCopied(true);
+                            setTimeout(() => setIsLinkCopied(false), 2000);
+                          });
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                      >
+                        <HiLink className="w-4 h-4" />
+                        <span>{isLinkCopied ? "복사됨!" : "링크 복사"}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!modalAlbumDetail.isPublic) {
+                            setShowPrivateModal(true);
+                            return;
+                          }
+                          try {
+                            const shareUrl = buildAlbumShareUrlFromAlbumInfo({
+                              id: modalAlbumDetail.uuid,
+                              title: modalAlbumDetail.title || "",
+                              color: modalAlbumDetail.color || "#808080",
+                              description: modalAlbumDetail.description || "",
+                              musicCount: modalAlbumDetail.musicCount || 0,
+                              musicCountLimit: modalAlbumDetail.musicCountLimit || 15,
+                              createdAt: modalAlbumDetail.createdAt || "",
+                              isPublic: modalAlbumDetail.isPublic,
+                            });
+                            const nickname = user?.nickname ?? "누군가";
+                            await shareKakaoFeed({
+                              title: modalAlbumDetail.title || "",
+                              description: `"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
+                              url: shareUrl,
+                              imageUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/images/logo.png`,
+                              buttonTitle: "노래 추가하기",
+                            });
+                          } catch {
+                            // 공유 실패 시 무시
+                          }
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#FEE500] rounded-lg text-sm text-gray-900 hover:bg-[#FDD835] active:bg-[#FBC02D] transition-colors font-medium"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            d="M10 0C4.48 0 0 3.84 0 8.57c0 3.04 1.92 5.72 4.8 7.28l-.96 3.6c-.16.6.48 1.04 1 .72l4.4-2.52c.48.08.96.12 1.48.12 5.52 0 10-3.84 10-8.57C20 3.84 15.52 0 10 0z"
+                            fill="#000000"
+                          />
+                        </svg>
+                        <span>카카오 공유</span>
+                      </button>
+                    </div>
 
-                            {/* 카카오톡으로 공유하기 */}
-                            <button
-                              onClick={async () => {
-                                // 비공개 앨범 체크
-                                if (!album.isPublic) {
-                                  setShowPrivateModal(true);
-                                  return;
-                                }
-                                try {
-                                  const shareUrl = buildAlbumShareUrlFromAlbumInfo({
-                                    id: album.uuid,
-                                    title: album.title || "",
-                                    color: album.color || "#808080",
-                                    description: album.description || "",
-                                    musicCount: album.musicCount || 0,
-                                    musicCountLimit: album.musicCountLimit || 15,
-                                    createdAt: album.createdAt || "",
-                                    isPublic: album.isPublic || true,
-                                  });
-                                  const nickname = user?.nickname ?? "누군가";
-                                  await shareKakaoFeed({
-                                    title: album.title || "",
-                                    description: `"${nickname}"님의 앨범에 노래를 추가해주세요♪`,
-                                    url: shareUrl,
-                                    imageUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/images/logo.png`,
-                                    buttonTitle: "노래 추가하기",
-                                  });
-                                } catch (err) {
-                                  // 공유 실패 처리
-                                }
-                              }}
-                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-[#FEE500] rounded-lg text-sm text-gray-900 hover:bg-[#FDD835] active:bg-[#FBC02D] transition-colors font-medium"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 20 20"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M10 0C4.48 0 0 3.84 0 8.57c0 3.04 1.92 5.72 4.8 7.28l-.96 3.6c-.16.6.48 1.04 1 .72l4.4-2.52c.48.08.96.12 1.48.12 5.52 0 10-3.84 10-8.57C20 3.84 15.52 0 10 0z"
-                                  fill="#000000"
-                                />
-                              </svg>
-                              <span>공유</span>
-                            </button>
-                          </div>
-
-                          <div className="mt-5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsAlbumInfoEditMode(true);
-                                setTempIsPublic(album.isPublic ?? false);
-                              }}
-                              className="w-full py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-900 text-sm font-semibold transition-colors"
-                            >
-                              수정하기
-                            </button>
-                          </div>
-                        </>
-                      );
-                    })()}
+                    <div className="mt-5 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAlbumInfoEditMode(true);
+                          setTempIsPublic(modalAlbumDetail.isPublic);
+                        }}
+                        className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-900 text-sm font-semibold transition-colors"
+                      >
+                        수정하기
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsAlbumInfoOpen(false)}
+                        className="flex-1 py-2.5 px-4 rounded-xl bg-[#006FFF] text-white text-sm font-semibold hover:bg-[#0056CC] active:bg-[#0044AA] transition-colors"
+                      >
+                        닫기
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <>
-                    {(() => {
-                      const album = albums.find(a => a.uuid === selectedAlbumId);
-                      if (!album) return null;
-                      
-                      return (
-                        <>
-                          {/* 공개 여부 수정 폼 */}
-                          <div>
-                            <div className="flex items-center justify-between mb-4">
-                              <label className="text-base font-medium text-gray-900">
-                                공개설정
-                              </label>
-                              <div className="flex items-center gap-3">
-                                {tempIsPublic ? (
-                                  <>
-                                    <span className="text-base text-gray-700">공개</span>
-                                    <HiLockOpen className="w-5 h-5 text-gray-700" />
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="text-base text-gray-700">비공개</span>
-                                    <HiLockClosed className="w-5 h-5 text-gray-700" />
-                                  </>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => setTempIsPublic(!tempIsPublic)}
-                                  disabled={isVisibilityUpdating}
-                                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                    tempIsPublic ? "bg-[#006FFF]" : "bg-gray-300"
-                                  }`}
-                                  role="switch"
-                                  aria-checked={tempIsPublic}
-                                >
-                                  <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                      tempIsPublic ? "translate-x-6" : "translate-x-1"
-                                    }`}
-                                  />
-                                </button>
-                              </div>
-                            </div>
-                            <p className="text-sm text-gray-500 text-left">
-                              {tempIsPublic ? "다른 사용자에게 앨범이 공개됩니다." : "다른 사용자에게 앨범이 공개되지 않습니다."}
-                            </p>
-                          </div>
+                    {/* 공개 여부 수정 폼 (앨범 상세 모달과 동일) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <label className="text-base font-medium text-gray-900">
+                          공개설정
+                        </label>
+                        <div className="flex items-center gap-3">
+                          {tempIsPublic ? (
+                            <>
+                              <span className="text-base text-gray-700">공개</span>
+                              <HiLockOpen className="w-5 h-5 text-gray-700" />
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-base text-gray-700">비공개</span>
+                              <HiLockClosed className="w-5 h-5 text-gray-700" />
+                            </>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setTempIsPublic(!tempIsPublic)}
+                            disabled={isVisibilityUpdating}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                              tempIsPublic ? "bg-[#006FFF]" : "bg-gray-300"
+                            }`}
+                            role="switch"
+                            aria-checked={tempIsPublic}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                tempIsPublic ? "translate-x-6" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500 text-left">
+                        {tempIsPublic
+                          ? "현재는 공개 상태입니다."
+                          : "현재는 비공개 상태입니다."}
+                      </p>
+                    </div>
 
-                          <div className="mt-6 flex gap-2">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (!selectedAlbumId || !album) return;
-                                
-                                setIsVisibilityUpdating(true);
-                                try {
-                                  await updateAlbumVisibility(selectedAlbumId, tempIsPublic);
-                                  // 앨범 목록 업데이트
-                                  setAlbums(prev =>
-                                    prev.map(a =>
-                                      a.uuid === selectedAlbumId ? { ...a, isPublic: tempIsPublic } : a
-                                    )
-                                  );
-                                  setIsAlbumInfoEditMode(false);
-                                  setIsEditMode(false);
-                                } catch (error) {
-                                  // 공개 여부 수정 실패 처리
-                                } finally {
-                                  setIsVisibilityUpdating(false);
-                                }
-                              }}
-                              disabled={isVisibilityUpdating || tempIsPublic === (albums.find(a => a.uuid === selectedAlbumId)?.isPublic)}
-                              className="flex-1 py-2.5 px-4 rounded-xl bg-[#006FFF] text-white text-sm font-semibold hover:bg-[#0056CC] active:bg-[#0044AA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                              {isVisibilityUpdating ? "저장 중..." : "저장"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsAlbumInfoEditMode(false);
-                                setTempIsPublic(album.isPublic ?? false);
-                              }}
-                              disabled={isVisibilityUpdating}
-                              className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 text-sm font-semibold transition-colors"
-                            >
-                              취소
-                            </button>
-                          </div>
-                        </>
-                      );
-                    })()}
+                    <div className="mt-6 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!selectedAlbumId) return;
+                          setIsVisibilityUpdating(true);
+                          try {
+                            await updateAlbumVisibility(selectedAlbumId, tempIsPublic);
+                            const updated = await getAlbum(selectedAlbumId);
+                            setModalAlbumDetail(updated);
+                            setAlbums((prev) =>
+                              prev.map((a) =>
+                                a.uuid === selectedAlbumId ? { ...a, isPublic: tempIsPublic } : a
+                              )
+                            );
+                            setIsAlbumInfoEditMode(false);
+                          } catch {
+                            // 공개 여부 수정 실패
+                          } finally {
+                            setIsVisibilityUpdating(false);
+                          }
+                        }}
+                        disabled={isVisibilityUpdating || tempIsPublic === modalAlbumDetail.isPublic}
+                        className="flex-1 py-2.5 px-4 rounded-xl bg-[#006FFF] text-white text-sm font-semibold hover:bg-[#0056CC] active:bg-[#0044AA] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isVisibilityUpdating ? "저장 중..." : "저장"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAlbumInfoEditMode(false);
+                          setTempIsPublic(modalAlbumDetail.isPublic);
+                        }}
+                        disabled={isVisibilityUpdating}
+                        className="flex-1 py-2.5 px-4 rounded-xl bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 text-sm font-semibold transition-colors"
+                      >
+                        취소
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
