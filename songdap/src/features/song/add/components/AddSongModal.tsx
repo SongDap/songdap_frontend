@@ -327,7 +327,7 @@ export default function AddSongModal({
                       value={messageData.writer}
                       onChange={(e) => handleMessageDataChange("writer", e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
-                      placeholder="닉네임을 입력하세요"
+                      placeholder="닉네임을 입력하지 않으면 익명으로 표시됩니다"
                     />
                   </div>
 
@@ -341,7 +341,7 @@ export default function AddSongModal({
                       onChange={(e) => handleMessageDataChange("message", e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF] resize-none"
                       rows={4}
-                      placeholder="전하고 싶은 메시지를 입력하세요"
+                      placeholder="메시지를 입력하세요&#10;메시지가 모든 사용자에게 표시됩니다."
                     />
                   </div>
                 </form>
