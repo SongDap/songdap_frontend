@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { HiMail, HiMusicNote, HiTrash, HiInformationCircle, HiX, HiChevronDown, HiLockOpen, HiLockClosed } from "react-icons/hi";
-import { HiArrowRightOnRectangle } from "react-icons/hi2";
+import { HiArrowPath } from "react-icons/hi2";
 
 import { getAlbum, updateAlbumVisibility } from "@/features/album/api";
 import { getAlbumMusics, deleteMusic } from "@/features/song/api";
@@ -118,7 +118,6 @@ export default function AlbumDetailContent({ id }: { id: string }) {
 
   const playerListRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const autoPlayDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const albumQuery = useQuery<AlbumResponse>({
     queryKey: ["album", albumUuid],
@@ -325,19 +324,12 @@ export default function AlbumDetailContent({ id }: { id: string }) {
       const prevIdx = (idx - 1 + musics.length) % musics.length;
 
       if (triggerAutoPlay) {
-        if (autoPlayDelayTimerRef.current) {
-          clearTimeout(autoPlayDelayTimerRef.current);
-          autoPlayDelayTimerRef.current = null;
-        }
         setIsAutoPlayPending(true);
         handleSelectSong(musics[prevIdx], false, false);
-        autoPlayDelayTimerRef.current = setTimeout(() => {
-          autoPlayDelayTimerRef.current = null;
-          setIsAutoPlayPending(false);
-          setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
-        }, 3000);
+        setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
       } else {
         handleSelectSong(musics[prevIdx], false, false);
+        setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
       }
     },
     [currentSong, musics, handleSelectSong]
@@ -351,32 +343,16 @@ export default function AlbumDetailContent({ id }: { id: string }) {
       const nextIdx = (idx + 1) % musics.length;
 
       if (triggerAutoPlay) {
-        if (autoPlayDelayTimerRef.current) {
-          clearTimeout(autoPlayDelayTimerRef.current);
-          autoPlayDelayTimerRef.current = null;
-        }
         setIsAutoPlayPending(true);
         handleSelectSong(musics[nextIdx], false, false);
-        autoPlayDelayTimerRef.current = setTimeout(() => {
-          autoPlayDelayTimerRef.current = null;
-          setIsAutoPlayPending(false);
-          setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
-        }, 3000);
+        setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
       } else {
         handleSelectSong(musics[nextIdx], false, false);
+        setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
       }
     },
     [currentSong, musics, handleSelectSong]
   );
-
-  useEffect(() => {
-    return () => {
-      if (autoPlayDelayTimerRef.current) {
-        clearTimeout(autoPlayDelayTimerRef.current);
-        autoPlayDelayTimerRef.current = null;
-      }
-    };
-  }, []);
 
   // 편지 탭에서는 하단 플레이어 바만 숨김 (선택 곡은 유지해서 다시 돌아왔을 때 그대로 활성화)
 
@@ -732,7 +708,7 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                               : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                           }`}
                         >
-                          <HiArrowRightOnRectangle className="w-4 h-4 md:w-5 md:h-5" />
+                          <HiArrowPath className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                       </div>
 
@@ -957,6 +933,8 @@ export default function AlbumDetailContent({ id }: { id: string }) {
           onAutoPlayNextFailed={() => setShowAutoPlayFailedModal(true)}
           autoPlayNext={isAutoPlayMode}
           isPlayButtonDisabled={isAutoPlayPending}
+          onPlayPending={setIsAutoPlayPending}
+          playDelayMs={isAutoPlayMode ? 1000 : 500}
           expandTrigger={expandTrigger}
           autoPlayTrigger={autoPlayTrigger}
         />
