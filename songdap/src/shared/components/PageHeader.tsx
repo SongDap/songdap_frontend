@@ -220,9 +220,6 @@ export default function PageHeader({
       <header
         className="w-full"
         style={headerBackground}
-        onClick={() => {
-          if (profileMenuOpen) setProfileMenuOpen(false);
-        }}
       >
         <div className="w-full" style={headerOverlay}>
           {/* PC 헤더 - 뒤로가기 */}
