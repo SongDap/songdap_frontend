@@ -195,15 +195,12 @@ export default function AlbumCard({
             />
           )}
 
-          {/* 오른쪽 위 자물쇠 아이콘 + 곡 개수 */}
-          <div className="absolute top-2 right-2 flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
-            {!isPublic && (
+          {/* 오른쪽 위 자물쇠 아이콘 (비공개일 때만) */}
+          {!isPublic && (
+            <div className="absolute top-2 right-2 flex items-center px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
               <HiLockClosed className="w-4 h-4 text-gray-700" />
-            )}
-            <span className="text-sm text-gray-700">
-              {typeof musicCountLimit === "number" ? `${songCount}/${musicCountLimit}곡` : `${songCount}곡`}
-            </span>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* 앨범 정보 */}

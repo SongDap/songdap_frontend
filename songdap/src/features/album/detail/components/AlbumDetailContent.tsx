@@ -824,10 +824,15 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                                     onDelete={isOwner === true ? () => {
                                       if (confirm(`${music.artist}의 "${music.title}"을 삭제하시겠습니까?`)) {
                                         deleteMusic(music.uuid)
-                                          .then(() => {
-                                            albumQuery.refetch();
-                                            musicsQuery.refetch();
+                                          .then(async () => {
                                             setCurrentSong(null);
+                                            await Promise.all([albumQuery.refetch(), musicsQuery.refetch()]);
+                                            // 리스트 갱신 후 포커스가 다음 카드로 넘어가며 확장뷰가 열리는 것 방지
+                                            if (typeof requestAnimationFrame !== "undefined") {
+                                              requestAnimationFrame(() => {
+                                                (document.activeElement as HTMLElement)?.blur();
+                                              });
+                                            }
                                           })
                                           .catch(() => {
                                             alert("노래 삭제 중 오류가 발생했습니다.");
