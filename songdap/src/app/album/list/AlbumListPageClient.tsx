@@ -8,7 +8,7 @@ import Link from "next/link";
 import { ROUTES } from "@/shared/lib";
 import { AlbumCard } from "@/features/album/list/components";
 import { HiChevronLeft, HiChevronRight, HiPencil, HiX, HiLockOpen, HiLockClosed, HiLink } from "react-icons/hi";
-import { getAlbums, getAlbum, deleteAlbum, updateAlbumVisibility, type AlbumListItem } from "@/features/album/api";
+import { getAlbums, deleteAlbum, updateAlbumVisibility, type AlbumListItem } from "@/features/album/api";
 import { AlbumCover } from "@/shared/ui";
 import { buildAlbumShareUrlFromAlbumInfo } from "@/shared/lib/songAddLink";
 import { shareKakaoFeed } from "@/shared/lib/kakaoShare";
@@ -64,40 +64,6 @@ export default function AlbumListPageClient() {
       makeListUrl: makeAlbumListUrl,
     });
 
-  // 앨범 데이터 포맷팅 헬퍼 함수
-  const enrichAlbumData = (baseItems: AlbumListItem[], detailResults: PromiseSettledResult<any>[]): AlbumListItemEnriched[] => {
-    const detailMap = new Map<string, any>();
-    const forbiddenSet = new Set<string>();
-
-    detailResults.forEach((r) => {
-      if (r.status === "fulfilled" && r.value?.uuid) {
-        detailMap.set(r.value.uuid, r.value);
-        return;
-      }
-      if (r.status === "rejected") {
-        const idx = detailResults.indexOf(r);
-        const albumUuid = baseItems[idx]?.uuid;
-        if (albumUuid && isAxiosStatus(r.reason, 403)) {
-          forbiddenSet.add(albumUuid);
-        }
-      }
-    });
-
-    return baseItems.map((a) => {
-      const d = detailMap.get(a.uuid);
-      return {
-        ...a,
-        title: d?.title ?? a.title,
-        color: d?.color ?? a.color,
-        description: d?.description,
-        isPublic: d?.isPublic ?? (forbiddenSet.has(a.uuid) ? false : undefined),
-        musicCount: d?.musicCount,
-        musicCountLimit: d?.musicCountLimit,
-        createdAt: d?.createdAt,
-      };
-    });
-  };
-
   // 앨범 삭제 헬퍼 함수
   const handleAlbumDelete = async (id: string) => {
     try {
@@ -109,9 +75,9 @@ export default function AlbumListPageClient() {
 
       const pageData = await getAlbums(currentSortApi, currentPageNum - 1, itemsPerPage);
       const base = pageData.content ?? [];
-      const details = await Promise.allSettled(base.map((a) => getAlbum(a.uuid)));
       
-      setAlbums(enrichAlbumData(base, details));
+      // getAlbums API에서 이미 필요한 정보를 제공하므로 추가 호출 제거 (N+1 방지)
+      setAlbums(base as AlbumListItemEnriched[]);
       setTotalElements(pageData.totalElements);
       setTotalPages(pageData.totalPages);
       setIsEditMode(false);
@@ -142,14 +108,11 @@ export default function AlbumListPageClient() {
         // 백엔드 API는 0부터 시작하는 페이지 번호를 사용하므로 page - 1
         const pageData = await getAlbums(sortApi, page - 1, itemsPerPage);
 
-        // 목록 API가 간소화되어 있으면, 카드 표시용으로 상세를 추가 로드
+        // getAlbums API에서 이미 필요한 정보를 제공하므로 추가 호출 제거 (N+1 방지)
         const baseItems = pageData.content ?? [];
-        const detailResults = await Promise.allSettled(baseItems.map((a) => getAlbum(a.uuid)));
-
-        const enriched = enrichAlbumData(baseItems, detailResults);
 
         if (fetchSeqRef.current === seq) {
-          setAlbums(enriched);
+          setAlbums(baseItems as AlbumListItemEnriched[]);
         }
         if (baseItems.length > 0) {
           trackEvent(

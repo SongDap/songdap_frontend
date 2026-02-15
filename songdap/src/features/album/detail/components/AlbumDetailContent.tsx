@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { HiMail, HiMusicNote, HiTrash, HiInformationCircle, HiX, HiChevronDown, HiLockOpen, HiLockClosed } from "react-icons/hi";
 
 import { getAlbum, updateAlbumVisibility } from "@/features/album/api";
-import { getAlbumMusics, getMusicDetail, deleteMusic } from "@/features/song/api";
+import { getAlbumMusics, deleteMusic } from "@/features/song/api";
 import type { AlbumResponse } from "@/features/album/api";
 import type { MusicInfo, MusicSortOption } from "@/features/song/api";
 import { SongCard } from "@/features/song/add/components";
@@ -48,23 +48,15 @@ function SongLetterItem({
   enabled: boolean;
   isOwner: boolean | null;
 }) {
-  const detailQuery = useQuery({
-    queryKey: ["musicDetail", music.uuid],
-    queryFn: () => getMusicDetail(music.uuid),
-    enabled,
-    staleTime: 1000 * 60 * 10,
-  });
-
-  const detail = detailQuery.data?.musics;
-
+  // 이미 충분한 정보가 MusicInfo에 있으므로 추가 API 호출 제거
   return (
     <div className="w-full">
       <SongLetter
-        title={detail?.title ?? music.title}
-        artist={(detail?.artist ?? music.artist) ?? ""}
-        imageUrl={detail?.image ?? (music.image ?? null)}
-        message={detail?.message ?? music.message ?? undefined}
-        nickname={detail?.writer ?? music.writer}
+        title={music.title}
+        artist={music.artist ?? ""}
+        imageUrl={music.image ?? null}
+        message={music.message ?? undefined}
+        nickname={music.writer}
         date={todayLabel}
         tapeColor={tapeColor}
         isOwner={isOwner}
@@ -83,9 +75,13 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   const [isSongAddModalOpen, setIsSongAddModalOpen] = useState(false);
   const [expandTrigger, setExpandTrigger] = useState<number | undefined>(undefined);
   const [autoPlayTrigger, setAutoPlayTrigger] = useState<number | undefined>(undefined);
+  const [isAutoPlayMode, setIsAutoPlayMode] = useState(false);
+  const [isAutoPlayPending, setIsAutoPlayPending] = useState(false);
+  const [showAutoPlayFailedModal, setShowAutoPlayFailedModal] = useState(false);
 
   const playerListRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const autoPlayDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const albumQuery = useQuery<AlbumResponse>({
     queryKey: ["album", albumUuid],
@@ -272,31 +268,78 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   }, [getVideoIdFromUrl]);
 
   const handleSelectSong = useCallback(
-    (music: MusicInfo, openExpanded = true) => {
+    (music: MusicInfo, openExpanded = true, autoPlay = false) => {
       setCurrentSong(toCurrentSong(music));
       if (openExpanded) {
         setExpandTrigger((prev) => (prev ?? 0) + 1);
+        setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
+      } else if (autoPlay) {
         setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
       }
     },
     [toCurrentSong]
   );
 
-  const handlePrevious = useCallback(() => {
-    if (!currentSong || musics.length === 0) return;
-    const idx = musics.findIndex((m) => m.uuid === currentSong.uuid);
-    if (idx < 0) return;
-    const prevIdx = (idx - 1 + musics.length) % musics.length;
-    handleSelectSong(musics[prevIdx], false);
-  }, [currentSong, musics, handleSelectSong]);
+  const handlePrevious = useCallback(
+    (triggerAutoPlay = false) => {
+      if (!currentSong || musics.length === 0) return;
+      const idx = musics.findIndex((m) => m.uuid === currentSong.uuid);
+      if (idx < 0) return;
+      const prevIdx = (idx - 1 + musics.length) % musics.length;
 
-  const handleNext = useCallback(() => {
-    if (!currentSong || musics.length === 0) return;
-    const idx = musics.findIndex((m) => m.uuid === currentSong.uuid);
-    if (idx < 0) return;
-    const nextIdx = (idx + 1) % musics.length;
-    handleSelectSong(musics[nextIdx], false);
-  }, [currentSong, musics, handleSelectSong]);
+      if (triggerAutoPlay) {
+        if (autoPlayDelayTimerRef.current) {
+          clearTimeout(autoPlayDelayTimerRef.current);
+          autoPlayDelayTimerRef.current = null;
+        }
+        setIsAutoPlayPending(true);
+        handleSelectSong(musics[prevIdx], false, false);
+        autoPlayDelayTimerRef.current = setTimeout(() => {
+          autoPlayDelayTimerRef.current = null;
+          setIsAutoPlayPending(false);
+          setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
+        }, 3000);
+      } else {
+        handleSelectSong(musics[prevIdx], false, false);
+      }
+    },
+    [currentSong, musics, handleSelectSong]
+  );
+
+  const handleNext = useCallback(
+    (triggerAutoPlay = false) => {
+      if (!currentSong || musics.length === 0) return;
+      const idx = musics.findIndex((m) => m.uuid === currentSong.uuid);
+      if (idx < 0) return;
+      const nextIdx = (idx + 1) % musics.length;
+
+      if (triggerAutoPlay) {
+        if (autoPlayDelayTimerRef.current) {
+          clearTimeout(autoPlayDelayTimerRef.current);
+          autoPlayDelayTimerRef.current = null;
+        }
+        setIsAutoPlayPending(true);
+        handleSelectSong(musics[nextIdx], false, false);
+        autoPlayDelayTimerRef.current = setTimeout(() => {
+          autoPlayDelayTimerRef.current = null;
+          setIsAutoPlayPending(false);
+          setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
+        }, 3000);
+      } else {
+        handleSelectSong(musics[nextIdx], false, false);
+      }
+    },
+    [currentSong, musics, handleSelectSong]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (autoPlayDelayTimerRef.current) {
+        clearTimeout(autoPlayDelayTimerRef.current);
+        autoPlayDelayTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // 편지 탭에서는 하단 플레이어 바만 숨김 (선택 곡은 유지해서 다시 돌아왔을 때 그대로 활성화)
 
@@ -604,30 +647,52 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                   {/* 상단 헤더: 탭(플레이어/편지) + 정렬 필터 (같은 Y축) */}
                   <div className="flex items-center justify-center px-4 pt-3 pb-2 flex-shrink-0">
                     <div className="w-full flex items-center justify-between gap-2">
-                      {/* 뷰 모드 토글 */}
-                      <div className="inline-flex p-1 rounded-full bg-gray-200 flex-shrink-0">
-                        <button
-                          onClick={() => setViewMode("player")}
-                          className={`p-2 md:p-2.5 rounded-full transition-colors ${
-                            viewMode === "player"
-                              ? "bg-[#006FFF] text-white shadow-sm"
-                              : "text-gray-500 hover:text-gray-700"
-                          }`}
-                          aria-label="뮤직플레이어"
-                        >
-                          <HiMusicNote className="w-4 h-4 md:w-5 md:h-5" />
-                        </button>
-                        <button
-                          onClick={() => setViewMode("letter")}
-                          className={`p-2 md:p-2.5 rounded-full transition-colors ${
-                            viewMode === "letter"
-                              ? "bg-[#006FFF] text-white shadow-sm"
-                              : "text-gray-500 hover:text-gray-700"
-                          }`}
-                          aria-label="편지"
-                        >
-                          <HiMail className="w-4 h-4 md:w-5 md:h-5" />
-                        </button>
+                      {/* 뷰 모드 토글 + 연속 재생 */}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="inline-flex p-1 rounded-full bg-gray-200">
+                          <button
+                            onClick={() => setViewMode("player")}
+                            className={`p-2 md:p-2.5 rounded-full transition-colors ${
+                              viewMode === "player"
+                                ? "bg-[#006FFF] text-white shadow-sm"
+                                : "text-gray-500 hover:text-gray-700"
+                            }`}
+                            aria-label="뮤직플레이어"
+                          >
+                            <HiMusicNote className="w-4 h-4 md:w-5 md:h-5" />
+                          </button>
+                          <button
+                            onClick={() => setViewMode("letter")}
+                            className={`p-2 md:p-2.5 rounded-full transition-colors ${
+                              viewMode === "letter"
+                                ? "bg-[#006FFF] text-white shadow-sm"
+                                : "text-gray-500 hover:text-gray-700"
+                            }`}
+                            aria-label="편지"
+                          >
+                            <HiMail className="w-4 h-4 md:w-5 md:h-5" />
+                          </button>
+                        </div>
+
+                        {/* 연속 재생 토글 */}
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <span className="text-xs text-gray-600 whitespace-nowrap">연속 재생</span>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isAutoPlayMode}
+                            onClick={() => setIsAutoPlayMode((v) => !v)}
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2 ${
+                              isAutoPlayMode ? "bg-[#006FFF]" : "bg-gray-300"
+                            }`}
+                          >
+                            <span
+                              className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-out ${
+                                isAutoPlayMode ? "left-[22px]" : "left-0.5"
+                              }`}
+                            />
+                          </button>
+                        </label>
                       </div>
 
                       {/* 노래 추가 버튼 및 정렬 드롭다운 */}
@@ -816,6 +881,17 @@ export default function AlbumDetailContent({ id }: { id: string }) {
         </div>
       </div>
 
+      {/* 3초 대기 중 토스트 */}
+      {isAutoPlayPending && currentSong && viewMode === "player" && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 bottom-24 z-[95] px-4 py-2.5 rounded-full bg-gray-900/90 text-white text-sm font-medium shadow-lg"
+          role="status"
+          aria-live="polite"
+        >
+          재생 중입니다. 잠시 기다려주세요.
+        </div>
+      )}
+
       {/* 하단 플레이어(편지 탭에서는 숨김) */}
       {currentSong && (
         <MusicPlayer
@@ -829,11 +905,59 @@ export default function AlbumDetailContent({ id }: { id: string }) {
           hideUI={viewMode !== "player"}
           isOwner={isOwner}
           onClose={() => setCurrentSong(null)}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
+          onPrevious={() => handlePrevious(isAutoPlayMode)}
+          onNext={() => handleNext(isAutoPlayMode)}
+          onNextAndPlay={() => handleNext(true)}
+          onAutoPlayNextFailed={() => setShowAutoPlayFailedModal(true)}
+          autoPlayNext={isAutoPlayMode}
+          isPlayButtonDisabled={isAutoPlayPending}
           expandTrigger={expandTrigger}
           autoPlayTrigger={autoPlayTrigger}
         />
+      )}
+
+      {/* 연속 재생 중 다음 곡 재생 실패 시 모달 */}
+      {showAutoPlayFailedModal && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 z-[110]"
+            onClick={() => {
+              setShowAutoPlayFailedModal(false);
+              setIsAutoPlayMode(false);
+            }}
+            aria-hidden
+          />
+          <div
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-2xl shadow-xl z-[120] p-6 mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-center text-gray-900 font-medium mb-5">
+              다음 곡 재생에 실패했어요.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAutoPlayFailedModal(false);
+                  handleNext(true);
+                }}
+                className="w-full py-3 rounded-xl bg-[#006FFF] text-white font-semibold hover:bg-[#0056CC]"
+              >
+                다음 곡 재생
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAutoPlayFailedModal(false);
+                  setIsAutoPlayMode(false);
+                }}
+                className="w-full py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200"
+              >
+                연속 재생 취소
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* 노래 추가 모달 */}
