@@ -61,7 +61,24 @@ function KakaoCallbackContent() {
     loginWithKakao(code)
       .then((data) => {
         loginFunction(data);
-        const nextPath = data?.newMember ? "/signup" : ROUTES.ALBUM.LIST;
+        if (data?.newMember) {
+          router.replace("/signup");
+          return;
+        }
+        // state에 저장된 복귀 경로가 있으면 그대로 앨범 상세 등 유지
+        const stateParam = searchParams.get("state");
+        let nextPath = ROUTES.ALBUM.LIST;
+        if (stateParam) {
+          try {
+            const decoded = decodeURIComponent(stateParam);
+            // Open redirect 방지: /로 시작하고 // 또는 프로토콜 없음
+            if (decoded.startsWith("/") && !decoded.startsWith("//") && !decoded.includes(":")) {
+              nextPath = decoded;
+            }
+          } catch {
+            // state 파싱 실패 시 기본값 유지
+          }
+        }
         router.replace(nextPath);
       })
       .catch((error) => {

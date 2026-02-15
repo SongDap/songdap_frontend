@@ -67,9 +67,14 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+const AUTH_LOG = "[Auth]";
+
 const handleAuthExpired = () => {
   if (typeof window === "undefined") return;
+  console.log(AUTH_LOG, "세션 만료 처리 → 모달 표시 + 로컬 정리");
   showAuthExpired();
+  // 프로필/헤더가 즉시 반영되도록 이벤트로 알림 (useOauthStore는 axios에서 직접 import 시 순환 참조)
+  window.dispatchEvent(new CustomEvent("auth:expired"));
 };
 
 //
@@ -123,9 +128,11 @@ apiClient.interceptors.response.use(
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
+      console.log(AUTH_LOG, "Access Token 만료 감지(401) → 토큰 재발급 시도", { url: originalRequest?.url });
 
       // 이미 refresh 중이면 대기열에 추가
       if (isRefreshing) {
+        console.log(AUTH_LOG, "이미 재발급 중 → 요청 대기열에 추가");
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(() => {
@@ -144,6 +151,8 @@ apiClient.interceptors.response.use(
           undefined,
           { __skipAuthRefresh: true } as any
         );
+
+        console.log(AUTH_LOG, "토큰 재발급 성공 → 원래 요청 재시도");
 
         // 토큰 리프레쉬 후 사용자 정보 동기화 필요
         // (Zustand 상태가 유효한지 확인하고 필요시 업데이트)
@@ -179,6 +188,7 @@ apiClient.interceptors.response.use(
 
       } catch (refreshError) {
         // Refresh Token도 만료
+        console.log(AUTH_LOG, "Refresh Token 만료(재발급 실패) → 세션 만료 처리");
         processQueue(refreshError, null);
 
         // 로그아웃 API 호출(최선) + 로컬 상태 정리 후 홈으로 이동
@@ -205,6 +215,7 @@ apiClient.interceptors.response.use(
     // 사용자에게 재로그인/홈 선택을 제공
     if (error.response?.status === 401 && originalRequest?._retry) {
       if (!originalRequest.__skipAuthExpired) {
+        console.log(AUTH_LOG, "재발급 후에도 401 → 세션 만료 처리");
         handleAuthExpired();
       }
     }
@@ -213,6 +224,7 @@ apiClient.interceptors.response.use(
     // 이 경우에도 동일하게 재로그인/홈 선택 제공.
     if (error.response?.status === 403) {
       if (!originalRequest.__skipAuthExpired) {
+        console.log(AUTH_LOG, "403 권한 없음 → 세션 만료 처리");
         handleAuthExpired();
       }
     }

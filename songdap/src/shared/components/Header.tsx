@@ -195,11 +195,10 @@ export default function Header() {
       );
     } else if (isProfileEditPage) {
       return (
-        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto relative">
+        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto">
           <Link href="/">
             <img src="/images/logo.png" alt="logo" className="h-16 w-auto object-contain" />
           </Link>
-          <span className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900">프로필 편집</span>
           <ProfileMenu
             isAuthenticated={isAuthenticated}
             profileMenuOpen={profileMenuOpen}
@@ -214,11 +213,10 @@ export default function Header() {
       );
     } else if (isWithdrawPage) {
       return (
-        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto relative">
+        <div className="hidden md:flex h-[95px] px-20 items-center justify-between max-w-[1440px] mx-auto">
           <Link href="/">
             <img src="/images/logo.png" alt="logo" className="h-16 w-auto object-contain" />
           </Link>
-          <span className="absolute left-1/2 transform -translate-x-1/2 text-2xl font-bold text-gray-900">회원 탈퇴</span>
           <ProfileMenu
             isAuthenticated={isAuthenticated}
             profileMenuOpen={profileMenuOpen}
@@ -285,7 +283,6 @@ export default function Header() {
           <Link href="/">
             <img src="/images/logo.png" alt="logo" className="h-10 w-auto object-contain" />
           </Link>
-          <span className="text-lg font-semibold text-gray-900">프로필 편집</span>
           <ProfileMenu
             isAuthenticated={isAuthenticated}
             profileMenuOpen={profileMenuOpen}
@@ -304,7 +301,6 @@ export default function Header() {
           <Link href="/">
             <img src="/images/logo.png" alt="logo" className="h-10 w-auto object-contain" />
           </Link>
-          <span className="text-lg font-semibold text-gray-900">회원 탈퇴</span>
           <ProfileMenu
             isAuthenticated={isAuthenticated}
             profileMenuOpen={profileMenuOpen}
