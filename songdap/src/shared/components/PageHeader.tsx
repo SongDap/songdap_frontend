@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { HiLockClosed } from "react-icons/hi";
 import { useOauthStore } from "@/features/oauth/model/useOauthStore";
 import { ROUTES } from "@/shared/lib/routes";
@@ -52,6 +52,8 @@ export default function PageHeader({
   showLogo = false,
 }: PageHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const user = useOauthStore((s) => s.user);
   const logout = useOauthStore((s) => s.logout);
   const isAuthenticated = useOauthStore((s) => s.isAuthenticated);
@@ -67,10 +69,13 @@ export default function PageHeader({
 
   const allProfileRefs = [profileMenuRefPcBack, profileMenuRefPcLogo, profileMenuRefMobBack, profileMenuRefMobLogo];
 
-  // 카카오 로그인 URL
+  // 로그인 후 돌아올 URL (앨범 상세 등 현재 페이지 유지)
+  const returnPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
+
+  // 카카오 로그인 URL (state에 복귀 경로 전달)
   const JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY;
   const REDIRECT_URI = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI;
-  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+  const kakaoURL = `https://kauth.kakao.com/oauth/authorize?client_id=${JAVASCRIPT_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code&state=${encodeURIComponent(returnPath)}`;
 
   const handleLogin = () => {
     if (!JAVASCRIPT_KEY || !REDIRECT_URI) {
