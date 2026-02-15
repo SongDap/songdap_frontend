@@ -30,6 +30,7 @@ export function useAlbumDetail(albumUuid: string) {
   const playerListRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
+  const prevViewModeRef = useRef<ViewMode>("player");
 
   const albumQuery = useQuery<AlbumResponse>({
     queryKey: ["album", albumUuid],
@@ -228,6 +229,14 @@ export function useAlbumDetail(albumUuid: string) {
     handleSelectSong(musics[0], false);
   }, [viewMode, currentSong, musics, handleSelectSong]);
 
+  // 편지 탭에서 플레이어 탭으로 돌아왔을 때 현재 곡 재생
+  useEffect(() => {
+    if (prevViewModeRef.current === "letter" && viewMode === "player" && currentSong) {
+      setAutoPlayTrigger((prev) => (prev ?? 0) + 1);
+    }
+    prevViewModeRef.current = viewMode;
+  }, [viewMode, currentSong]);
+
   // 선택 곡 자동 스크롤
   useEffect(() => {
     if (viewMode !== "player" || !currentSong) return;
@@ -282,6 +291,7 @@ export function useAlbumDetail(albumUuid: string) {
     isAlbumInfoOpen,
     setIsAlbumInfoOpen,
     isAlbumInfoEditMode,
+    setIsAlbumInfoEditMode,
     tempIsPublic,
     setTempIsPublic,
     isVisibilityUpdating,

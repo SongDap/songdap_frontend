@@ -88,13 +88,8 @@ export default function MusicPlayer({
     prevSongKeyRef.current = songKey;
   }, [title, artist, videoId, autoPlayTrigger, onPlayPending]);
 
-  // 카드의 "재생" 버튼에서 확장뷰를 열고 자동 재생을 트리거하기 위한 로직
+  // 카드의 "재생" 버튼 / 연속 재생(편지 탭 포함) 등에서 자동 재생을 트리거 (hideUI여도 편지 탭에서 다음 곡 자동 재생 위해 실행)
   useLayoutEffect(() => {
-    if (hideUI) {
-      prevAutoPlayTriggerRef.current = autoPlayTrigger;
-      return;
-    }
-
     // 초기 마운트 시 autoPlayTrigger가 undefined이면 무시
     if (prevAutoPlayTriggerRef.current === undefined && autoPlayTrigger === undefined) {
       prevAutoPlayTriggerRef.current = autoPlayTrigger;
@@ -127,7 +122,7 @@ export default function MusicPlayer({
     }
 
     prevAutoPlayTriggerRef.current = autoPlayTrigger;
-  }, [autoPlayTrigger, videoId, hideUI, onPlayPending, playDelayMs]);
+  }, [autoPlayTrigger, videoId, onPlayPending, playDelayMs]);
 
   useEffect(() => {
     return () => {
