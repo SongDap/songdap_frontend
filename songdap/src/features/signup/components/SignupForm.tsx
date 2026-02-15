@@ -69,10 +69,20 @@ export function SignupForm() {
         if (!isValid || isSubmitting) return;
         setIsSubmitting(true);
         try {
+            let profileImageFileToSend = profileImageFile ?? undefined;
+            if (!profileImageFileToSend) {
+                try {
+                    const res = await fetch("/images/profile_img.png");
+                    const blob = await res.blob();
+                    profileImageFileToSend = new File([blob], "profile_img.png", { type: blob.type || "image/png" });
+                } catch {
+                    // 기본 이미지 로드 실패 시 파일 없이 전송
+                }
+            }
             const payload = {
                 nickname: nickname.trim(),
                 email: email.trim() || undefined,
-                profileImageFile: profileImageFile || undefined,
+                profileImageFile: profileImageFileToSend,
                 agreeAge,
                 agreeTerms,
             } as any;

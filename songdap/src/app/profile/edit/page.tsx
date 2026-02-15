@@ -67,7 +67,20 @@ export default function ProfileEditPage() {
             initialNickname={initialNickname}
             initialProfileImage={initialProfileImage}
             onSubmit={async (payload) => {
-              const updated = await updateProfile(payload);
+              let profileImageFile = payload.profileImageFile;
+              if (payload.useDefaultProfileImage) {
+                try {
+                  const res = await fetch("/images/profile_img.png");
+                  const blob = await res.blob();
+                  profileImageFile = new File([blob], "profile_img.png", { type: blob.type || "image/png" });
+                } catch {
+                  // 기본 이미지 로드 실패 시 파일 없이 전송
+                }
+              }
+              const updated = await updateProfile({
+                nickname: payload.nickname,
+                profileImageFile,
+              });
 
               // 완료 이벤트 추적
               trackEvent(

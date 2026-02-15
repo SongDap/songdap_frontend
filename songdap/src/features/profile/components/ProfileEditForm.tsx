@@ -10,6 +10,8 @@ type ProfileEditPayload = {
   nickname: string;
   email?: string;
   profileImageFile?: File;
+  /** true면 기본 이미지(profile_img.png) 파일로 전송 */
+  useDefaultProfileImage?: boolean;
 };
 
 type ProfileEditFormProps = {
@@ -46,8 +48,8 @@ export default function ProfileEditForm({
     try {
       await onSubmit({
         nickname: nickname.trim(),
-        // 기본 이미지로 설정이면 파일 없이 전송 (회원가입 시 미설정과 동일)
-        profileImageFile: useDefaultProfileImage ? undefined : (profileImageFile || undefined),
+        profileImageFile: profileImageFile || undefined,
+        useDefaultProfileImage: useDefaultProfileImage || undefined,
       });
     } finally {
       setIsSubmitting(false);

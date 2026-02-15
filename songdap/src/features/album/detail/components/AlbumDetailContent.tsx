@@ -427,13 +427,26 @@ export default function AlbumDetailContent({ id }: { id: string }) {
   }
   const backHref = makeAlbumListUrl(parseAlbumListQuery(searchParams));
 
+  const currentSongIndex = currentSong
+    ? musics.findIndex((m) => m.uuid === currentSong.uuid) + 1
+    : 0;
+  const totalSongCount = album.musicCount ?? 0;
+  const headerTitle = (
+    <div className="flex flex-col items-center justify-center gap-0.5">
+      <span className="text-xs text-gray-600">
+        ({currentSongIndex}/{totalSongCount})
+      </span>
+      <span className="line-clamp-2 text-center">{album.title}</span>
+    </div>
+  );
+
   return (
     <div 
       className="flex flex-col h-screen overflow-hidden"
     >
       <div className="flex-shrink-0">
         <PageHeader
-          title={album.title}
+          title={headerTitle}
           isPublic={album.isPublic}
           showBackButton={isOwner === true}
           showLogo={isOwner !== true}
