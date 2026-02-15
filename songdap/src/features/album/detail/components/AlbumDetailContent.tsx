@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { HiMail, HiMusicNote, HiTrash, HiInformationCircle, HiX, HiChevronDown, HiLockOpen, HiLockClosed } from "react-icons/hi";
+import { HiArrowRightOnRectangle } from "react-icons/hi2";
 
 import { getAlbum, updateAlbumVisibility } from "@/features/album/api";
 import { getAlbumMusics, deleteMusic } from "@/features/song/api";
@@ -718,25 +719,21 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                           </button>
                         </div>
 
-                        {/* 연속 재생 토글 */}
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
-                          <span className="text-xs text-gray-600 whitespace-nowrap">연속 재생</span>
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={isAutoPlayMode}
-                            onClick={() => setIsAutoPlayMode((v) => !v)}
-                            className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2 ${
-                              isAutoPlayMode ? "bg-[#006FFF]" : "bg-gray-300"
-                            }`}
-                          >
-                            <span
-                              className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ease-out ${
-                                isAutoPlayMode ? "left-[22px]" : "left-0.5"
-                              }`}
-                            />
-                          </button>
-                        </label>
+                        {/* 연속 재생 토글 (아이콘만) */}
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={isAutoPlayMode}
+                          aria-label="연속 재생"
+                          onClick={() => setIsAutoPlayMode((v) => !v)}
+                          className={`p-2 md:p-2.5 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#006FFF] focus:ring-offset-2 ${
+                            isAutoPlayMode
+                              ? "bg-[#006FFF] text-white shadow-sm"
+                              : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          <HiArrowRightOnRectangle className="w-4 h-4 md:w-5 md:h-5" />
+                        </button>
                       </div>
 
                       {/* 노래 추가 버튼 및 정렬 드롭다운 */}
