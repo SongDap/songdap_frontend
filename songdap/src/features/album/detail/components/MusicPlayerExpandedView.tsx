@@ -341,32 +341,16 @@ export default function MusicPlayerExpandedView({
           className={controlButtonClassName}
           aria-label="유튜브"
         >
-          {showMiniVideo && videoId ? (
-            <div
-              className="relative overflow-hidden rounded-lg"
-              style={iconStyle}
-              aria-hidden
-            >
-              <img
-                src={`https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`}
-                alt="유튜브 미리보기"
-                className="w-full h-full object-cover"
-                style={iconStyle}
-              />
-              <div className="absolute inset-0 bg-black/10" />
-            </div>
-          ) : (
-            <svg
-              width={iconSize}
-              height={iconSize}
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="text-red-500"
-            >
-              <rect x="2" y="4" width="20" height="16" rx="2" ry="2" fill="#EF4444" />
-              <polygon points="9,8 9,16 16,12" fill="white" />
-            </svg>
-          )}
+          <svg
+            width={iconSize}
+            height={iconSize}
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="text-red-500"
+          >
+            <rect x="2" y="4" width="20" height="16" rx="2" ry="2" fill="#EF4444" />
+            <polygon points="9,8 9,16 16,12" fill="white" />
+          </svg>
         </button>
 
         {/* 이전곡 버튼 */}
@@ -381,19 +365,26 @@ export default function MusicPlayerExpandedView({
           <FaStepBackward className="text-white" style={controlIconStyle} />
         </button>
 
-        {/* 재생/일시정지 버튼 */}
-        <button
-          onClick={onPlayPause}
-          disabled={isPlayButtonDisabled}
-          className={`${controlButtonClassName} ${isPlayButtonDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
-          aria-label={isPlaying ? "일시정지" : "재생"}
-        >
-          {isPlaying ? (
-            <FaPause className="text-white" style={controlIconStyle} />
-          ) : (
-            <FaPlay className="text-white" style={controlIconStyle} />
+        {/* 재생/일시정지 버튼 + 재생 중 문구 */}
+        <div className="flex flex-col items-center gap-0.5">
+          <button
+            onClick={onPlayPause}
+            disabled={isPlayButtonDisabled}
+            className={`${controlButtonClassName} ${isPlayButtonDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            aria-label={isPlaying ? "일시정지" : "재생"}
+          >
+            {isPlaying ? (
+              <FaPause className="text-white" style={controlIconStyle} />
+            ) : (
+              <FaPlay className="text-white" style={controlIconStyle} />
+            )}
+          </button>
+          {isPlaying && (
+            <span className="text-[10px] md:text-xs text-white/80 whitespace-nowrap">
+              유튜브 동영상 재생 중
+            </span>
           )}
-        </button>
+        </div>
 
         {/* 다음곡 버튼 */}
         <button
