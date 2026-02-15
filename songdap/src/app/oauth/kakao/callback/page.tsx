@@ -67,7 +67,7 @@ function KakaoCallbackContent() {
         }
         // state에 저장된 복귀 경로가 있으면 그대로 앨범 상세 등 유지
         const stateParam = searchParams.get("state");
-        let nextPath = ROUTES.ALBUM.LIST;
+        let nextPath: string = ROUTES.ALBUM.LIST;
         if (stateParam) {
           try {
             const decoded = decodeURIComponent(stateParam);
