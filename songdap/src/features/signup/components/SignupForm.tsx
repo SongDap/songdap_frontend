@@ -86,7 +86,7 @@ export function SignupForm() {
 
             // 쿠키 기반이라 accessToken은 비워도 됨
             loginFunction({ accessToken: "", user: me });
-            router.replace("/");
+            router.replace("/album/list");
         } catch (e) {
             console.error("회원가입(온보딩) 실패:", e);
             alert("회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.");
