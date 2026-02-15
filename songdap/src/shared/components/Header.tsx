@@ -163,7 +163,10 @@ export default function Header() {
 
             {/* 프로필 메뉴 */}
             {isAuthenticated && profileMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <div 
+                className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="py-2">
                   {profileMenuItems.map((item, idx) => (
                     <Link
