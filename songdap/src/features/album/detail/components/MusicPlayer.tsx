@@ -18,7 +18,11 @@ type MusicPlayerProps = {
   onClose?: () => void; // 플레이어를 닫을 때 호출
   onOpenYouTubeModal?: () => void; // 유튜브 모달 열기
   onPrevious?: () => void; // 이전곡
-  onNext?: () => void; // 다음곡
+  onNext?: () => void; // 다음곡 (버튼 클릭 시)
+  onNextAndPlay?: () => void; // 다음 곡으로 넘기고 자동 재생 (연속 재생 모드에서 재생 끝났을 때)
+  onAutoPlayNextFailed?: () => void; // 연속 재생 중 다음 곡 재생 실패 시 (모달 등 처리)
+  autoPlayNext?: boolean; // 연속 재생 모드 여부
+  isPlayButtonDisabled?: boolean; // 3초 대기 중 등 재생 버튼 비활성화
   expandTrigger?: number; // 익스팬드뷰를 강제로 열기 위한 트리거
   autoPlayTrigger?: number; // 특정 액션(카드 재생 버튼 등)으로 자동재생 트리거
 };
@@ -37,6 +41,10 @@ export default function MusicPlayer({
   onOpenYouTubeModal,
   onPrevious,
   onNext,
+  onNextAndPlay,
+  onAutoPlayNextFailed,
+  autoPlayNext = false,
+  isPlayButtonDisabled = false,
   expandTrigger,
   autoPlayTrigger,
 }: MusicPlayerProps) {
@@ -81,11 +89,15 @@ export default function MusicPlayer({
 
     // autoPlayTrigger가 변경되거나 초기 마운트에서 값이 있으면 처리
     if (autoPlayTrigger !== undefined && autoPlayTrigger !== prevAutoPlayTriggerRef.current) {
-      // 유튜브 videoId가 없으면 재생 불가 → 안내만 표시
+      // 유튜브 videoId가 없으면 재생 불가
       if (!videoId || videoId.trim().length === 0) {
-        setPlaybackNotice("유튜브 링크가 없어요.");
-        if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
-        noticeTimerRef.current = window.setTimeout(() => setPlaybackNotice(null), 2500);
+        if (autoPlayNext && onAutoPlayNextFailed) {
+          onAutoPlayNextFailed();
+        } else {
+          setPlaybackNotice("유튜브 링크가 없어요.");
+          if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
+          noticeTimerRef.current = window.setTimeout(() => setPlaybackNotice(null), 2500);
+        }
       } else {
         setIsPlaying(true);
       }
@@ -103,6 +115,10 @@ export default function MusicPlayer({
   }, []);
 
   const showPlaybackBlockedNotice = () => {
+    if (autoPlayNext && onAutoPlayNextFailed) {
+      onAutoPlayNextFailed();
+      return;
+    }
     setPlaybackNotice("재생이 차단됐어요. 다시 시도해주세요.");
     if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
     noticeTimerRef.current = window.setTimeout(() => {
@@ -131,6 +147,7 @@ export default function MusicPlayer({
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isPlayButtonDisabled) return;
     // 유튜브 videoId가 없으면 "소리 재생"을 할 수 없음
     if (!isPlaying && (!videoId || videoId.trim().length === 0)) {
       setPlaybackNotice("유튜브 링크가 없어요.");
@@ -173,6 +190,9 @@ export default function MusicPlayer({
       }}
       onPlaybackBlocked={showPlaybackBlockedNotice}
       onEnded={() => {
+        if (autoPlayNext && onNextAndPlay) {
+          onNextAndPlay();
+        }
         setIsPlaying(false);
       }}
     />
@@ -214,6 +234,7 @@ export default function MusicPlayer({
         videoId={videoId}
         showMiniVideo={hasPlayedOnce}
         onPlayPause={handlePlayPause}
+        isPlayButtonDisabled={isPlayButtonDisabled}
         onClose={handleCloseExpand}
         isClosing={isClosing}
         isOpening={isOpening}
@@ -237,6 +258,7 @@ export default function MusicPlayer({
         videoId={videoId}
         showMiniVideo={hasPlayedOnce}
         onPlayPause={handlePlayPause}
+        isPlayButtonDisabled={isPlayButtonDisabled}
         onExpand={handleToggleExpand}
         onOpenYouTubeModal={handleOpenYouTube}
         onPrevious={onPrevious}

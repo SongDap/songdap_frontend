@@ -26,6 +26,7 @@ type MusicPlayerBarProps = {
   videoId?: string;
   showMiniVideo?: boolean;
   onPlayPause: (e: React.MouseEvent) => void;
+  isPlayButtonDisabled?: boolean; // 3초 대기 중 등 재생 버튼 비활성화
   onExpand: () => void;
   onOpenYouTubeModal?: () => void;
   onPrevious?: () => void; // 이전곡
@@ -40,6 +41,7 @@ export default function MusicPlayerBar({
   videoId,
   showMiniVideo,
   onPlayPause,
+  isPlayButtonDisabled = false,
   onExpand,
   onOpenYouTubeModal,
   onPrevious,
@@ -154,7 +156,8 @@ export default function MusicPlayerBar({
         {/* 재생/일시정지 버튼 */}
         <button
           onClick={onPlayPause}
-          className={controlButtonClassName}
+          disabled={isPlayButtonDisabled}
+          className={`${controlButtonClassName} ${isPlayButtonDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
           aria-label={isPlaying ? "일시정지" : "재생"}
         >
           {isPlaying ? (
