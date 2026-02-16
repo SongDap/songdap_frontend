@@ -354,6 +354,7 @@ export default function AddSongModal({
                   <div>
                     <label className="block text-base font-medium text-gray-900 mb-2">
                       닉네임 <span className="text-sm font-normal text-gray-500">(선택)</span>
+                      <span className="block text-xs font-normal text-gray-500 mt-0.5">입력하지 않으면 익명으로 표시됩니다.</span>
                     </label>
                     <div className="relative">
                       <input
@@ -362,7 +363,7 @@ export default function AddSongModal({
                         onChange={(e) => handleMessageDataChange("writer", e.target.value)}
                         maxLength={16}
                         className="w-full px-4 py-2 pr-14 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF]"
-                        placeholder="닉네임을 입력하지 않으면 익명으로 표시됩니다"
+                        placeholder="닉네임을 입력하세요"
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                         {messageData.writer.length}/16
@@ -373,14 +374,15 @@ export default function AddSongModal({
                   {/* 전하고 싶은 메시지 */}
                   <div>
                     <label className="block text-base font-medium text-gray-900 mb-2">
-                      전하고 싶은 메시지 <span className="text-sm font-normal text-gray-500">(선택)</span>
+                      메시지 <span className="text-sm font-normal text-gray-500">(선택)</span>
+                      <span className="block text-xs font-normal text-gray-500 mt-0.5">메시지는 모든 사용자에게 표시됩니다.</span>
                     </label>
                     <textarea
                       value={messageData.message}
                       onChange={(e) => handleMessageDataChange("message", e.target.value)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006FFF] resize-none"
                       rows={4}
-                      placeholder="메시지를 입력하세요&#10;메시지가 모든 사용자에게 표시됩니다."
+                      placeholder="메시지를 입력하세요"
                     />
                   </div>
                 </form>
@@ -460,6 +462,7 @@ export default function AddSongModal({
                         handleClose();
                         if (onSuccess) onSuccess();
                         alert("노래가 추가되었습니다!");
+                        if (onRefresh) onRefresh();
 
                       } finally {
                         setIsSubmitting(false);

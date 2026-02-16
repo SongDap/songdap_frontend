@@ -60,7 +60,14 @@ export function useAlbumDetail(albumUuid: string) {
 
   const musics = useMemo(() => {
     const pages = musicsQuery.data?.pages ?? [];
-    return pages.flatMap((p) => p.items?.content ?? []);
+    const flat = pages.flatMap((p) => p.items?.content ?? []);
+    // uuid 기준 중복 제거 (페이지 겹침/API 중복 시 React key 경고 방지)
+    const seen = new Set<string>();
+    return flat.filter((m) => {
+      if (seen.has(m.uuid)) return false;
+      seen.add(m.uuid);
+      return true;
+    });
   }, [musicsQuery.data]);
 
   const isOwner = useMemo(

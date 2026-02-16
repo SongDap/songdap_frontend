@@ -238,20 +238,21 @@ export default function AlbumCard({
                     onClick={() => setShowShareMenu(false)}
                   />
                   {/* 메뉴 */}
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                    {/* 링크 복사 */}
+                  <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <button
                       onClick={handleLinkCopy}
                       className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      aria-label={isLinkCopied ? "복사됨" : "링크 복사"}
                     >
                       <HiLink className="w-5 h-5 text-gray-600" />
-                      <span>{isLinkCopied ? "복사됨!" : "링크 복사하기"}</span>
+                      <span>{isLinkCopied ? "복사됨!" : "링크 복사"}</span>
                     </button>
 
                     {/* 카카오톡 공유 */}
                     <button
                       onClick={handleKakaoShare}
                       className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      aria-label="카카오톡 공유"
                     >
                       <svg
                         width="20"
@@ -266,7 +267,7 @@ export default function AlbumCard({
                           fill="#000000"
                         />
                       </svg>
-                      <span>카카오톡으로 공유하기</span>
+                      <span>카카오톡 공유</span>
                     </button>
                   </div>
                 </>

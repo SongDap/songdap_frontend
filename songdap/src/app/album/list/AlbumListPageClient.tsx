@@ -76,9 +76,15 @@ export default function AlbumListPageClient() {
       setIsLoading(true);
 
       const pageData = await getAlbums(currentSortApi, currentPageNum - 1, itemsPerPage);
-      const base = pageData.content ?? [];
-      
-      // getAlbums API에서 이미 필요한 정보를 제공하므로 추가 호출 제거 (N+1 방지)
+      const raw = pageData.content ?? [];
+      const base = (() => {
+        const seen = new Set<string>();
+        return raw.filter((a) => {
+          if (seen.has(a.uuid)) return false;
+          seen.add(a.uuid);
+          return true;
+        });
+      })();
       setAlbums(base as AlbumListItemEnriched[]);
       setTotalElements(pageData.totalElements);
       setTotalPages(pageData.totalPages);
@@ -110,7 +116,15 @@ export default function AlbumListPageClient() {
         const pageData = await getAlbums(sortApi, page - 1, itemsPerPage);
 
         // getAlbums API에서 이미 필요한 정보를 제공하므로 추가 호출 제거 (N+1 방지)
-        const baseItems = pageData.content ?? [];
+        const raw = pageData.content ?? [];
+        const baseItems = (() => {
+          const seen = new Set<string>();
+          return raw.filter((a) => {
+            if (seen.has(a.uuid)) return false;
+            seen.add(a.uuid);
+            return true;
+          });
+        })();
 
         if (fetchSeqRef.current === seq) {
           setAlbums(baseItems as AlbumListItemEnriched[]);
@@ -144,6 +158,7 @@ export default function AlbumListPageClient() {
         setAlbums([]);
         setTotalElements(0);
         setTotalPages(0);
+        alert("앨범 목록을 불러오지 못했습니다. 다시 시도해주세요.");
       } finally {
         setIsLoading(false);
       }
@@ -480,7 +495,7 @@ export default function AlbumListPageClient() {
                       </div>
                     )}
 
-                    {/* 링크 복사 / 카카오 공유 */}
+                    {/* 링크 복사, 카카오톡 공유 */}
                     <div className="mt-5 flex items-center justify-center gap-3">
                       <button
                         type="button"
@@ -547,7 +562,7 @@ export default function AlbumListPageClient() {
                             fill="#000000"
                           />
                         </svg>
-                        <span>카카오 공유</span>
+                        <span>카카오톡 공유</span>
                       </button>
                     </div>
 

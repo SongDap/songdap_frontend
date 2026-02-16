@@ -1,7 +1,5 @@
 "use client";
 
-import { HiX } from "react-icons/hi";
-
 type AutoPlayFailedModalProps = {
   onRetry: () => void;
   onCancel: () => void;
@@ -16,9 +14,13 @@ export default function AutoPlayFailedModal({ onRetry, onCancel }: AutoPlayFaile
         aria-hidden
       />
       <div
-        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-2xl shadow-xl z-[120] p-6 mx-4"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-[120] flex items-center justify-center p-4 pointer-events-none"
+        aria-hidden
       >
+        <div
+          className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-6 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
         <p className="text-center text-gray-900 font-medium mb-5">
           다음 곡 재생에 실패했어요.
         </p>
@@ -37,6 +39,7 @@ export default function AutoPlayFailedModal({ onRetry, onCancel }: AutoPlayFaile
           >
             연속 재생 취소
           </button>
+        </div>
         </div>
       </div>
     </>
