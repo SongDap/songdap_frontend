@@ -24,14 +24,12 @@ export default function AuthExpiredOverlay() {
   // 세션 만료 시 모달 표시와 동시에 프로필(스토어) 즉시 반영
   useEffect(() => {
     if (!authExpired) return;
-    console.log("[Auth] 세션 만료 모달 표시 → 로컬 스토어 정리");
     logoutLocal();
   }, [authExpired, logoutLocal]);
 
   // axios 인터셉터에서 발생시키는 이벤트 수신 → 같은 틱에 스토어 갱신해 헤더/프로필이 새로고침 없이 반영
   useEffect(() => {
     const onAuthExpired = () => {
-      console.log("[Auth] auth:expired 이벤트 수신 → 로컬 스토어 정리");
       logoutLocal();
     };
     window.addEventListener("auth:expired", onAuthExpired);

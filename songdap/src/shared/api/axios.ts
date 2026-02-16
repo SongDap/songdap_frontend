@@ -67,11 +67,8 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-const AUTH_LOG = "[Auth]";
-
 const handleAuthExpired = () => {
   if (typeof window === "undefined") return;
-  console.log(AUTH_LOG, "세션 만료 처리 → 모달 표시 + 로컬 정리");
   showAuthExpired();
   // 프로필/헤더가 즉시 반영되도록 이벤트로 알림 (useOauthStore는 axios에서 직접 import 시 순환 참조)
   window.dispatchEvent(new CustomEvent("auth:expired"));
@@ -137,15 +134,23 @@ apiClient.interceptors.response.use(
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
-      console.log(AUTH_LOG, "Access Token 만료 감지(401) → 토큰 재발급 시도", { url: originalRequest?.url });
+
+      // Access Token 만료 시 스토리지/스토어 유저 제거 (유효한 액세스 없음 = 유저정보 없음)
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('user');
+          const { useOauthStore } = await import('@/features/oauth/model/useOauthStore');
+          useOauthStore.setState({ user: null, isAuthenticated: false });
+        } catch {
+          /* ignore */
+        }
+      }
 
       // 이미 refresh 중이면 대기열에 추가
       if (isRefreshing) {
-        console.log(AUTH_LOG, "이미 재발급 중 → 요청 대기열에 추가");
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(() => {
-          // 쿠키 기반이므로 헤더 설정 불필요, 원래 요청 재시도
           return apiClient(originalRequest);
         });
       }
@@ -154,38 +159,24 @@ apiClient.interceptors.response.use(
 
       try {
         // Refresh Token은 HttpOnly Cookie로 자동 전송됨
-        // Access Token도 쿠키로 자동 설정됨
         await apiClient.post(
           API_ENDPOINTS.AUTH.REISSUE,
           undefined,
           { __skipAuthRefresh: true } as any
         );
 
-        console.log(AUTH_LOG, "토큰 재발급 성공 → 원래 요청 재시도");
-
-        // 토큰 리프레쉬 후 사용자 정보 동기화 필요
-        // (Zustand 상태가 유효한지 확인하고 필요시 업데이트)
+        // 재발급 성공 시에만 사용자 정보 복구 (getMe → 스토어·스토리지 복원)
         if (typeof window !== 'undefined') {
           try {
             const { useOauthStore } = await import('@/features/oauth/model/useOauthStore');
-            const currentUser = useOauthStore.getState().user;
-            
-            // 로그인 상태인데 사용자 정보가 없으면 다시 가져오기
-            if (currentUser) {
-              // 사용자 정보 재검증 (백엔드에서 토큰이 정말 유효한지 확인)
-              const { getMe } = await import('./userApi');
-              try {
-                const freshUser = await getMe();
-                useOauthStore.getState().login({ 
-                  accessToken: '',  // 쿠키 기반이므로 빈 값
-                  user: freshUser 
-                });
-              } catch (meError) {
-                // getMe 실패 시 로그인 정보 유지 (쿠키는 정상이므로)
-              }
-            }
-          } catch (stateError) {
-            // 상태 동기화 실패
+            const { getMe } = await import('./userApi');
+            const freshUser = await getMe();
+            useOauthStore.getState().login({
+              accessToken: '',
+              user: freshUser,
+            });
+          } catch {
+            // getMe 실패 시 로그인 상태 복구 안 함 (스토어는 비로그인 유지)
           }
         }
 
@@ -196,8 +187,8 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
 
       } catch (refreshError) {
-        // Refresh Token도 만료
-        console.log(AUTH_LOG, "Refresh Token 만료(재발급 실패) → 세션 만료 처리");
+        // 재발급 실패 (Refresh Token 만료 등)
+        console.log("[Auth] 재발급 실패");
         processQueue(refreshError, null);
 
         // 로그아웃 API 호출(최선) + 로컬 상태 정리 후 홈으로 이동
@@ -224,16 +215,13 @@ apiClient.interceptors.response.use(
     // 사용자에게 재로그인/홈 선택을 제공
     if (error.response?.status === 401 && originalRequest?._retry) {
       if (!originalRequest.__skipAuthExpired) {
-        console.log(AUTH_LOG, "재발급 후에도 401 → 세션 만료 처리");
         handleAuthExpired();
       }
     }
 
     // 일부 API는 인증이 없을 때 403으로 내려올 수 있음(권한 없음/미인증).
-    // 이 경우에도 동일하게 재로그인/홈 선택 제공.
     if (error.response?.status === 403) {
       if (!originalRequest.__skipAuthExpired) {
-        console.log(AUTH_LOG, "403 권한 없음 → 세션 만료 처리");
         handleAuthExpired();
       }
     }
