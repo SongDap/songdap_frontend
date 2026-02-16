@@ -11,34 +11,19 @@ function KakaoCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const loginFunction = useOauthStore((s) => s.login);
-  const DEBUG_OAUTH = process.env.NEXT_PUBLIC_DEBUG_OAUTH === "true";
 
   useEffect(() => {
     const code = searchParams.get('code');
     const errorParam = searchParams.get("error");
     const errorDesc = searchParams.get("error_description");
 
-    if (DEBUG_OAUTH) {
-      console.log("[OAUTH][KAKAO][03] 콜백 진입 (/oauth/kakao/callback)");
-      console.log("현재 URL:", typeof window !== "undefined" ? window.location.href : "(server)");
-      console.log("code 존재:", Boolean(code));
-      console.log("error:", errorParam);
-      console.log("error_description:", errorDesc);
-      console.groupEnd();
-    }
-
     if (errorParam) {
-      console.error("[OAUTH][KAKAO][ERR] 카카오 인증 에러:", {
-        error: errorParam,
-        description: errorDesc,
-      });
       alert(`카카오 로그인이 취소되었습니다.\n에러: ${errorParam}${errorDesc ? `\n${errorDesc}` : ""}`);
       router.replace(ROUTES.HOME);
       return;
     }
 
     if (!code) {
-      console.warn("[OAUTH][KAKAO][WARN] code 파라미터가 없습니다.");
       router.replace(ROUTES.HOME);
       return;
     }
@@ -90,30 +75,6 @@ function KakaoCallbackContent() {
         const requestUrl = axiosError?.config?.url;
         const baseURL = axiosError?.config?.baseURL;
         const fullUrl = baseURL ? `${baseURL}${requestUrl}` : requestUrl;
-        
-        console.error('[OAUTH][KAKAO][ERR] 카카오 로그인 실패', { 
-          status, 
-          requestUrl,
-          baseURL,
-          fullUrl,
-          method: axiosError?.config?.method,
-          headers: axiosError?.config?.headers,
-          requestData: axiosError?.config?.data,
-          responseHeaders: axiosError?.response?.headers,
-        });
-        
-        // errorData를 별도로 로깅하여 객체 내용을 펼쳐서 볼 수 있도록 함
-        if (errorData && typeof errorData === 'object') {
-          console.error('[OAUTH][KAKAO][ERR] 에러 응답 데이터:', errorData);
-          // 에러 메시지가 있으면 별도로 표시
-          const errorObj = errorData as { message?: string; code?: string | number };
-          if (errorObj.message) {
-            console.error('[OAUTH][KAKAO][ERR] 에러 메시지:', errorObj.message);
-          }
-          if (errorObj.code) {
-            console.error('[OAUTH][KAKAO][ERR] 에러 코드:', errorObj.code);
-          }
-        }
 
         isRequesting.current = false;
         if (!hasHandledError.current) {

@@ -236,16 +236,6 @@ export async function getAlbumMusics(
       throw new Error("노래 목록 응답 구조를 파싱할 수 없습니다.");
     }
 
-    console.log("[Song API] 노래 목록 조회 성공:", {
-      albumUuid,
-      sort,
-      page,
-      size,
-      totalElements: responseData.items.totalElements,
-      numberOfElements: responseData.items.numberOfElements,
-      flag: responseData.flag,
-    });
-
     return responseData;
   } catch (error: any) {
     throw error;

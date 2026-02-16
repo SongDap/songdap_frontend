@@ -26,7 +26,6 @@ export default function ProfileEditPage() {
       })
       .catch((e) => {
         // 401/재발급 실패는 axios 인터셉터에서 logout+redirect 처리됨
-        console.warn("[Profile Edit] 사용자 정보 조회 실패:", e);
         // 혹시나 인터셉터를 타지 않는 케이스면 안전하게 로그아웃 처리
         if (!cancelled) {
           logout();

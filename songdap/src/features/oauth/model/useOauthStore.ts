@@ -4,8 +4,6 @@ import { create } from 'zustand';
 import { AuthResponse, UserInfo } from './types';
 import { logoutFromServer } from "../api/oauthApi";
 
-const AUTH_LOG = "[Auth]";
-
 // 이건 dto 보고 수정해야함
 interface OauthState {
   user: UserInfo | null;
@@ -40,12 +38,10 @@ export const useOauthStore = create<OauthState>(function(set){
                 user:data.user,
                 isAuthenticated:true
             });
-            if (typeof window !== 'undefined') console.log(AUTH_LOG, "로그인 완료", { nickname: data.user?.nickname });
-        },
+            },
 
         // 로그아웃
         logout  : function() {
-            if (typeof window !== 'undefined') console.log(AUTH_LOG, "로그아웃 (사용자 요청)");
             // 서버 로그아웃 API 호출(쿠키/Redis 정리) - 실패해도 로컬 정리는 수행
             // NOTE: zustand action은 sync로 유지하고, 네트워크는 fire-and-forget 처리
             logoutFromServer().catch(() => {});
@@ -69,14 +65,12 @@ export const useOauthStore = create<OauthState>(function(set){
 
             const userRaw = localStorage.getItem('user');
             if (!userRaw) {
-                console.log(AUTH_LOG, "hydrate: localStorage에 user 없음 → 스킵");
                 return;
             }
 
             try {
                 const parsed = JSON.parse(userRaw) as Partial<UserInfo> | null;
                 if (!parsed?.nickname) {
-                    console.log(AUTH_LOG, "hydrate: user 파싱 결과 nickname 없음 → 스킵");
                     return;
                 }
 
@@ -89,10 +83,7 @@ export const useOauthStore = create<OauthState>(function(set){
                     user,
                     isAuthenticated: true,
                 });
-                console.log(AUTH_LOG, "hydrate 완료 (localStorage → 스토어 복구)", { nickname: user.nickname });
             } catch (e) {
-                // 파싱 실패 시 깨끗하게 정리
-                console.warn(AUTH_LOG, "hydrate: user 파싱 실패 → 로컬 정리");
                 localStorage.removeItem('user');
                 set({ user: null, isAuthenticated: false });
             }
