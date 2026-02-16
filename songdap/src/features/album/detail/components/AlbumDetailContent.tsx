@@ -79,6 +79,25 @@ export default function AlbumDetailContent({ id }: { id: string }) {
     );
   }
 
+  if (albumQuery.isError) {
+    return (
+      <>
+        <PageHeader title="앨범" showLogo={true} showBackButton={true} />
+        <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6">
+          <p className="text-gray-700 text-center">일시적인 오류가 발생했습니다.</p>
+          <button
+            type="button"
+            onClick={() => albumQuery.refetch()}
+            className="px-4 py-2 bg-[#006FFF] text-white rounded-lg text-sm font-medium hover:bg-[#0056CC] transition-colors"
+            aria-label="다시 시도"
+          >
+            다시 시도
+          </button>
+        </div>
+      </>
+    );
+  }
+
   if (!album) {
     return (
       <>
@@ -305,7 +324,19 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                       className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-0 pt-0 pb-40 md:pb-44"
                     >
                       <div className="flex flex-col">
-                        {!musicsQuery.isLoading && musics.length === 0 ? (
+                        {musicsQuery.isError ? (
+                          <div className="py-16 px-6 text-center">
+                            <p className="text-gray-600 mb-3">노래 목록을 불러오지 못했습니다.</p>
+                            <button
+                              type="button"
+                              onClick={() => musicsQuery.refetch()}
+                              className="px-4 py-2 bg-[#006FFF] text-white rounded-lg text-sm font-medium hover:bg-[#0056CC] transition-colors"
+                              aria-label="다시 시도"
+                            >
+                              다시 시도
+                            </button>
+                          </div>
+                        ) : !musicsQuery.isLoading && musics.length === 0 ? (
                           <div className="py-16 px-6 text-center text-gray-600">
                             추가된 노래가 없습니다.
                           </div>
@@ -377,7 +408,19 @@ export default function AlbumDetailContent({ id }: { id: string }) {
                   {viewMode === "letter" && (
                     <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-6 md:px-4 pt-4 pb-28">
                       <div className="flex flex-col gap-8">
-                        {!musicsQuery.isLoading && musics.length === 0 ? (
+                        {musicsQuery.isError ? (
+                          <div className="py-16 px-6 text-center">
+                            <p className="text-gray-600 mb-3">노래 목록을 불러오지 못했습니다.</p>
+                            <button
+                              type="button"
+                              onClick={() => musicsQuery.refetch()}
+                              className="px-4 py-2 bg-[#006FFF] text-white rounded-lg text-sm font-medium hover:bg-[#0056CC] transition-colors"
+                              aria-label="다시 시도"
+                            >
+                              다시 시도
+                            </button>
+                          </div>
+                        ) : !musicsQuery.isLoading && musics.length === 0 ? (
                           <div className="py-16 px-6 text-center text-gray-600">
                             추가된 노래가 없습니다.
                           </div>

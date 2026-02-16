@@ -65,6 +65,7 @@ export default function AuthExpiredOverlay() {
               }
               window.location.replace("/");
             }}
+            aria-label="카카오로 다시 로그인"
           >
             카카오로 다시 로그인
           </button>
@@ -76,6 +77,7 @@ export default function AuthExpiredOverlay() {
               hideAuthExpired();
               window.location.replace("/");
             }}
+            aria-label="홈으로 이동"
           >
             홈으로 이동
           </button>
@@ -87,6 +89,7 @@ export default function AuthExpiredOverlay() {
               // 오버레이만 닫고 사용자가 계속 탐색하도록(요청은 계속 실패할 수 있음)
               hideAuthExpired();
             }}
+            aria-label="닫기"
           >
             닫기
           </button>

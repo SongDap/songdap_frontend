@@ -7,6 +7,7 @@ import { FaStepBackward, FaStepForward, FaPlay, FaPause } from "react-icons/fa";
 const ICON_SIZE_RATIO = 0.12;
 const ICON_MIN_SIZE = 40;
 const ICON_MAX_SIZE = 56;
+const YOUTUBE_ICON_SIZE_MULTIPLIER = 1.25; // 유튜브 아이콘만 더 크게
 const SPACING_SMALL_RATIO = 0.01;
 const SPACING_MEDIUM_RATIO = 0.02;
 const SPACING_LARGE_RATIO = 0.04;
@@ -82,6 +83,7 @@ export default function MusicPlayerBar({
   const controlButtonClassName = "flex items-center justify-center hover:opacity-80 active:opacity-70 focus:outline-none transition-opacity";
   const iconStyle = { width: `${iconSize}px`, height: `${iconSize}px` };
   const controlIconStyle = { width: `${iconSize * 0.75}px`, height: `${iconSize * 0.75}px` }; // 재생/이전/다음 아이콘은 75% 크기
+  const youtubeIconSize = Math.round(iconSize * YOUTUBE_ICON_SIZE_MULTIPLIER);
 
   return (
     <div 
@@ -104,26 +106,54 @@ export default function MusicPlayerBar({
         style={{ paddingTop: `${spacing.medium}px`, paddingBottom: `${spacing.large}px` }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 유튜브 버튼 (아이콘) */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenYouTubeModal?.();
+        {/* 유튜브 버튼 (아이콘) + 재생 중 태그 오버레이 */}
+        <div
+          className="relative flex shrink-0 items-center justify-center overflow-hidden"
+          style={{
+            width: youtubeIconSize,
+            height: youtubeIconSize,
+            minWidth: youtubeIconSize,
+            minHeight: youtubeIconSize,
+            maxWidth: youtubeIconSize,
+            maxHeight: youtubeIconSize,
           }}
-          className={controlButtonClassName}
-          aria-label="유튜브"
         >
-          <svg
-            width={iconSize}
-            height={iconSize}
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="text-red-500"
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenYouTubeModal?.();
+            }}
+            className={`${controlButtonClassName} p-0`}
+            style={{ width: youtubeIconSize, height: youtubeIconSize }}
+            aria-label="유튜브"
           >
-            <rect x="2" y="4" width="20" height="16" rx="2" ry="2" fill="#EF4444" />
-            <polygon points="9,8 9,16 16,12" fill="white" />
-          </svg>
-        </button>
+            <svg
+              width={youtubeIconSize}
+              height={youtubeIconSize}
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="text-red-500"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2" fill="#EF4444" />
+              <polygon points="9,8 9,16 16,12" fill="white" />
+            </svg>
+          </button>
+          {isPlaying && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenYouTubeModal?.();
+              }}
+              className="absolute inset-0 flex flex-col items-center justify-center p-0 text-[9px] font-medium text-black leading-tight cursor-pointer hover:opacity-80 active:opacity-70 focus:outline-none transition-opacity"
+              style={{ width: youtubeIconSize, height: youtubeIconSize }}
+              aria-label="유튜브 재생 중 - 클릭하여 열기"
+            >
+              <span className="block pl-1">Youtube</span>
+              <span className="block">재생 중</span>
+            </button>
+          )}
+        </div>
 
         {/* 이전곡 버튼 */}
         <button
@@ -137,26 +167,19 @@ export default function MusicPlayerBar({
           <FaStepBackward className="text-white" style={controlIconStyle} />
         </button>
 
-        {/* 재생/일시정지 버튼 + 재생 중 문구 */}
-        <div className="flex flex-col items-center gap-0.5">
-          <button
-            onClick={onPlayPause}
-            disabled={isPlayButtonDisabled}
-            className={`${controlButtonClassName} ${isPlayButtonDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
-            aria-label={isPlaying ? "일시정지" : "재생"}
-          >
-            {isPlaying ? (
-              <FaPause className="text-white" style={controlIconStyle} />
-            ) : (
-              <FaPlay className="text-white" style={controlIconStyle} />
-            )}
-          </button>
-          {isPlaying && (
-            <span className="text-[10px] text-white/80 whitespace-nowrap">
-              유튜브 동영상 재생 중
-            </span>
+        {/* 재생/일시정지 버튼 */}
+        <button
+          onClick={onPlayPause}
+          disabled={isPlayButtonDisabled}
+          className={`${controlButtonClassName} ${isPlayButtonDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+          aria-label={isPlaying ? "일시정지" : "재생"}
+        >
+          {isPlaying ? (
+            <FaPause className="text-white" style={controlIconStyle} />
+          ) : (
+            <FaPlay className="text-white" style={controlIconStyle} />
           )}
-        </div>
+        </button>
 
         {/* 다음곡 버튼 */}
         <button

@@ -21,6 +21,7 @@ const LP_MAX_SIZE = 400;
 const ICON_SIZE_RATIO = 0.12;
 const ICON_MIN_SIZE = 40;
 const ICON_MAX_SIZE = 56;
+const YOUTUBE_ICON_SIZE_MULTIPLIER = 1.25; // 유튜브 아이콘만 더 크게
 const TITLE_SIZE_RATIO = 0.03;
 const TITLE_MIN_SIZE = 20;
 const TITLE_MAX_SIZE = 32;
@@ -167,6 +168,8 @@ export default function MusicPlayerExpandedView({
   const controlButtonClassName = "flex items-center justify-center hover:opacity-80 active:opacity-70 focus:outline-none transition-opacity";
   const iconStyle = { width: `${iconSize}px`, height: `${iconSize}px` };
   const controlIconStyle = { width: `${iconSize * 0.75}px`, height: `${iconSize * 0.75}px` }; // 재생/이전/다음 아이콘은 75% 크기
+  const listIconStyle = { width: `${iconSize * 0.6}px`, height: `${iconSize * 0.6}px` }; // 리스트 아이콘만 더 작게
+  const youtubeIconSize = Math.round(iconSize * YOUTUBE_ICON_SIZE_MULTIPLIER);
 
   // 아이콘 컨테이너 높이 계산 (paddingTop + iconSize + paddingBottom)
   const controlContainerHeight = spacing.medium + iconSize + spacing.large;
@@ -332,26 +335,54 @@ export default function MusicPlayerExpandedView({
             </div>
           </div>
         )}
-        {/* 유튜브 버튼 */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenYouTubeModal?.();
+        {/* 유튜브 버튼 + 재생 중 태그 오버레이 */}
+        <div
+          className="relative flex shrink-0 items-center justify-center overflow-hidden"
+          style={{
+            width: youtubeIconSize,
+            height: youtubeIconSize,
+            minWidth: youtubeIconSize,
+            minHeight: youtubeIconSize,
+            maxWidth: youtubeIconSize,
+            maxHeight: youtubeIconSize,
           }}
-          className={controlButtonClassName}
-          aria-label="유튜브"
         >
-          <svg
-            width={iconSize}
-            height={iconSize}
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="text-red-500"
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenYouTubeModal?.();
+            }}
+            className={`${controlButtonClassName} p-0`}
+            style={{ width: youtubeIconSize, height: youtubeIconSize }}
+            aria-label="유튜브"
           >
-            <rect x="2" y="4" width="20" height="16" rx="2" ry="2" fill="#EF4444" />
-            <polygon points="9,8 9,16 16,12" fill="white" />
-          </svg>
-        </button>
+            <svg
+              width={youtubeIconSize}
+              height={youtubeIconSize}
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="text-red-500"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2" fill="#EF4444" />
+              <polygon points="9,8 9,16 16,12" fill="white" />
+            </svg>
+          </button>
+          {isPlaying && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenYouTubeModal?.();
+              }}
+              className="absolute inset-0 flex flex-col items-center justify-center p-0 text-[9px] font-medium text-black leading-tight cursor-pointer hover:opacity-80 active:opacity-70 focus:outline-none transition-opacity"
+              style={{ width: youtubeIconSize, height: youtubeIconSize }}
+              aria-label="유튜브 재생 중 - 클릭하여 열기"
+            >
+              <span className="block pl-1">Youtube</span>
+              <span className="block">재생 중</span>
+            </button>
+          )}
+        </div>
 
         {/* 이전곡 버튼 */}
         <button
@@ -365,26 +396,19 @@ export default function MusicPlayerExpandedView({
           <FaStepBackward className="text-white" style={controlIconStyle} />
         </button>
 
-        {/* 재생/일시정지 버튼 + 재생 중 문구 */}
-        <div className="flex flex-col items-center gap-0.5">
-          <button
-            onClick={onPlayPause}
-            disabled={isPlayButtonDisabled}
-            className={`${controlButtonClassName} ${isPlayButtonDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
-            aria-label={isPlaying ? "일시정지" : "재생"}
-          >
-            {isPlaying ? (
-              <FaPause className="text-white" style={controlIconStyle} />
-            ) : (
-              <FaPlay className="text-white" style={controlIconStyle} />
-            )}
-          </button>
-          {isPlaying && (
-            <span className="text-[10px] text-white/80 whitespace-nowrap">
-              유튜브 동영상 재생 중
-            </span>
+        {/* 재생/일시정지 버튼 */}
+        <button
+          onClick={onPlayPause}
+          disabled={isPlayButtonDisabled}
+          className={`${controlButtonClassName} ${isPlayButtonDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+          aria-label={isPlaying ? "일시정지" : "재생"}
+        >
+          {isPlaying ? (
+            <FaPause className="text-white" style={controlIconStyle} />
+          ) : (
+            <FaPlay className="text-white" style={controlIconStyle} />
           )}
-        </div>
+        </button>
 
         {/* 다음곡 버튼 */}
         <button
@@ -398,16 +422,17 @@ export default function MusicPlayerExpandedView({
           <FaStepForward className="text-white" style={controlIconStyle} />
         </button>
 
-        {/* 리스트 버튼 */}
+        {/* 리스트 버튼 - 버튼 영역은 플레이어바 오른쪽(썸네일)과 동일하게 iconSize로 고정, 아이콘만 작게 */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onClose();
           }}
-          className={controlButtonClassName}
+          className={`${controlButtonClassName} shrink-0`}
+          style={{ width: iconSize, height: iconSize }}
           aria-label="리스트"
         >
-          <FaList className="text-white" style={iconStyle} />
+          <FaList className="text-white" style={listIconStyle} />
         </button>
       </div>
     </>

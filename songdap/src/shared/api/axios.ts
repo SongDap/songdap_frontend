@@ -75,6 +75,15 @@ const handleAuthExpired = () => {
   showAuthExpired();
   // 프로필/헤더가 즉시 반영되도록 이벤트로 알림 (useOauthStore는 axios에서 직접 import 시 순환 참조)
   window.dispatchEvent(new CustomEvent("auth:expired"));
+  // 이벤트 리스너와 별개로 스토어 직접 갱신(동적 import로 순환 참조 회피) → 헤더가 세션 만료 시 반드시 로그인 UI로 전환
+  import("@/features/oauth/model/useOauthStore").then(({ useOauthStore }) => {
+    try {
+      localStorage.removeItem("user");
+    } catch {
+      /* ignore */
+    }
+    useOauthStore.setState({ user: null, isAuthenticated: false });
+  });
 };
 
 //

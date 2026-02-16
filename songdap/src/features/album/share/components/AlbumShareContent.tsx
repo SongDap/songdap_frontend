@@ -104,36 +104,35 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
       <div className="max-w-2xl mx-auto text-center">
         {albumData && <AlbumInfoDisplay albumData={albumData} albumColor={albumColor} todayDate={todayDate} />}
 
-        {/* 공유 버튼 */}
+        {/* 링크 복사, 카카오톡 공유 */}
         <div className="flex items-center justify-center gap-3">
-          {/* 링크 복사하기 */}
-          <button
-            onClick={handleLinkCopy}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-          >
-            <HiLink className="w-5 h-5" />
-            <span>{isLinkCopied ? "복사됨!" : "링크 복사하기"}</span>
-          </button>
-
-          {/* 카카오톡으로 공유하기 */}
-          <button
-            onClick={handleKakaoShare}
-            className="flex items-center gap-2 px-4 py-2 bg-[#FEE500] rounded-lg text-base text-gray-900 hover:bg-[#FDD835] active:bg-[#FBC02D] transition-colors font-medium"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <button
+              onClick={handleLinkCopy}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-base text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              aria-label={isLinkCopied ? "복사됨" : "링크 복사"}
             >
-              <path
-                d="M10 0C4.48 0 0 3.84 0 8.57c0 3.04 1.92 5.72 4.8 7.28l-.96 3.6c-.16.6.48 1.04 1 .72l4.4-2.52c.48.08.96.12 1.48.12 5.52 0 10-3.84 10-8.57C20 3.84 15.52 0 10 0z"
-                fill="#000000"
-              />
-            </svg>
-            <span>카카오톡으로 공유하기</span>
-          </button>
+              <HiLink className="w-5 h-5" />
+              <span>{isLinkCopied ? "복사됨!" : "링크 복사"}</span>
+            </button>
+            <button
+              onClick={handleKakaoShare}
+              className="flex items-center gap-2 px-4 py-2 bg-[#FEE500] rounded-lg text-base text-gray-900 hover:bg-[#FDD835] active:bg-[#FBC02D] transition-colors font-medium"
+              aria-label="카카오톡 공유"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10 0C4.48 0 0 3.84 0 8.57c0 3.04 1.92 5.72 4.8 7.28l-.96 3.6c-.16.6.48 1.04 1 .72l4.4-2.52c.48.08.96.12 1.48.12 5.52 0 10-3.84 10-8.57C20 3.84 15.52 0 10 0z"
+                  fill="#000000"
+                />
+              </svg>
+              <span>카카오톡 공유</span>
+            </button>
         </div>
 
         {/* 완료 버튼 */}
@@ -148,6 +147,7 @@ export default function AlbumShareContent({ albumData: initialAlbumData, onCompl
                 onComplete();
               }}
               className="w-full py-3 px-4 bg-[#006FFF] text-white rounded-lg text-base font-medium hover:bg-[#0056CC] active:bg-[#0044AA] focus:outline-none transition-colors"
+              aria-label="완료"
             >
               완료
             </button>
